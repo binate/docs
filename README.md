@@ -1,0 +1,2 @@
+# docs
+Binate project documentation
