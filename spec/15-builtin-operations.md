@@ -9,7 +9,7 @@
 ## Scope notes
 
 - Allocation (make, make_slice, box); conversions (cast, bit_cast -> Ch.8); size/layout (sizeof, alignof, len); unchecked (unsafe_index, unsafe_div, unsafe_rem); identity/presence (same, present); volatile-access builtins; managed-representation introspection.
-- present() accepts only interface values today; OPEN extension -> Provisional. move/ispod are PROPOSED -> Annex D.
+- present() extended to func values (vtable field 0), pointers (non-null), slices (len>0); value types rejected — DONE (binate 29c9dc47, conformance 667). move/ispod are PROPOSED -> Annex D.
 
 ## Rules
 

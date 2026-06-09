@@ -101,4 +101,4 @@ from it.
 
 The implementation-conformance axis is made real by **spec conformance
 tests** — conformance-style `.bn` programs tagged with the rule-ID(s) they
-exercise. See `explorations/plan-language-spec.md` §11 for the mechanism.
+exercise. See `explorations/plan-language-spec.md` §10 for the mechanism.

@@ -12,7 +12,7 @@
 - Managed-slice @[]T is 4 words {data,len,backing,backingLen}; raw slice *[]T is 2 words.
 - Opaque (forward-declared) types: Stable/shipped (conformance/512). Field access gated on a VISIBLE/CONCRETE underlying; opaque (nil underlying) -> field access permanently rejected.
 - Named-distinct field access: §7.3 v1 REJECTS (D5); target = Go's rule (fields incl. auto-deref through a pointer underlying; methods never auto-inherited).
-- Provisional/Draft: interface-value byte layout; length-0-no-backing ENFORCEMENT (rule Stable, some backends still violate). Impl-conformance: nested arrays mis-compiled (claude-todo MAJOR).
+- Provisional: interface-value byte layout. Length-0-no-backing: rule + enforcement LANDED (binate 71ff7489, conformance 666); an open builder-comp-int regression (test 110) remains. Impl-conformance: nested arrays mis-compiled (claude-todo MAJOR).
 
 ## Rules
 

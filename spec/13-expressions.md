@@ -9,7 +9,7 @@
 ## Scope notes
 
 - Operands, primaries, operators; the grammar's 11-level Go-style precedence is AUTHORITATIVE over the conflicting notes prose; defined arithmetic (no UB); div/mod-by-zero + signed-MIN/-1 as defined panics; comparison (no chaining; IEEE-754 incl. unordered-!=); short-circuit logical; selectors (. only, auto-deref, no ->); index/slice + bounds; composite literals; D1-D11; no operator overloading.
-- Draft/OPEN: struct/array fieldwise equality + generic-instantiation comparability not implemented.
+- ==/!= on aggregates (struct/array) AND interface values is DISALLOWED by design (a defined Constraint); rejection LANDED (binate 60719e01/78af9c23). Equality via explicit methods (Compare/Equatable), present()/same, or errors.Is; sentinel identity (err==io.EOF) via io.IsEOF/errors.Is/same, not ==.
 - FLAG (MAJOR): cyclic non-struct named types hang the comparability checker (compiler-DoS).
 
 ## Rules
