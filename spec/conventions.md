@@ -1,7 +1,10 @@
 # Conventions
 
-Shared apparatus for the Binate language specification. Referenced by every
-chapter. (Phase-0 deliverable; refine as Ch.4 Notation is authored.)
+An **informative** cheat-sheet of the conventions used throughout the Binate
+language specification, for quick reference while reading or authoring. The
+**normative** sources are **Ch.4 Notation** (metalanguage, rubric, status
+legend, rule-IDs) and **Ch.3 Terms and Definitions** (terminology); where this
+digest and those chapters could differ, the chapters govern.
 
 ## Requirement vocabulary
 
