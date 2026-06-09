@@ -1,0 +1,67 @@
+# Binate Language Specification — index
+
+The **core language specification** for Binate (a systems language with
+reference-counted managed/raw pointers, explicit interfaces + `impl`,
+monomorphized generics, errors-as-values, and a dual compiled+interpreted
+execution model). This spec covers the core language **and the tier-0
+intrinsic packages** (Ch.20); the standard library (tier 1) is a separate,
+dependent sibling spec.
+
+- **Structure, conventions, and authoring plan:** `explorations/plan-language-spec.md`.
+- **Shared apparatus:** [`conventions.md`](conventions.md) (requirement
+  vocabulary, status legend, per-construct rubric, rule-ID scheme,
+  terminology, grammar notation, spec-tests).
+- **Canonical grammar:** [`binate.ebnf`](binate.ebnf) (Annex A is generated
+  from it).
+
+> **This is a Phase-0 scaffold.** Every chapter below is a stub carrying its
+> status badge, rule-ID prefix, and source map; none is authored yet.
+
+## Status legend
+
+Two orthogonal axes (see [`conventions.md`](conventions.md)):
+**language-design stability** (Stable / Provisional / Draft / Reserved) and
+**implementation-conformance** (does the current toolchain conform? — sourced
+from `claude-todo.md` and, going forward, spec-test results). Status is
+orthogonal to normative/informative.
+
+## Reading order (the dependency DAG)
+
+Bottom-up: each chapter leans only on earlier ones. The two load-bearing
+cross-cutting chapters (Memory model, Execution/dual-mode) come late, after
+every term they need is defined.
+
+| # | Chapter | Kind | Maturity | Rule-ID |
+|---|---------|------|----------|---------|
+| 1 | [Scope and Introduction](01-scope-introduction.md) | informative | n/a (framing) |  |
+| 2 | [Conformance](02-conformance.md) | normative | Draft (skeleton) | `conf` |
+| 3 | [Terms and Definitions](03-terms-and-definitions.md) | normative | Draft (seed in Phase 0) | `term` |
+| 4 | [Notation](04-notation.md) | normative | Draft (apparatus — author first) | `notation` |
+| 5 | [Lexical Elements](05-lexical-elements.md) | normative | mostly Stable | `lex` |
+| 6 | [Constants](06-constants.md) | normative | Stable | `const` |
+| 7 | [Types](07-types.md) | mixed | mostly Stable (caveats) | `type` |
+| 8 | [Conversions](08-conversions.md) | normative | Stable | `conv` |
+| 9 | [Declarations and Scope](09-declarations-and-scope.md) | normative | Stable | `decl` |
+| 10 | [Functions, Methods, and Function Values](10-functions-methods-function-values.md) | mixed | Stable surface; function VALUES Provisional | `func` |
+| 11 | [Interfaces, impl, and Self](11-interfaces-impl-self.md) | mixed | Stable design; known dispatch defects | `iface` |
+| 12 | [Generics and Enumerations](12-generics-and-enumerations.md) | normative | Stable (v1 scope) | `gen` |
+| 13 | [Expressions](13-expressions.md) | normative | Stable (comparability gaps) | `expr` |
+| 14 | [Statements](14-statements.md) | normative | Stable | `stmt` |
+| 15 | [Built-in Operations](15-builtin-operations.md) | normative | mostly Stable | `builtin` |
+| 16 | [Packages and Program Structure](16-packages-and-program-structure.md) | mixed | Stable core | `pkg` |
+| 17 | [Program Initialization and Execution](17-program-initialization-and-execution.md) | normative | Stable | `prog` |
+| 18 | [Memory Model: Reference Counting and Object Lifetime](18-memory-model-reference-counting.md) | mixed | Stable axioms; sentinel Draft | `mem` |
+| 19 | [Execution Model: the Abstract Machine and Dual-Mode Interop](19-execution-model-dual-mode.md) | mixed | Contract Stable; in-process embedding a goal | `exec` |
+| 20 | [Intrinsic (Tier-0) Packages](20-intrinsic-tier0-packages.md) | mixed | lang Stable; rt/reflect/testing Draft/Provisional | `pkg0` |
+| 21 | [Implementation-defined, Unspecified, and Undefined Behavior](21-implementation-defined-and-undefined-behavior.md) | normative | Contracts Stable | `behavior` |
+| A | [Grammar Summary](annex-a-grammar-summary.md) | normative | Blocked on reconciliation | `grammar` |
+| B | [Implementation Model and Implementation-defined Index](annex-b-implementation-model-and-idb-index.md) | mixed | Split Stable | `impl` |
+| C | [Stability Status Table](annex-c-stability-status-table.md) | informative | Derived — finalize last | `status` |
+| D | [Rationale and Design Notes](annex-d-rationale-and-design-notes.md) | informative | n/a | `rationale` |
+
+## Prerequisites (before dependent chapters/annex finalize)
+
+1. **Grammar reconciliation + move into the spec** (Phase 0) — produces the
+   canonical `binate.ebnf`; gates Annex A.
+2. **`pkg/rt` review** — classify each member stay / move-to-stdlib /
+   make-internal; gates §20.2.
