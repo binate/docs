@@ -43,7 +43,8 @@ every term they need is defined.
 | 7.13 | [Type Layout & Representation](07b-type-layout.md) | normative | Stable (ABI contract) | `type.layout` |
 | 8 | [Conversions](08-conversions.md) | normative | Stable | `conv` |
 | 9 | [Declarations and Scope](09-declarations-and-scope.md) | normative | Stable | `decl` |
-| 10 | [Functions, Methods, and Function Values](10-functions-methods-function-values.md) | mixed | Stable surface; function VALUES Provisional | `func` |
+| 10 | [Functions, Methods, and Function Values](10-functions-methods-function-values.md) | mixed | Stable (functions/methods) | `func` |
+| 10.8 | [Function Values, Closures, Method Values](10b-function-values.md) | mixed | Provisional | `func` |
 | 11 | [Interfaces, impl, and Self](11-interfaces-impl-self.md) | mixed | Stable design; known dispatch defects | `iface` |
 | 12 | [Generics and Enumerations](12-generics-and-enumerations.md) | normative | Stable (v1 scope) | `gen` |
 | 13 | [Expressions](13-expressions.md) | normative | Stable (comparability gaps) | `expr` |
