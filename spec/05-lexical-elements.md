@@ -129,10 +129,12 @@ Two further reserved builtin spellings exist for low-level operations:
 `lex.predeclared.are-idents` — The predeclared type and value names — `int`,
 `uint`, the sized integer types (`int8`/`int16`/`int32`/`int64`,
 `uint8`/`uint16`/`uint32`/`uint64`), `bool`, `byte`, `char`, `any`, `float32`,
-`float64`, and `iota` — are **not** keywords. Lexically they are ordinary
-identifiers; their predeclared meaning comes from the universe scope (Ch.3,
-Ch.9) and they may be shadowed by a user declaration. This chapter therefore
-does not treat them as a lexical category.
+`float64`, `true`, `false`, and `nil` — are **not** keywords. Lexically they are
+ordinary identifiers; their predeclared meaning comes from the universe scope
+(Ch.3, Ch.9) and they may be shadowed by a user declaration. The name `iota` is
+likewise an ordinary identifier lexically, but it is *not* a universe binding —
+it has a special meaning only inside a grouped `const` block (§9.1). This
+chapter therefore does not treat any of these as a lexical category.
 
 ## 5.7 Integer literals
 
