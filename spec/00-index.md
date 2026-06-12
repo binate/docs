@@ -40,6 +40,7 @@ every term they need is defined.
 | 5 | [Lexical Elements](05-lexical-elements.md) | normative | mostly Stable | `lex` |
 | 6 | [Constants](06-constants.md) | normative | Stable | `const` |
 | 7 | [Types](07-types.md) | mixed | mostly Stable (caveats) | `type` |
+| 7.13 | [Type Layout & Representation](07b-type-layout.md) | normative | Stable (ABI contract) | `type.layout` |
 | 8 | [Conversions](08-conversions.md) | normative | Stable | `conv` |
 | 9 | [Declarations and Scope](09-declarations-and-scope.md) | normative | Stable | `decl` |
 | 10 | [Functions, Methods, and Function Values](10-functions-methods-function-values.md) | mixed | Stable surface; function VALUES Provisional | `func` |

@@ -1,0 +1,200 @@
+# 7.13 Type Layout and Representation
+
+> **Status:** normative · **Maturity:** Stable (the cross-mode ABI contract)  
+> **Rule-ID prefix:** `type.layout`  
+> Part of Ch.7 ([Types](07-types.md)).
+
+This section defines the in-memory **layout** of every type: sizes, alignment,
+field offsets, and the exact word layout of slices, the managed-allocation
+header, interface values, and function values. Layout is the **cross-mode ABI
+contract**: compiled and interpreted execution share one heap and call each
+other through function pointers, so they **shall** use byte-identical layout
+(§7.13 `type.layout.keystone`). It is defined once, parameterized by the target
+(`type.layout.target-info`), and used by every compiler backend, the
+interpreter, and the runtime.
+
+## Latitude
+
+Each layout fact is classified (§3.1):
+
+- **target-invariant** — fixed on every target: the composite **word counts**
+  and **field orders** below, the struct padding/alignment **algorithm**, the
+  rule that a managed-slice's first two words equal a raw slice, and the
+  >16-byte by-value parameter cutoff.
+- **target-parameterized** — a function of `TargetInfo`: every absolute byte
+  size, offset, and alignment (all derive from `PointerSize`/`IntSize`/`MaxAlign`).
+- **implementation-defined / target-defined** — **byte order (endianness)**
+  (`type.layout.byte-order`).
+- **backend-private** — concrete type-representation spellings (e.g. LLVM
+  `i8*`/`%Struct`), instruction selection, register allocation, calling-convention
+  register choices, and binary/debug formats (Annex B).
+
+## 7.13.1 The target description
+
+`type.layout.target-info` — Layout is parameterized by a target description:
+
+```
+TargetInfo {
+    PointerSize int    // bytes per pointer: 4 (32-bit) or 8 (64-bit)
+    IntSize     int    // bytes per `int`/`uint`; equals PointerSize
+    MaxAlign    int    // caps scalar alignment; typically == PointerSize
+}
+```
+
+`SizeOf`, `AlignOf`, `FieldOffset`, and the struct-layout computation are
+defined once over this description (in `pkg/types`) and are the single
+authoritative layout used by every backend, the bytecode interpreter, and the
+runtime. Below, `W` denotes `PointerSize` (the word size; `IntSize == W`).
+
+## 7.13.2 Scalars
+
+`type.layout.scalar` — Scalar sizes (bytes): `bool` = 1; `int`/`uint` = `W`
+(target word size); `int8`/`uint8`/`char`/`byte` = 1, `int16`/`uint16` = 2,
+`int32`/`uint32` = 4, `int64`/`uint64` = 8; `float32` = 4, `float64` = 8. A
+scalar's natural alignment equals its size, **clamped to `MaxAlign`**. Thus on a
+32-bit target with `MaxAlign` = 4, `int64` and `float64` are 8 bytes but align to
+4. (`int`/`uint` align to `W`.)
+
+## 7.13.3 Structs
+
+`type.layout.struct` — A struct's fields are laid out in declaration order. Each
+field is placed at the lowest offset, at or above the running offset, that meets
+the field's alignment (inserting padding before it as needed). The struct's
+alignment is the maximum field alignment (minimum 1). The struct's size is the
+offset past the last field, rounded up to the struct's alignment (trailing
+padding). An empty struct (no fields) has size 0. The field **order** and this
+**algorithm** are target-invariant; the resulting byte offsets and sizes are
+target-parameterized.
+
+## 7.13.4 Arrays
+
+`type.layout.array` — An array `[N]T` occupies exactly `N × SizeOf(T)` contiguous
+bytes at stride `SizeOf(T)` (no inter-element padding); its alignment is `T`'s
+alignment. A zero-length array has size 0. Contiguity and the stride
+(`= SizeOf(elem)`) are target-invariant.
+
+## 7.13.5 Raw slices
+
+`type.layout.slice-raw` — A raw slice `*[]T` is **always 2 words**:
+
+| Offset | Word | Field |
+|--------|------|-------|
+| `0` | 0 | `data` — raw pointer to the first element of the view |
+| `W` | 1 | `len` — element count (target `int`) |
+
+Size `2W`, alignment `W`. The `nil`/empty raw slice is `{null, 0}`.
+
+## 7.13.6 Managed-slices
+
+`type.layout.slice-managed` — A managed-slice `@[]T` is **always 4 words**:
+
+| Offset | Word | Field |
+|--------|------|-------|
+| `0` | 0 | `data` — raw pointer to the **view** start |
+| `W` | 1 | `len` — element count of the view (target `int`) |
+| `2W` | 2 | `backing` — managed pointer to the backing allocation **start** (reference-counted; may differ from `data` after sub-slicing) |
+| `3W` | 3 | `backingLen` — total backing element count (for destructor iteration) |
+
+Size `4W`, alignment `W`. The **first two words are byte-identical** to a raw
+slice — which is what makes the `@[]T` → `*[]T` decay (§7.6) a field extraction.
+A length-0 managed-slice has no backing: `{null, 0, null, 0}` (§7.7).
+
+## 7.13.7 The managed-allocation header
+
+`type.layout.header` — Every managed allocation is prefixed by a **2-word header
+at a negative offset** from the payload pointer:
+
+| Offset | Field |
+|--------|-------|
+| `-2W` | `refcount` — the reference count |
+| `-W` | `free_fn` — the deallocation function (allocator-chosen) |
+
+Header size `2W` (16 bytes on a 64-bit target, 8 on a 32-bit target). There is
+**no destructor pointer** in the header: a value's destructor is statically
+known per type and is supplied at each `RefDec` site, not stored with the object
+(interface/closure drop information lives in the relevant vtable; Ch.18).
+`free_fn` is the deallocation step, distinct from the destructor (`term.destructor`).
+
+`type.layout.immortal` — Static (immortal) managed data carries a reserved
+**sentinel** reference count (a deeply negative value); `RefInc`/`RefDec`
+short-circuit on a negative count, so immortal data is never freed (Ch.18). This
+lets static data be referred to through managed pointers without ever being
+destroyed.
+
+## 7.13.8 Interface values
+
+`type.layout.iface-value` — An interface value (raw `*Iface` or managed `@Iface`)
+is **always 2 words**:
+
+| Offset | Word | Field |
+|--------|------|-------|
+| `0` | 0 | `data` — the held value / managed pointer (the managed form reference-counts it) |
+| `W` | 1 | `vtable` — the dispatch table |
+
+Size `2W`, alignment `W`. The vtable's slot 0 is the destructor handle (the
+"dtor-first" convention); later slots are methods (Ch.11, Annex B).
+
+## 7.13.9 Function values
+
+`type.layout.func-value` — A function value (raw `*func` or managed `@func`) is
+**always 2 words**, but in the **opposite field order** to an interface value:
+
+| Offset | Word | Field |
+|--------|------|-------|
+| `0` | 0 | `vtable` — `{dtor, call}` (slot 0 destructor, null for a non-capturing value; slot 1 the callable shim) |
+| `W` | 1 | `data` — capture/context pointer (the managed form reference-counts it; `null` for a non-capturing value) |
+
+Size `2W`, alignment `W`. This `{vtable, data}` order is the **reverse** of the
+interface value's `{data, vtable}` — a deliberate ABI asymmetry that every mode
+must observe.
+
+> _Note (ABI hardening — implementation)._ This field order, and the interface
+> value's, are currently encoded as fixed indices in the IR-gen and backends
+> rather than as named offset helpers in the shared layout layer (unlike the
+> slice and header offsets). Compiled and interpreted modes agree by convention;
+> hardening the orders into shared helpers is a tracked follow-up
+> (`type.layout.funcval-order-hardening`, `claude-todo.md`). The orders stated
+> here are the normative contract regardless.
+
+## 7.13.10 Transparent wrappers
+
+`type.layout.transparent` — `readonly T`, an alias of `T`, and a named-distinct
+type over `T` are **layout-identical** to `T`: same size, alignment, and field
+offsets. `SizeOf`/`AlignOf`/`FieldOffset` peel them. They introduce no
+representation change (§7.3, §7.11).
+
+## 7.13.11 Aggregate parameter passing
+
+`type.layout.byval-cutoff` — An aggregate value (struct, array, slice,
+managed-slice, function value, or interface value) passed as a parameter is
+passed **by value when its size is ≤ 16 bytes** and **by indirect reference when
+its size exceeds 16 bytes** (measured with the target-aware `SizeOf`, after
+peeling transparent wrappers). The 16-byte threshold is target-invariant (it
+matches the common 64-bit calling conventions); the measured size is
+target-parameterized. This is a single layout fact that IR-gen and every backend
+must agree on.
+
+## 7.13.12 Byte order
+
+`type.layout.byte-order` — The byte order (endianness) of multi-byte scalars is
+**target-defined** and is currently *unconstrained* by the layout layer
+(`TargetInfo` carries no endianness field). It is observable through `bit_cast`
+and the representation-introspection built-ins (Ch.15).
+
+> _Open._ Whether to pin byte order as implementation-defined and add an
+> endianness field to `TargetInfo` (so layout-dependent constant emission is
+> well-defined) is an open item (tracked in `claude-todo.md`).
+
+## 7.13.13 The cross-mode agreement requirement
+
+`type.layout.keystone` — *(normative; the master ABI invariant)* A conforming
+implementation's compiled and interpreted modes **shall** use byte-identical
+layout for every type on a given target — every word count, field order, size,
+offset, alignment, the header layout, and the by-value cutoff above. Because
+compiled and interpreted code share one heap and pass values across the mode
+boundary without marshalling (Ch.19), any divergence silently corrupts data.
+High-level slice and array operations lower to primitive load/offset sequences
+that **encode** this layout (data pointer = word 0, length = word 1, element
+stride = `SizeOf(elem)`), so a backend cannot independently choose a different
+representation. This requirement is the reason layout is a language-level
+contract rather than a backend decision (§2.4, Annex B).
