@@ -42,9 +42,8 @@ TargetInfo {
 ```
 
 `SizeOf`, `AlignOf`, `FieldOffset`, and the struct-layout computation are
-defined once over this description (in `pkg/types`) and are the single
-authoritative layout used by every backend, the bytecode interpreter, and the
-runtime. Below, `W` denotes `PointerSize` (the word size; `IntSize == W`).
+defined once over this description (the single authoritative layout used by every
+backend, the bytecode interpreter, and the runtime). Below, `W` denotes `PointerSize` (the word size; `IntSize == W`).
 
 ## 7.13.2 Scalars
 
@@ -113,7 +112,8 @@ Header size `2W` (16 bytes on a 64-bit target, 8 on a 32-bit target). There is
 **no destructor pointer** in the header: a value's destructor is statically
 known per type and is supplied at each `RefDec` site, not stored with the object
 (interface/closure drop information lives in the relevant vtable; Ch.18).
-`free_fn` is the deallocation step, distinct from the destructor (`term.destructor`).
+`free_fn` is the deallocation step, distinct from the destructor (the per-type
+destructor logic; Ch.18).
 
 `type.layout.immortal` — Static (immortal) managed data carries a reserved
 **sentinel** reference count (a deeply negative value); `RefInc`/`RefDec`
@@ -160,8 +160,10 @@ must observe.
 
 `type.layout.transparent` — `readonly T`, an alias of `T`, and a named-distinct
 type over `T` are **layout-identical** to `T`: same size, alignment, and field
-offsets. `SizeOf`/`AlignOf`/`FieldOffset` peel them. They introduce no
-representation change (§7.3, §7.11).
+offsets. `SizeOf` and `AlignOf` peel all three wrappers; `FieldOffset` peels only
+aliases, so a caller passing a `readonly`- or named-wrapped struct type must strip
+it to the concrete struct first. They introduce no representation change (§7.3,
+§7.11).
 
 ## 7.13.11 Aggregate parameter passing
 
@@ -197,4 +199,4 @@ High-level slice and array operations lower to primitive load/offset sequences
 that **encode** this layout (data pointer = word 0, length = word 1, element
 stride = `SizeOf(elem)`), so a backend cannot independently choose a different
 representation. This requirement is the reason layout is a language-level
-contract rather than a backend decision (§2.4, Annex B).
+contract rather than a backend decision (Ch.2, Annex B).

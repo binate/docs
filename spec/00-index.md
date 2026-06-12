@@ -14,8 +14,11 @@ dependent sibling spec.
 - **Canonical grammar:** [`binate.ebnf`](binate.ebnf) (Annex A is generated
   from it).
 
-> **This is a Phase-0 scaffold.** Every chapter below is a stub carrying its
-> status badge, rule-ID prefix, and source map; none is authored yet.
+> **Authoring status.** Chapters 3–13 (and the shared apparatus —
+> [`conventions.md`](conventions.md) and this index) are **authored**. Chapters
+> 1–2 and 14–21, plus annexes A–D, remain Phase-0 stubs carrying their status
+> badge, rule-ID prefix, and source map. Per-chapter maturity is in the table
+> below; each chapter's own header badge governs where it could differ.
 
 ## Status legend
 
@@ -35,8 +38,8 @@ every term they need is defined.
 |---|---------|------|----------|---------|
 | 1 | [Scope and Introduction](01-scope-introduction.md) | informative | n/a (framing) |  |
 | 2 | [Conformance](02-conformance.md) | normative | Draft (skeleton) | `conf` |
-| 3 | [Terms and Definitions](03-terms-and-definitions.md) | normative | Draft (seed in Phase 0) | `term` |
-| 4 | [Notation](04-notation.md) | normative | Draft (apparatus — author first) | `notation` |
+| 3 | [Terms and Definitions](03-terms-and-definitions.md) | normative | mostly Stable (grows with the spec) | `term` |
+| 4 | [Notation](04-notation.md) | normative | Stable (apparatus) | `notation` |
 | 5 | [Lexical Elements](05-lexical-elements.md) | normative | mostly Stable | `lex` |
 | 6 | [Constants](06-constants.md) | normative | Stable | `const` |
 | 7 | [Types](07-types.md) | mixed | mostly Stable (caveats) | `type` |
@@ -45,8 +48,8 @@ every term they need is defined.
 | 9 | [Declarations and Scope](09-declarations-and-scope.md) | normative | Stable | `decl` |
 | 10 | [Functions, Methods, and Function Values](10-functions-methods-function-values.md) | mixed | Stable (functions/methods) | `func` |
 | 10.8 | [Function Values, Closures, Method Values](10b-function-values.md) | mixed | Provisional | `func` |
-| 11 | [Interfaces, impl, and Self](11-interfaces-impl-self.md) | mixed | Stable (CRITICAL dispatch defects resolved) | `iface` |
-| 12 | [Generics and Enumerations](12-generics-and-enumerations.md) | normative | Stable (v1 scope) | `gen` |
+| 11 | [Interfaces, impl, and Self](11-interfaces-impl-self.md) | mixed | language rules Stable; conformance mixed (CRITICAL dispatch defects resolved; alias-receiver §11.3, arm32 §11.11) | `iface` |
+| 12 | [Generics and Enumerations](12-generics-and-enumerations.md) | mixed | language rules Stable (v1 scope); two v1-restrictions unenforced | `gen` |
 | 13 | [Expressions](13-expressions.md) | normative | Stable (composite-literal defects flagged) | `expr` |
 | 14 | [Statements](14-statements.md) | normative | Stable | `stmt` |
 | 15 | [Built-in Operations](15-builtin-operations.md) | normative | mostly Stable | `builtin` |

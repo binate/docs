@@ -21,8 +21,12 @@ strict integer/floating rule (§6.5); string and character literal typing
 `const.untyped` — An **integer**, **floating-point**, **string**, or
 **boolean** literal is *untyped*: it has no inherent type and takes a type from
 its context (§6.2, §6.5, §6.6), defaulting as in §6.2. A literal is assignable
-to any type whose value space includes the literal's value. A **character**
-literal, by contrast, is *typed* as `char` (§6.6).
+to any type that can represent it: an **integer** literal to any integer type
+whose range includes its value (the fit *is* enforced — §6.4, §6.7), a
+**floating-point** literal to any floating-point type (no magnitude or precision
+fit-check is performed at assignment), a **string** literal to its char-slice
+and char-array targets (§6.6), and a **boolean** literal to `bool`. A
+**character** literal, by contrast, is *typed* as `char` (§6.6).
 
 > _Example._ `123` may be used as an `int`, `uint`, `int32`, `byte`, …; `3.14`
 > as a `float32` or `float64`; `"abc"` as any of the string-literal targets in
@@ -124,8 +128,8 @@ explicit conversion is a type error. Conversions are written with `cast` (e.g.
 ## 6.6 String and character literals
 
 `const.string.types` — A string literal is an untyped constant whose **natural
-type** is `[N]readonly char` — exactly the `N` bytes written, with no implicit
-NUL terminator (§5.9) — and whose **default type** is `@[]readonly char` (a
+type** is `[N]readonly char` — exactly the `N` bytes the literal denotes after
+escape decoding (§5.11), with no implicit NUL terminator (§5.9) — and whose **default type** is `@[]readonly char` (a
 managed-slice view of the static data). Its assignable targets are:
 
 | Target | Effect |

@@ -1,6 +1,6 @@
 # 11. Interfaces, impl, and Self
 
-> **Status:** mixed · **Maturity:** Stable (the CRITICAL dispatch defects are resolved; minor gaps below)  
+> **Status:** mixed · **Maturity:** language rules Stable; implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3) and the 32-bit-ARM platform gap (§11.11) remain)  
 > **Rule-ID prefix:** `iface`
 
 Binate interfaces are **nominal**: a type satisfies an interface only through an
@@ -78,7 +78,9 @@ method call (§10.5).
 > peel: peeling the alias so the impl type-checks currently produces a **runtime
 > SIGSEGV** at dispatch (the vtable/closure lowering does not peel the alias), so
 > rejecting is the safe behavior until that is fixed (`iface.impl.alias-receiver`,
-> `claude-todo.md`).
+> `claude-todo.md`). A parallel hold applies to **method values** on an alias
+> receiver (Ch.10); the two are the same underlying alias-peeling gap, not an
+> `impl`-only case.
 
 ## 11.4 Constructing an interface value
 
@@ -198,8 +200,11 @@ integers, `bool`, `float32`, `float64`); no other package may. It provides the
 | `Hashable : Comparable` | `Hash() uint` |
 
 Each of the 13 primitive scalar types implements `Stringer`, `Orderable`, and
-`Hashable` (and `Comparable` transitively). The exact signatures are normative in
-§20.1; this section names them and the carve-out.
+`Hashable` (and `Comparable` transitively). The table above is the normative
+statement of these signatures until §20.1 is authored — §20.1 (`pkg/builtins/lang`)
+will become the normative home for the canonical-interface signatures, with this
+section naming them and the carve-out. (Verified against
+`ifaces/core/pkg/builtins/lang.bni`.)
 
 `iface.canonical.auto-available` — Calling a canonical **method** on a primitive
 (`x.String()`, `x.Compare(y)`) requires **no import** — the compiler force-loads
@@ -208,8 +213,8 @@ interface **type** (`*lang.Stringer`) still requires importing the package.
 
 > _Open items (§20.1)._ The canonical floating-point `Compare` does not implement
 > IEEE total order (NaN compares equal to itself), and `float` `Hash` uses raw
-> bits (so distinct NaN bit patterns hash inconsistently with `Compare`-equality);
-> and the auto-import is not yet wired into the REPL. Tracked for §20.1.
+> bits (so distinct NaN bit patterns hash inconsistently with `Compare`-equality).
+> Tracked for §20.1.
 
 ## 11.11 Dynamic dispatch
 
@@ -225,9 +230,15 @@ observable result is normative; the vtable layout is informative (Annex B).
 > _Implementation-conformance note._ The interface dispatch machinery — including
 > **multi-return interface methods** (the idiomatic `(T, @Error)`), transitively
 > re-exported interfaces, and sub-word multi-return — was the subject of several
-> CRITICAL defects that are now **resolved on every dev-host-runnable mode** (LLVM,
-> the bytecode VM, and the native aarch64/x64 backends). The one residual is the
-> 32-bit **ARM** backend, where multi-return / sub-word interface dispatch is not
-> yet verified to conform (a separate 32-bit ABI issue, not runnable on the dev
-> host; `claude-todo.md`). The language rules above are Stable; this is a
-> platform-conformance gap, recorded in Annex C.
+> CRITICAL defects that are now **resolved**: the machinery is mode-agnostic and
+> verified XPASS on the dev-host-runnable conformance modes (LLVM, the bytecode VM,
+> and the native aarch64/x64 backends). Two residuals remain. (1) The 32-bit
+> **ARM** backend has not yet been verified to conform for multi-return / sub-word
+> interface dispatch (a separate 32-bit ABI issue, not runnable on the dev host;
+> `conformance/matrix/abi/iface-multi-return/*/*.xfail.builder-comp_arm32_*`). (2)
+> The transitive-re-export test is additionally blocked on the `builder-comp-int-int`
+> mode by an **unrelated** multi-package double-interpretation crash — not an
+> interface-dispatch defect (`conformance/665_transitive_iface_reexport.xfail.builder-comp-int-int`).
+> The language rules above are Stable; these are platform/mode-conformance gaps
+> (tracked in `claude-todo.md`; to be recorded in Annex C once that ledger is
+> authored).

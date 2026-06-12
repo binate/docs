@@ -10,7 +10,8 @@ the grammar metalanguage (§4.1), the per-construct presentation rubric
 (§4.5), and the notation used for dynamic semantics (§4.6).
 
 This chapter is the normative source for these conventions; the
-[`conventions.md`](conventions.md) cheat-sheet is an informative digest of it.
+[`conventions.md`](conventions.md) cheat-sheet is an informative digest of this
+chapter and of Ch.3 (Terms and Definitions).
 
 ## 4.1 Grammar metalanguage
 
@@ -35,13 +36,14 @@ Nonterminals are written as identifiers (e.g. `IntegerLit`); terminals are
 either double-quoted literals or named character classes defined in prose.
 A note such as `(* any character except '"' *)` defines a terminal class.
 
-`notation.grammar.source` — The complete grammar is given in **Annex A**, which
-is generated from the single canonical source `binate.ebnf`. The productions
-relevant to a construct are also inlined at the head of that construct's
-section (the **Grammar** part of the rubric, §4.2). Where an inlined
-production and Annex A could disagree, Annex A governs; where the grammar and
-this document's prose could disagree, **the prose governs** until the grammar
-reconciliation pass (see Annex A) completes.
+`notation.grammar.source` — The complete grammar is to be given in **Annex A**,
+generated from the single canonical source `binate.ebnf` once the Phase-0
+reconciliation completes; **until then `binate.ebnf` is a placeholder** and the
+inlined productions are authoritative. The productions relevant to a construct are
+inlined at the head of that construct's section (the **Grammar** part of the
+rubric, §4.2). Where an inlined production and Annex A could disagree, Annex A
+governs; where the grammar and this document's prose could disagree, **the prose
+governs** until the grammar reconciliation pass (see Annex A) completes.
 
 > _Note._ The retired grammar annotations `[BOOTSTRAP]` and `[DEFERRED]`
 > tracked a now-removed Go-interpreter subset; they are **not** part of this
@@ -53,8 +55,9 @@ reconciliation pass (see Annex A) completes.
 omitted when it is empty (e.g. a construct with no static constraints has no
 **Constraints** part).
 
-1. **Grammar** _(normative)_ — the relevant EBNF productions, inlined from
-   `binate.ebnf`.
+1. **Grammar** _(normative)_ — the relevant EBNF productions, inlined (from the
+   canonical `binate.ebnf` once authored; currently hand-written against the
+   implementation per `notation.grammar.source`).
 2. **Constraints** _(normative)_ — the statically diagnosable rules a
    conforming implementation must enforce, i.e. the conditions under which a
    program is rejected. These correspond to compiler diagnostics, to the
@@ -95,8 +98,11 @@ requirement equivalent to **shall**.
 
 `notation.status.axes` — Status is tracked on two axes that are **orthogonal**
 to the normative/informative distinction (a Draft rule is still
-normative-in-intent). Every chapter and section carries a status badge; a rule
-may override its section's badge.
+normative-in-intent). Every chapter and section carries a badge with two fields:
+a **Status:** field (the normative/informative kind) and a **Maturity:** field
+(the Axis-1 stability value below: Stable / Provisional / Draft / Reserved). A
+rule may override its section's Maturity. (Axis 2, implementation-conformance, is
+recorded in Annex C — not in the per-chapter badge.)
 
 **Axis 1 — language-design stability:**
 
@@ -118,9 +124,22 @@ recorded in **Annex C** with cross-references.
 
 `notation.ruleid` — Every normative statement carries a stable **rule
 identifier** of the form `<prefix>.<area>.<name>` (for example
-`type.slice.layout`, `mem.ownership.transfer`, `iface.dispatch.multireturn`).
-Each chapter owns a prefix (the table is in [`conventions.md`](conventions.md);
-e.g. Ch.5 = `lex`, Ch.7 = `type`, Ch.18 = `mem`).
+`type.layout.slice-managed`, `mem.ownership.transfer`,
+`iface.dispatch.multireturn`). Each chapter owns a single prefix (this table is
+the normative home; the [`conventions.md`](conventions.md) cheat-sheet digests
+it):
+
+| Ch | Prefix | Ch | Prefix | Ch | Prefix |
+|----|--------|----|--------|----|--------|
+| 2 Conformance | `conf` | 9 Declarations | `decl` | 16 Packages | `pkg` |
+| 3 Terms | `term` | 10 Functions | `func` | 17 Program | `prog` |
+| 4 Notation | `notation` | 11 Interfaces | `iface` | 18 Memory model | `mem` |
+| 5 Lexical | `lex` | 12 Generics | `gen` | 19 Execution | `exec` |
+| 6 Constants | `const` | 13 Expressions | `expr` | 20 Tier-0 pkgs | `pkg0` |
+| 7 Types | `type` | 14 Statements | `stmt` | 21 Behavior | `behavior` |
+| 8 Conversions | `conv` | 15 Builtins | `builtin` | Annex A/B | `grammar`/`impl` |
+
+The §7.13 layout rules form the `type.layout` sub-area under Ch.7's `type` prefix.
 
 `notation.ruleid.stability` — Rule identifiers are **stable**: they are the
 target for cross-references and for **spec-conformance-test citations**, and

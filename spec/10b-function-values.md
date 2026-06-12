@@ -95,8 +95,9 @@ auto-promote to `@func` — a closure that must outlive its frame shall be typed
 `func.closure.escape-lint` — Escape of a stack-bound capturing `*func` is a
 **lint warning** (`func-value-escape`), not a hard type error: `*func` is an
 opt-in escape hatch whose lifetime is the programmer's responsibility, and the
-warning steers toward `@func`. Detection is best-effort (it covers `return` and
-file-scope initializers, not every escape path). Separately, an `@func` literal
+warning steers toward `@func`. Detection is best-effort (it covers `return`,
+file-scope initializers, and assignment through a pointer-/managed-rooted
+destination, not every escape path). Separately, an `@func` literal
 that captures a **raw pointer** is flagged `managed-func-raw-capture` (the
 `@func` can outlive the raw pointer's source).
 

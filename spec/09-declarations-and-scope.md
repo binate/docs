@@ -9,14 +9,14 @@ variable (§9.2), and short-variable (§9.3) declarations, the `readonly`
 modifier on a declaration (§9.4), lexical scope and shadowing (§9.5), the scope
 levels and what may be declared at package scope (§9.6), statement scope and
 temporary lifetime (§9.7), and declaration and initialization order (§9.8).
-Type declarations are covered in §7.3; functions, methods, and `impl` in
-Ch.10–Ch.11; imports and package structure in Ch.16.
+Type declarations are covered in §7.3–§7.4 and §7.12; functions, methods, and
+`impl` in Ch.10–Ch.11; imports and package structure in Ch.16.
 
 ## 9.1 Constant declarations
 
 `decl.const` — A `const` declaration binds a name to a **compile-time constant
 value**. A constant has **no storage** and **no address** (`&` of a constant is
-an error; §7.8), and its value is computed at compile time (Ch.6).
+an error; §7.11), and its value is computed at compile time (Ch.6).
 
 ```
 ConstDecl = "const" ConstSpec
@@ -116,24 +116,30 @@ from the declaration to the end of the innermost enclosing block.
 
 `decl.scope.shadow` — A declaration in an inner block may **shadow** a name from
 an enclosing scope (including a predeclared universe name); within the inner
-block the inner name is the one in scope. Shadowing is permitted and is not
-diagnosed.
+block the inner name is the one in scope. Shadowing is permitted and is **not
+currently diagnosed**.
+
+> _Open (notes vs. implementation)._ The design intent is that shadowing is
+> permitted but the compiler emits a **suppressible warning by default**
+> (`claude-notes.md`, scoping). The current toolchain does not yet diagnose
+> shadowing; this rule describes the implemented behavior.
 
 ## 9.6 Scope levels and package-scope declarations
 
 `decl.scope.levels` — There are these scope levels, innermost last:
 
-- **universe** — the predeclared **type** names (the scalar types; Ch.5),
-  which may be shadowed by an inner declaration. (The constant keywords
-  `true`/`false`/`nil` and the builtin-operation keywords such as `make`/`len`
-  are reserved, not shadowable; and `iota` is recognized only inside a grouped
-  const block, not a universe binding; §9.1.)
+- **universe** — the predeclared scalar **type** names (Ch.5), the predeclared
+  interface `any` (Ch.7), and the predeclared functions `print`, `println`, and
+  `panic` — all of which may be shadowed by an inner declaration. (The constant
+  keywords `true`/`false`/`nil` and the builtin-operation keywords such as
+  `make`/`len` are reserved, not shadowable; and `iota` is recognized only inside
+  a grouped const block, not a universe binding; §9.1.)
 - **package** — the names declared at the top level of a package, visible
   throughout the package (and, if in the `.bni`, exported; Ch.16).
 - **block** — names declared inside a function body or a nested block (§9.5).
 
 `decl.scope.package-decls` — At **package scope** the permitted declarations are:
-type declarations (§7.3), function and method declarations and `impl`
+type declarations (§7.3–§7.4, §7.12), function and method declarations and `impl`
 declarations (Ch.10–Ch.11), interface declarations (Ch.11), `const` and `var`
 declarations (§9.1–§9.2), and (at file scope) `import` declarations (Ch.16).
 

@@ -150,7 +150,9 @@ is evaluated only if `a` is `true`; in `a || b`, `b` is evaluated only if `a` is
 on a `bool`), `~` (bitwise complement, §13.5), `*` (pointer dereference, §7.8),
 and `&` (address-of). There is **no unary `+`**. `&x` yields a **raw** pointer
 `*T` to `x`'s storage (always raw, even for a managed value; §7.8); `&` of a
-constant is an error (a constant has no storage; §9.1).
+**named** constant is an error (a constant has no storage; §9.1). _Open:_ the
+checker enforces this only for named constants — taking the address of a literal
+(`&5`) is not currently diagnosed (`expr.unary.addr-literal`, `claude-todo.md`).
 
 `expr.member` — Member access uses `.` only — there is **no `->`**. A selector
 `x.name` auto-dereferences **one** pointer level (raw or managed) to reach a
@@ -194,8 +196,9 @@ managed-slice (a new backing, reference count 1; managed elements are retained).
 A raw-slice literal is permitted only with **const elements**, `*[]readonly T{…}`
 (a read-only view of static data or a scope-bound stack backing); a non-const
 `*[]T{…}` is rejected (use `*[]readonly T{…}` or `@[]T{…}`). A string literal has
-natural type `[N]readonly char` and decays to a matching char array or slice
-(Ch.6).
+natural type `[N]readonly char` and **default type** `@[]readonly char` (a
+managed-slice view); it is also assignable to the other char array/slice targets —
+`@[]char`, `*[]readonly char`, `[N]char`, and `[N]readonly char` (§6.6, §8.1).
 
 > _Open / known defects (composite literals)._ Three array-literal features in
 > the design are not correctly implemented and are flagged here pending fixes:
@@ -209,11 +212,19 @@ natural type `[N]readonly char` and decays to a matching char array or slice
 > - **Inferred-length** `[...]T{…}` is **not implemented** (rejected as a
 >   non-constant array length), though the design includes it
 >   (`expr.composite.array.inferred-len`, `claude-todo.md`).
+> - **Struct positional elements are not checked** — a positional struct-literal
+>   value is not verified against its field's type, and a struct literal with more
+>   positional values than the struct has fields is silently accepted (surplus
+>   values discarded — benign, unlike the array over-count above). So
+>   `expr.composite.struct`'s "each value must be assignable to its field" is not
+>   enforced for positional elements (`expr.composite.struct.positional-unchecked`,
+>   MINOR, `claude-todo.md`).
 
 ## 13.11 Grammar disambiguation
 
 `expr.disambiguation` — The grammar resolves several ambiguities (the full set,
-**D1–D11**, is in Annex A). The expression-relevant ones:
+**D1–D11**, is consolidated in Annex A once authored; until then the per-construct
+prose here and the design notes govern). The expression-relevant ones:
 
 - **D1** — a simple statement is parsed as an expression list, then reinterpreted
   by the trailing token (`:=`, `=`, a compound assignment, `++`/`--`, or none →

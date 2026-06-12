@@ -103,7 +103,10 @@ reverse (raw → managed) is never implicit — it would invent a reference (§7
   sign-extends a signed source and zero-extends an unsigned source. (`cast(uint, x)`
   of a negative `int` `x` yields its two's-complement value.)
 - **Integer ↔ floating-point** and **floating-point ↔ floating-point:**
-  converted by value.
+  converted by value. For **floating-point → integer**, a *finite, in-range*
+  value converts by truncation toward zero; the **out-of-range / non-finite**
+  edge (a magnitude outside the target integer type's range, `±Inf`, or `NaN`)
+  is not yet well-defined — see the second Open note below.
 - `cast` **drops `readonly`** (it yields exactly `T`); it is the sanctioned way
   to drop element-level `readonly` (§8.3) and may combine that with a width or
   pointer-target change in one step.
@@ -121,6 +124,19 @@ defined value conversions above is therefore the programmer's responsibility
 > *assignment* of a constant, which **is** enforced — `var x uint8 = 256` is an
 > error; Ch.6.) Whether `cast` should fit-check constant arguments is an open
 > item (`conv.cast.literal-fit`, `claude-todo.md`).
+
+> _Open (notes vs. implementation)._ **Float → integer at the out-of-range /
+> non-finite edge is currently platform-dependent** (`conv.cast.float-int-saturation`).
+> The ratified contract (2026-06-12) is **saturate to the target integer width's
+> `[MIN, MAX]`, with `NaN` → `0`** — a single value defined identically across all
+> targets, refining Go (which leaves the result implementation-specific but
+> panic-free). The current implementation does **not** yet realize it: the LLVM
+> backend emits a bare `fptosi`/`fptoui` (`codegen/emit_ops.bn`), so an
+> out-of-range or `NaN` source is poison on that path, and the native back-ends
+> inherit their ISA's behavior (arm64 `FCVTZS` saturates; x86-64 `CVTTSD2SI`
+> yields `INT64_MIN`). Until the saturation lowering lands, this edge is a hole in
+> the no-undefined-behavior promise (§19); it is tracked as a MAJOR item
+> (`claude-todo.md`) and will be catalogued in Ch.21 once pinned.
 
 ## 8.6 `bit_cast` — bit reinterpretation
 

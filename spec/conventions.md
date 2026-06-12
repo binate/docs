@@ -18,8 +18,10 @@ rationale lives only in Annex D and Note blocks — never in normative prose.
 
 Each feature section is presented in this fixed order:
 
-1. **Grammar** — the relevant EBNF productions (inlined; normative), drawn
-   from the canonical `binate.ebnf`.
+1. **Grammar** — the relevant EBNF productions (inlined; normative). Until the
+   Phase-0 grammar reconciliation produces the canonical `binate.ebnf`, the
+   inlined productions are authoritative and `binate.ebnf` is a placeholder
+   (§4.1 `notation.grammar.source`).
 2. **Constraints** — diagnosable static rules (what a conforming
    implementation must reject). Maps onto Binate's "compiler checks upfront /
    interpreter defers" split, and onto the conformance harness's negative
@@ -51,7 +53,8 @@ Separate from language stability. A known miscompile does **not** make a
 language rule unstable — it makes the _implementation_ non-conformant. This
 axis is sourced from `claude-todo.md` (CRITICAL + MAJOR) and, going forward,
 from **spec conformance test** results (pass / xfail per mode). It lives in
-Annex C (status table) and Annex B (implementation model).
+**Annex C** (the status table); the implementation model and
+implementation-defined-behavior index are **Annex B**.
 
 The retired grammar annotations `[BOOTSTRAP]` / `[DEFERRED]` are **not** a
 stability axis (they tracked a retired Go-interpreter subset) and are stripped
@@ -60,8 +63,9 @@ from the normative grammar.
 ## Rule-ID scheme
 
 Every normative section/statement carries a **stable rule-ID**:
-`<prefix>.<area>.<name>` (e.g. `mem.ownership.transfer`, `type.slice.layout`,
-`exec.dualmode.thunk`, `iface.dispatch.multireturn`). Per-chapter prefixes:
+`<prefix>.<area>.<name>` (e.g. `mem.ownership.transfer`, `type.layout.slice-managed`,
+`exec.dualmode.thunk`, `iface.dispatch.multireturn`). Per-chapter prefixes
+(normative home: §4.5 `notation.ruleid`):
 
 | Ch | Prefix | Ch | Prefix | Ch | Prefix |
 |----|--------|----|--------|----|--------|
@@ -96,9 +100,10 @@ across edits.
 Keep the ISO/IEC-14977-flavored EBNF already in use: `=` definition, `|`
 alternation, `{}` repetition, `[]` optional, `()` grouping, `…` inclusive
 character range, `;` terminator, `(* *)` comments, double-quoted literal
-terminals, juxtaposition = concatenation. The canonical grammar is
-`binate.ebnf`; Annex A and the inlined per-section productions are generated
-from it.
+terminals, juxtaposition = concatenation. The canonical grammar will be
+`binate.ebnf`; Annex A and the inlined per-section productions are to be
+generated from it once the Phase-0 reconciliation completes. Until then
+`binate.ebnf` is a placeholder and the inlined productions are authoritative.
 
 ## Spec conformance tests
 

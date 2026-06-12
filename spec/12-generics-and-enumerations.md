@@ -1,6 +1,6 @@
 # 12. Generics and Enumerations
 
-> **Status:** normative · **Maturity:** Stable (v1 scope)  
+> **Status:** mixed · **Maturity:** language rules Stable (v1 scope); two v1-restrictions unenforced — see the §12.1 and §12.4 gaps  
 > **Rule-ID prefix:** `gen`
 
 This chapter covers **generics** — type-parameterized functions, structs, and
@@ -15,7 +15,7 @@ deliberate scope choices, relaxable later, not instability.
 
 ```
 TypeParams    = "[" TypeParamDecl { "," TypeParamDecl } "]" ;
-TypeParamDecl = identifier ConstraintName ;
+TypeParamDecl = identifier Type ;   (* the Type is checker-restricted — see gen.constraint *)
 ```
 
 `gen.constraint` — A type parameter's **constraint** is a **single named
@@ -23,7 +23,11 @@ interface** or the bare universal `any` (§11.5). There is **no `+` operator** t
 combine constraints: to require that a type argument satisfy several interfaces,
 declare a combined interface that **extends** them (§11.6) and use it as the
 constraint. A `[T any]` parameter is **unconstrained** — it may be used to store
-and move `T` values, but no method may be called on a `T` (there are none).
+and move `T` values, but no method may be called on a `T` (there are none). The
+surface grammar accepts any `Type` in the constraint position; the restriction to
+`any` or a named interface is enforced by the **type-checker**, which rejects any
+other form with a diagnostic (`ConstraintName` is not a distinct grammar
+production).
 
 `gen.no-generic-methods` _(Constraint)_ — Type parameters may be declared on
 **free functions**, not on **methods**: there are no generic methods on types
@@ -44,8 +48,12 @@ the type arguments are always written at the instantiation site (`sort[int](xs)`
 `gen.instantiate.disambiguation` — The form `name[…]` is disambiguated between a
 type-argument list and an index expression by what `name` resolves to: if it
 resolves to a generic declaration, `[…]` is a type-argument list; if it resolves
-to an indexable value (a slice or array), `[…]` is an index (§13). This is resolved
-during type-checking (disambiguation rule, Annex A).
+to an indexable value (a slice or array), `[…]` is an index (§13). This ambiguity
+arises **only in expression position**, where the parser emits a combined node and
+the type-checker resolves it; in **type-syntax** position (e.g. `var v Vec[int]`)
+`Name[…]` is unconditionally a type-argument list — there is no value indexing in
+type syntax. The full set of disambiguation rules (D1–D11) is consolidated in
+Annex A once authored.
 
 ## 12.3 Monomorphization and constraint dispatch
 
@@ -104,7 +112,7 @@ model.
 
 ## 12.6 Enumerations
 
-`enum.no-first-class` — Binate has **no first-class enum type**. An enumeration
+`gen.enum.no-first-class` — Binate has **no first-class enum type**. An enumeration
 is expressed as a **named integer type** together with a grouped `const` block
 using `iota` (§9.1):
 
@@ -123,7 +131,7 @@ type and its underlying integer (or another integer type) requires an explicit
 `cast` (it is a distinct type; §7.3). There is **no exhaustiveness checking** on
 such a type.
 
-`enum.bitflags` — A bit-flag set uses `1 << iota`:
+`gen.enum.bitflags` — A bit-flag set uses `1 << iota`:
 
 ```
 type Flags uint32
@@ -136,4 +144,4 @@ const (
 ```
 
 > _Note._ Discriminated (tagged) unions are a separate, future feature; they are
-> not provided by this idiom (Annex D).
+> not provided by this idiom (see Annex D once authored).

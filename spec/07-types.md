@@ -17,8 +17,8 @@ specified separately in **[§7.13 Type Layout & Representation](07b-type-layout.
 sense: assignment, parameter passing, and return copy the value, which lives
 inline (on the stack or embedded in a containing aggregate). The value types
 are: `bool`, the integer and floating-point scalars (§7.2), raw pointers `*T`,
-managed pointers `@T`, structs, arrays `[N]T`, raw and managed slices, function
-values, and interface values. A **managed pointer `@T` is itself a value type**
+managed pointers `@T`, structs, arrays `[N]T`, raw slices and managed-slices,
+function values, and interface values. A **managed pointer `@T` is itself a value type**
 — copying it is a value copy that additionally adjusts the pointee's reference
 count.
 
@@ -287,8 +287,9 @@ The `.` operator auto-dereferences a pointer of either kind (there is no `->`).
 `type.ptr.managed-to-raw` — `@T` → `*T` is an **implicit** conversion (a managed
 pointer decays to a raw pointer to the same pointee — a borrow that owns no
 reference). The reverse `*T` → `@T` is never implicit (it would invent a
-reference). The same managed→raw decay applies to slices (`@[]T` → `*[]T`; §7.6)
-and function values (`@func` → `*func`; §7.9).
+reference). The same managed→raw decay applies to slices (`@[]T` → `*[]T`; §7.6),
+function values (`@func` → `*func`; §7.9), and interface values
+(`@Iface` → `*Iface`, same interface; §7.10).
 
 `type.ptr.opaque-byte` — `*uint8` is the **opaque byte pointer**, the analog of
 C's `void*`; there is no separate void/opaque pointer type. Reinterpret between

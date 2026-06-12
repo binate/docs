@@ -65,6 +65,12 @@ The full model is Ch.18.
 lifetime is governed by reference counting. It carries a **management header**
 (`term.header`) holding its reference count.
 
+`term.header` — the **management header** of a managed allocation is a two-word
+block `{refcount, free_fn}` stored immediately before the object (at a negative
+offset); it has no destructor pointer (`free_fn` is the deallocation step, not a
+per-instance destructor). Its concrete layout is normative in §7.13
+(`type.layout.header`); the full lifetime rules are Ch.18.
+
 `term.refcount` — the **reference count** (refcount) of a managed allocation is
 the number of live references that own a count on it. After `make(T)` the
 refcount is 1; while any owning reference is live the refcount is positive;
@@ -141,9 +147,12 @@ conversion (§7.3).
 
 `term.assignability` — **assignability** governs when a value of one type may be
 used where another is expected without an explicit conversion. For named types
-the rule is Go's: a value crosses the boundary without a `cast` iff the two
-types have identical underlying types **and** at least one side is *unnamed*
-(§8). 
+the rule is Go's: a value crosses the boundary without a `cast` iff **exactly one
+side is a named-distinct type** whose underlying is an **unnamed composite**
+(slice, managed-slice, pointer, managed-pointer, array, or struct) and that
+underlying is assignable to the other side; a scalar underlying (e.g. `Celsius`
+over `float64`) always requires a `cast` (§7.3 `type.named.assignability`, §8.1
+`conv.named`).
 
 `term.equivalence` — type identity is **nominal** for named types (two named
 types are distinct even with identical structure) and **structural** for
@@ -195,9 +204,11 @@ value; the concrete vtable layout is informative (Annex B).
 denotes the implementing type (Ch.11).
 
 `term.function-value` — a **function value** is a callable value: `*func(...)`
-(raw) or `@func(...)` (managed), a two-word value whose layout is given in
-Ch.10. A **closure** (`term.closure`) is a function value that captures
-variables from its environment (by value; Ch.10).
+(raw) or `@func(...)` (managed), a two-word value `{vtable, data}` whose layout
+is given in §7.13 (`type.layout.func-value`) — note the field order is the
+*reverse* of an interface value's `{data, vtable}`. A **closure**
+(`term.closure`) is a function value that captures variables from its
+environment (by value; Ch.10).
 
 `term.generic` — a **generic** declaration is parameterized by one or more
 **type parameters** (`term.type-parameter`), each bound by a single interface

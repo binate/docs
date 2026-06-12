@@ -12,8 +12,8 @@ the lexical error model (§5.14).
 
 > _Note._ Most rules in this chapter were established directly against the
 > lexer implementation; several long-standing design notes and the reference
-> grammar are stale relative to it (e.g. the `readonly` keyword and four
-> builtin keywords are missing from the grammar). Where this chapter and the
+> grammar are stale relative to it (e.g. the `readonly` and `Self` keywords and
+> four builtin keywords are missing from the grammar). Where this chapter and the
 > grammar differ, this chapter governs until the grammar reconciliation
 > completes (see Annex A, `notation.grammar.source`).
 
