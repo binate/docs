@@ -126,15 +126,16 @@ Two further reserved builtin spellings exist for low-level operations:
 
 ## 5.6 Predeclared names are not keywords
 
-`lex.predeclared.are-idents` — The predeclared type and value names — `int`,
-`uint`, the sized integer types (`int8`/`int16`/`int32`/`int64`,
+`lex.predeclared.are-idents` — The predeclared type names — `int`, `uint`, the
+sized integer types (`int8`/`int16`/`int32`/`int64`,
 `uint8`/`uint16`/`uint32`/`uint64`), `bool`, `byte`, `char`, `any`, `float32`,
-`float64`, `true`, `false`, and `nil` — are **not** keywords. Lexically they are
-ordinary identifiers; their predeclared meaning comes from the universe scope
-(Ch.3, Ch.9) and they may be shadowed by a user declaration. The name `iota` is
-likewise an ordinary identifier lexically, but it is *not* a universe binding —
-it has a special meaning only inside a grouped `const` block (§9.1). This
-chapter therefore does not treat any of these as a lexical category.
+`float64` — are **not** keywords. Lexically they are ordinary identifiers; their
+predeclared meaning comes from the universe scope (Ch.3, Ch.9) and they may be
+shadowed by a user declaration. By contrast `true`, `false`, and `nil` are
+reserved **keywords** (§5.4) that denote constant values and cannot be used as
+identifiers; and `iota`, though lexically an ordinary identifier, is *not* a
+universe binding — it has a special meaning only inside a grouped `const` block
+(§9.1). This chapter does not treat any of these as a lexical category.
 
 ## 5.7 Integer literals
 
@@ -230,8 +231,10 @@ quotes; escape sequences are not interpreted at this stage (§5.11).
 exactly one byte (one source byte or one escape sequence). An empty character
 literal (`''`) or one denoting more than one byte is ill-formed.
 
-> _Note._ This single-byte constraint is enforced after lexing, not by the
-> scanner; see §5.14.
+> _Note._ This constraint is **not enforced** by the current implementation: an
+> empty `''` is silently decoded to the byte `0x00` and a multi-byte literal is
+> silently truncated to its first byte/escape, with no diagnostic. It is listed
+> among the undiagnosed lexical conditions in §5.14.
 
 ## 5.11 Escape sequences
 
@@ -318,5 +321,6 @@ item** (and a candidate spec conformance test once decided):
 
 - `lex.comment.unterminated` — an unterminated block comment (§5.2).
 - `lex.literal.string.unterminated` — an unterminated string literal (§5.9).
-- the single-byte character-literal constraint `lex.literal.char.one` (§5.10),
-  which is currently checked after lexing rather than reported uniformly.
+- the single-byte character-literal constraint `lex.literal.char.one` (§5.10) —
+  an empty `''` or a multi-byte `'ab'` is currently accepted and silently
+  mis-decoded (to `0x00`, or to the first byte) rather than diagnosed.

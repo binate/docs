@@ -21,7 +21,8 @@ an error; §7.8), and its value is computed at compile time (Ch.6).
 ```
 ConstDecl = "const" ConstSpec
           | "const" "(" { ConstSpec ";" } ")" ;   (* grouped — enables iota *)
-ConstSpec = identifier [ Type ] "=" Expression ;
+ConstSpec = identifier [ Type ] "=" Expression
+          | identifier ;   (* bare member: repeats the previous spec's type+expr, iota incremented *)
 ```
 
 `decl.const.scalar-only` _(Constraint)_ — A constant's type shall be a **scalar**:
@@ -43,8 +44,10 @@ variable has an address: `&x` yields `*T` (or `*readonly T` for a `readonly`
 variable; §9.4).
 
 ```
-VarDecl = "var" identifier Type [ "=" Expression ]
-        | "var" identifier "=" Expression ;
+VarDecl  = "var" VarSpec
+         | "var" "(" { VarSpec ";" } ")" ;   (* grouped *)
+VarSpec  = identifier Type [ "=" Expression ]
+         | identifier "=" Expression ;
 ```
 
 `decl.var.zero-init` — A variable declared without an initializer is
@@ -70,7 +73,7 @@ are likewise an error.
 types inferred from the right-hand side:
 
 ```
-ShortVarDecl = ExpressionList ":=" ExpressionList ;
+ShortVarDecl = IdentifierList ":=" ExpressionList ;
 ```
 
 The left-hand side is a list of identifiers. A multi-valued right-hand side
@@ -120,10 +123,11 @@ diagnosed.
 
 `decl.scope.levels` — There are these scope levels, innermost last:
 
-- **universe** — the predeclared names: the scalar types, the constants
-  `true`/`false`/`nil`, and the builtin-operation names (Ch.5). Predeclared
-  names may be shadowed by an inner declaration. (`iota` is *not* a universe
-  binding — it is recognized only inside a grouped const block; §9.1.)
+- **universe** — the predeclared **type** names (the scalar types; Ch.5),
+  which may be shadowed by an inner declaration. (The constant keywords
+  `true`/`false`/`nil` and the builtin-operation keywords such as `make`/`len`
+  are reserved, not shadowable; and `iota` is recognized only inside a grouped
+  const block, not a universe binding; §9.1.)
 - **package** — the names declared at the top level of a package, visible
   throughout the package (and, if in the `.bni`, exported; Ch.16).
 - **block** — names declared inside a function body or a nested block (§9.5).

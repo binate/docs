@@ -125,9 +125,8 @@ explicit conversion is a type error. Conversions are written with `cast` (e.g.
 
 `const.string.types` — A string literal is an untyped constant whose **natural
 type** is `[N]readonly char` — exactly the `N` bytes written, with no implicit
-NUL terminator (§5.9) — and whose **default type** is `@[]readonly char` (the
-D1 resolution; a managed-slice view of the static data). Its assignable targets
-are:
+NUL terminator (§5.9) — and whose **default type** is `@[]readonly char` (a
+managed-slice view of the static data). Its assignable targets are:
 
 | Target | Effect |
 |--------|--------|

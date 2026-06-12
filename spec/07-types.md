@@ -236,8 +236,9 @@ backing; an empty (`lo == hi`) sub-slice is the no-backing empty (§7.7).
 capability: adding it is allowed, dropping it requires a `cast` (§7.11). String
 literals have natural type `[N]readonly char` and default type `@[]readonly char`
 (Ch.6); their permitted targets are `@[]readonly char`, `@[]char` (allocate +
-copy), and `*[]readonly char`, but **not** `*[]char` (a mutable raw view of
-read-only static data is unsound).
+copy), `*[]readonly char`, and a matching-length char array `[N]readonly char`
+or `[N]char` (array copy) — but **not** `*[]char` (a mutable raw view of
+read-only static data is unsound). See §6.6 for the authoritative target table.
 
 `type.slice.no-nil-no-compare` — A slice is **not nillable** and **not
 comparable**: it cannot be assigned from `nil`, and `==`/`!=` on slices (even

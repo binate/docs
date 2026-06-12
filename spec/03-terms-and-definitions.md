@@ -37,7 +37,8 @@ implementation's compiled and interpreted modes shall agree on a given target
 the standard permits to vary between conforming implementations, where each
 implementation **shall document** its choice, and (where both modes exist) its
 compiled and interpreted modes shall agree on a given target. Example
-candidates: byte order, the text of a runtime-panic message.
+candidate: the text of a runtime-panic message. (Whether **byte order** is
+implementation-defined or simply target-defined is an open decision; §7.13.12.)
 
 `term.unspecified` — **unspecified behavior** is behavior the standard permits
 to vary, within stated bounds, and does **not** require an implementation to
@@ -166,9 +167,11 @@ non-owning view `{data, len}` that borrows its backing (§7). A managed-slice
 owns; a raw slice borrows.
 
 `term.predeclared-name` — a **predeclared name** is an identifier with a
-meaning in the universe scope (for example `int`, `bool`, `char`, `true`,
-`iota`). Predeclared *names* are ordinary identifiers lexically (they are not
-keywords; §5.6) and may be shadowed.
+meaning in the universe scope (for example `int`, `bool`, `char`, `byte`).
+Predeclared names are ordinary identifiers lexically (they are not keywords;
+§5.6) and may be shadowed. (`true`, `false`, and `nil` denote constant values
+but are reserved *keywords*, not predeclared names; `iota` is meaningful only
+inside a grouped `const` block and is not a universe binding — §9.1.)
 
 ## 3.4 Interface, dispatch, and generic terms
 
