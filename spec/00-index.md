@@ -47,7 +47,7 @@ every term they need is defined.
 | 10.8 | [Function Values, Closures, Method Values](10b-function-values.md) | mixed | Provisional | `func` |
 | 11 | [Interfaces, impl, and Self](11-interfaces-impl-self.md) | mixed | Stable (CRITICAL dispatch defects resolved) | `iface` |
 | 12 | [Generics and Enumerations](12-generics-and-enumerations.md) | normative | Stable (v1 scope) | `gen` |
-| 13 | [Expressions](13-expressions.md) | normative | Stable (comparability gaps) | `expr` |
+| 13 | [Expressions](13-expressions.md) | normative | Stable (composite-literal defects flagged) | `expr` |
 | 14 | [Statements](14-statements.md) | normative | Stable | `stmt` |
 | 15 | [Built-in Operations](15-builtin-operations.md) | normative | mostly Stable | `builtin` |
 | 16 | [Packages and Program Structure](16-packages-and-program-structure.md) | mixed | Stable core | `pkg` |
