@@ -11,7 +11,7 @@
 - §20.1 pkg/builtins/lang — canonical interfaces (Compare/String/Hash) + primitive impls. Fairly mature -> mostly Stable. (Normative home for the canonical-interface signatures, referenced by §11.10.)
 - §20.2 pkg/builtins/rt — the runtime contract (minimal primitives; hosted vs freestanding). Draft — GATED on the pkg/rt review; the manifest is actively shrinking.
 - §20.3 pkg/builtins/reflect — reflection/introspection surface. Draft/incomplete.
-- §20.4 pkg/builtins/testing — testing-support surface (the *_test.bn name reservation is §16.9). Provisional.
+- §20.4 pkg/builtins/testing — testing-support surface (the *_test.bn name reservation is §16.1, `pkg.files.test`). Provisional.
 
 ## Rules
 
