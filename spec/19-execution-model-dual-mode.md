@@ -40,15 +40,17 @@ realized**, never in what the program means.
 - **Interpreted** — the program is executed by a **bytecode virtual machine**: the
   shared IR is lowered to a flat bytecode and run by a dispatch loop.
 
-Both modes **validate the whole program before execution** (§17.1) and run the
+Both modes **validate the whole program before a non-interactive run** (§17.1; an
+interactive interpreter may defer per input) and run the
 same initialization-then-`main` entry sequence (§17.3). Each mode that an
 implementation provides independently produces the program's defined behavior.
 
 `exec.vm.runtime-floor` — Even under the interpreter, the **runtime and
-foreign-function floor is native**: the runtime package (`pkg/builtins/rt`,
-§20.2) — reference counting, allocation, process exit — and any function reached
-through the C boundary (`__c_call`, §16.9) execute as native code, reached from
-the bytecode through the same function-value mechanism as any other call (§19.4).
+foreign-function floor is native**: the runtime package (`pkg/builtins/rt`, whose
+manifest is the subject of §20.2 — e.g. reference counting, allocation, process
+exit) and any function reached through the C boundary (`__c_call`, §16.9, which
+includes the host I/O primitives) execute as native code, reached from the
+bytecode through the same function-value mechanism as any other call (§19.4).
 The interpreter interprets everything **above** that floor.
 
 ## 19.3 The dual-mode contract
@@ -66,7 +68,7 @@ identically in both modes.
 
 `exec.contract.layout` — Both modes use the **same heap, the same reference
 counting (§18), and the same memory layout for every type** — structs, arrays,
-raw and managed slices, managed-pointer headers, interface values, and function
+raw slices and managed-slices, managed-pointer headers, interface values, and function
 values — with **no marshalling** at the boundary. Memory layout is therefore a
 **language-level contract** (§7.13), identical across **every** compiler backend
 **and** the interpreter; any layout divergence is **silent data corruption**.
@@ -109,14 +111,15 @@ the cross-function reference-count operations are never elided (§18.7), which i
 what keeps the shared heap consistent across modes.
 
 `exec.interop.self-describing` — Every managed object carries its own management
-information — the allocation header `{refcount, free_fn}` (§18.2) and, for
-interface and function values, an embedded dispatch table (carrying the destructor
-and the method/call slots, §7.13) — so **neither mode needs special knowledge of
-the other's objects**: an
-object frees itself, dispatches its methods, and reports its presence the same way
-regardless of which mode created or holds it. The set of runtime functions a
-generated program may call (the **runtime function manifest**) is the runtime
-contract specified in §20.2.
+information: the allocation header `{refcount, free_fn}` (§18.2) deallocates it,
+and its destructor is reached mode-independently — for an ordinary `@T`/`@[]T`
+through a static, type-determined destructor handle, and for an interface or
+function value through the embedded dispatch table's destructor slot (§7.13). So
+**neither mode needs special knowledge of the other's objects**: an object frees
+itself, dispatches its methods, and reports its presence the same way regardless
+of which mode created or holds it. The set of runtime functions a generated
+program may call (the **runtime function manifest**) is the runtime contract whose
+home is §20.2 (not yet authored).
 
 ## 19.5 Cross-mode divergences
 
@@ -141,10 +144,14 @@ difference are distinguished:
   deliberate, permanent boundary, not a pending feature.
 - **Tracked defects** (to be fixed). Where the two modes currently disagree on
   **defined** behavior, that is a non-conformance to be fixed, not sanctioned
-  latitude. The known cases are tracked in `claude-todo.md`: **`panic(msg)` is a
-  no-op in the bytecode VM** (§15.7, §17.5; it should abort identically in both
-  modes), and bounded realization limits of the interpreter (its cross-mode call
-  dispatch and its reflection accessor for non-built-in packages).
+  latitude. The known cases are tracked in `claude-todo.md`: **`panic(msg)`'s
+  abort is realized inconsistently** — the bytecode VM treats it as a **no-op**
+  (no abort, no message), and the compiled backend **aborts but discards the
+  message**; the intended behavior is to abort *with* the message in both modes
+  (`builtin.panic.vm-noop`, §15.7, §17.5). Plus bounded realization limits of the
+  interpreter — its **reflection accessor** for non-built-in packages, and a cap
+  on the **argument count** of a cross-mode function-value call (the general
+  cross-mode dispatch mechanism itself is in place).
 
 ## 19.6 In-process embedding (a goal)
 

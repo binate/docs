@@ -69,6 +69,7 @@ reference, or one to an **immortal** allocation (`mem.immortal`), is a no-op.
 allocation `o`:
 
 ```
+if rc(o) == 0: abort        # over-release detected before decrement
 rc(o) := rc(o) - 1
 if rc(o) == 0:
     destroy(o)      # run o's destructor (mem.destructor)
@@ -96,7 +97,7 @@ reference is released, not at some later collection point.
 
 `mem.immortal` — **Static-managed** allocations — values emitted into the program
 image rather than heap-allocated, such as string-literal backing (§6.6) and
-package descriptors (§16.6) — carry an **immortal** sentinel count (a negative
+package descriptors (Ch.20) — carry an **immortal** sentinel count (a negative
 refcount). Acquire and release both short-circuit on an immortal count (no
 increment, no decrement, no free), so such a value is never mutated and never
 freed.
@@ -158,10 +159,16 @@ reference to the caller; after the return the caller owns that reference. The
 callee's own locals are released as it unwinds (§18.4). Two consequences worth
 naming:
 
-- Returning a **package global** (or any value that outlives the function) is a
-  **copy**: it acquires a new reference for the caller (the global keeps its own).
-- Returning a **freshly allocated** value transfers its sole reference (a move,
-  §18.6) — no extra acquire.
+- Returning a **package global** (or any value that outlives the function)
+  delivers a *new* reference: the object's count **rises by one** (the global
+  keeps its own; the caller gets another).
+- Returning a **freshly allocated** value delivers its sole reference: the count
+  is **unchanged** by the round trip (the caller's new reference replaces the
+  expiring temporary's). Whether the implementation realizes this as a **move**
+  (transfer with no acquire) or via the slow path (acquire the return value, then
+  release the temporary as it expires) is the optimization choice of §18.6 and is
+  not observable — for the common `@T`/`@[]T` kinds the conforming slow path
+  acquires and balances; only `@func`/`@Iface` fresh returns are currently moved.
 
 `mem.param` — For the duration of a function body, the callee **owns** a reference
 to each managed parameter, which it releases at scope exit (unless the parameter
@@ -198,9 +205,11 @@ part of the language.
 `mem.no-leak` _(Constraint)_ — A conforming implementation **must never** generate
 code that leaks: every managed allocation that is created is eventually released.
 Reference-count operations are **never elided across a function boundary** — the
-acquire on a managed parameter and the acquire on a returned value are emitted
-unconditionally (the slow path), and a value's destructor is reached through a
-type-independent handle — so that a value created in one execution mode and
+reference-count adjustments that balance each managed parameter and returned value
+are emitted at the boundary, not optimized away across it (for `@T`/`@[]T`/`@func`
+this is the callee's entry acquire; for `@Iface` it is the caller-delivered single
+reference of the move model, §18.5) — and a value's destructor is reached through
+a type-independent handle, so that a value created in one execution mode and
 released in another carries its own counting and cleanup correctly (the dual-mode
 interop contract, §19).
 
