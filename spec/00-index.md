@@ -14,9 +14,9 @@ dependent sibling spec.
 - **Canonical grammar:** [`binate.ebnf`](binate.ebnf) (Annex A is generated
   from it).
 
-> **Authoring status.** Chapters 3–14 (and the shared apparatus —
+> **Authoring status.** Chapters 3–15 (and the shared apparatus —
 > [`conventions.md`](conventions.md) and this index) are **authored**. Chapters
-> 1–2 and 15–21, plus annexes A–D, remain Phase-0 stubs carrying their status
+> 1–2 and 16–21, plus annexes A–D, remain Phase-0 stubs carrying their status
 > badge, rule-ID prefix, and source map. Per-chapter maturity is in the table
 > below; each chapter's own header badge governs where it could differ.
 
@@ -53,7 +53,7 @@ every term they need is defined.
 | 13 | [Expressions](13-expressions.md) | normative | Stable (composite-literal defects flagged) | `expr` |
 | 14 | [Statements](14-statements.md) | mixed | language rules Stable; 2 MAJOR impl defects flagged (parallel assignment, inc/dec on non-ident lvalue) | `stmt` |
 | 14.8 | [Control-flow statements](14b-control-flow.md) | mixed | language rules Stable; a few open semantic items | `stmt` |
-| 15 | [Built-in Operations](15-builtin-operations.md) | normative | mostly Stable | `builtin` |
+| 15 | [Built-in Operations](15-builtin-operations.md) | mixed | mostly Stable (opaque-gate + VM-panic gaps flagged; print/println provisional) | `builtin` |
 | 16 | [Packages and Program Structure](16-packages-and-program-structure.md) | mixed | Stable core | `pkg` |
 | 17 | [Program Initialization and Execution](17-program-initialization-and-execution.md) | normative | Stable | `prog` |
 | 18 | [Memory Model: Reference Counting and Object Lifetime](18-memory-model-reference-counting.md) | mixed | Stable axioms; sentinel Draft | `mem` |
