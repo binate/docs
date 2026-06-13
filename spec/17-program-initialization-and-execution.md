@@ -6,10 +6,11 @@
 This chapter specifies how a program is validated, initialized, entered, and
 terminated: the validation model (§17.1), package initialization (§17.2), the
 program entry (§17.3), termination (§17.4), and the closed set of defined
-non-recoverable runtime panics (§17.5). The package **dependency graph** and its
-topological order are computed in Ch.16 (`pkg.acyclic`); §17 specifies how that
-order is *used*. The annotation system that conditions program structure is
-§16.7. The dual-mode execution model is Ch.19.
+non-recoverable runtime panics (§17.5). Ch.16 (`pkg.acyclic`) requires the package
+import graph to be acyclic, which guarantees a well-defined dependency order; §17
+specifies how that order is *used*. The annotation system that conditions program
+structure is §16.7 (in `16b-build-constraints.md`). The dual-mode execution model
+is Ch.19.
 
 ## 17.1 The validation model
 
@@ -118,7 +119,7 @@ terminates. The set is:
 | Integer divide-by-zero | §13.4 | `runtime error: integer divide by zero` |
 | Signed `MIN / -1` overflow | §13.4 | `runtime error: integer overflow (MIN / -1)` |
 | `make_slice` negative length | §15.2 | `runtime error: make_slice with negative length` |
-| Nil-interface-value dispatch | §11.11 | (see below — mode-dependent) |
+| Nil-interface-value dispatch | §11.11 (`iface.dispatch.nil`) | (see below — mode-dependent) |
 | `panic(msg)` | §15.7 | (see below — currently incomplete) |
 
 `prog.panic.defined` — Each panic in the set is a **defined** abort: the

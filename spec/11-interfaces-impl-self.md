@@ -227,6 +227,14 @@ smoothing on this path (it was validated when the `impl` was declared); a
 `readonly` wrapper on the interface value is peeled before dispatch. The
 observable result is normative; the vtable layout is informative (Annex B).
 
+`iface.dispatch.nil` — Dispatching a method through a **nil** interface value (one
+that was never given a concrete value, so its vtable word is null) is a **defined
+non-recoverable abort** — one of the closed set of runtime panics (§17.5). Its
+*observable form* is target-dependent: the bytecode VM detects it and aborts with
+a diagnostic, while a compiled backend faults on the null-vtable dereference (and
+on a target with no memory protection the dereference may not fault at all). Use
+`present` (§15.5) to test an interface value before dispatching through it.
+
 > _Implementation-conformance note._ The interface dispatch machinery — including
 > **multi-return interface methods** (the idiomatic `(T, @Error)`), transitively
 > re-exported interfaces, and sub-word multi-return — was the subject of several

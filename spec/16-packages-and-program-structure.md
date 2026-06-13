@@ -1,6 +1,6 @@
 # 16. Packages and Program Structure
 
-> **Status:** mixed · **Maturity:** Stable core (aliased imports are flagged broken; build constraints §16b are MVP)  
+> **Status:** mixed · **Maturity:** Stable core (build constraints §16b are an arch/os MVP)  
 > **Rule-ID prefix:** `pkg`
 
 A **package** is the unit of compilation and the unit of namespacing. This
@@ -29,7 +29,8 @@ All `.bn` files of a package declare the same package string (§16.2) and are
 **merged** (in sorted filename order) into one logical package. A package needs at
 least **one** of the two surfaces: a `.bni`-only package (no implementation
 directory) and an implementation-only package (no `.bni`) are both valid; only
-the absence of **both** is an error ("package not found").
+the absence of **both** is an error (a message of the form `package "<path>"
+not found`).
 
 `pkg.files.test` — A file whose name ends in `_test.bn` is **excluded** from its
 package unless that package is being built for testing (Ch.20); test files thus
@@ -46,7 +47,8 @@ PackageClause = "package" string_literal ;
 
 Every source file begins with a package clause (after an optional leading
 annotation block, §16.7 — the package-clause annotation slot is the build-constraint
-file gate of §16.8; the reference grammar still lacks this slot). The package name
+file gate of §16.8; the legacy `explorations/grammar.ebnf` still lacks this slot,
+and the canonical `binate.ebnf` is a placeholder). The package name
 is a **string literal** — the
 package's **import path** — not an identifier: `package "pkg/binate/parser"`. The
 string is the same one used to `import` the package; there is no separate short
@@ -70,13 +72,6 @@ singly or in a parenthesized group, and may carry an optional **alias**
 identifier before the path string. An imported member is referenced
 **qualified** as `name.Member`, where `name` is the import path's last segment (or
 the alias, when given).
-
-> _Open (implementation defect)._ **Aliased imports do not work end-to-end.**
-> `import a "pkg/foo"` parses, but a cross-package call through the alias
-> (`a.Fn()`) is name-mangled with the **alias** rather than the package path,
-> producing an undefined symbol at link time. The feature is latent (no in-tree
-> code uses an alias) and the conformance case is expected-fail in every mode
-> (`pkg.import.alias`, `claude-todo.md`). Until fixed, import without an alias.
 
 ## 16.4 The exported surface and visibility
 
@@ -112,7 +107,9 @@ meaning at the boundary:
 - **`var`** — A `.bni` `var X T` (with **no initializer**) is an **extern**
   declaration: the storage lives in the package's `.bn`, which must define `X`
   with an **identical** type (including any `readonly` modifier). (So `var` *can*
-  be extern; `const` cannot.)
+  be extern; `const` cannot.) _Unenforced:_ the current compiler does not diagnose
+  a stray initializer on a `.bni` `var` — it is silently ignored (a conforming
+  implementation should reject it).
 - **`func`** — A non-generic function is **signature-only** in the `.bni` (its
   body lives in the `.bn`). A **generic** function carries its full **source-text
   body** in the `.bni` (§16.5.1).
@@ -160,7 +157,7 @@ path's last segment. Two packages whose paths share a last segment (e.g.
 different-package types is rejected (§7).
 
 `pkg.acyclic` _(Constraint)_ — The package **import graph must be acyclic**. An
-import cycle is a compile error ("import cycle").
+import cycle is a compile error (a message of the form `import cycle: <path>`).
 
 `pkg.package-accessor` — Every package additionally has a compiler-synthesized
 `_Package()` accessor — present in every package without any `.bni` declaration —

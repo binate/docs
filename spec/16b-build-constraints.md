@@ -12,16 +12,17 @@ foreign-function boundary (§16.9).
 `pkg.annotation` —
 
 ```
-Annotation      = "#" "[" AnnotationEntry { "," AnnotationEntry } "]" ;
-AnnotationEntry = AnnotationName [ "(" Expression { "," Expression } ")" ] ;
+Annotation      = "#" "[" [ AnnotationEntry { "," AnnotationEntry } ] "]" ;
+AnnotationEntry = AnnotationName [ "(" [ Expression { "," Expression } ] ")" ] ;
 AnnotationName  = identifier { "." identifier } ;
 ```
 
 An **annotation block** `#[ … ]` attaches metadata to the element it
 **immediately precedes**. In the current implementation an annotation block may
 lead the **package clause**, an **import**, or a **top-level declaration**. A
-block holds one or more comma-separated **entries**; each entry is a (possibly
-dotted) name with an optional parenthesized list of expression arguments.
+block holds comma-separated **entries**; each entry is a (possibly dotted) name
+with an optional parenthesized list of expression arguments. (The parser tolerates
+the degenerate empty forms `#[]` and `name()`; they carry no meaning.)
 
 `pkg.annotation.namespace` — An annotation **name** is a dotted identifier, and
 its first segment determines who must understand it:
@@ -29,7 +30,11 @@ its first segment determines who must understand it:
 - An **unqualified** name (no dot) is language-standard and **must be recognized**
   by the compiler — an unknown unqualified name is a **compile error** (this
   catches typos). The only unqualified annotation currently defined is `build`
-  (§16.8).
+  (§16.8). _Caveat (current impl):_ this typo check fires only where build
+  constraints are evaluated — i.e. when a build configuration is resolved
+  (§16.8). With no build configuration (the REPL, the bytecode tool, unit tests),
+  annotation names are not currently validated, so a typo'd unqualified name is
+  silently kept rather than diagnosed.
 - A **namespaced** name (containing a dot — e.g. `tool.lint`, `compiler.inline`)
   is metadata for another tool and is **ignored** by the compiler.
 
@@ -71,10 +76,12 @@ defined are:
 
 `pkg.build.gate` — The annotation gates at three granularities:
 
-- **File-level** — on the **package clause**, gating the **whole file** before it
-  is parsed (so it can hide target-specific *syntax*).
+- **File-level** — on the **package clause**, dropping the **whole file** from
+  the package. It selects which well-formed files contribute on a given target;
+  every candidate file is still parsed (the gate runs after parsing, so it cannot
+  carry syntax the parser would reject on another target).
 - **Declaration-level** — on a top-level declaration, dropping just that
-  declaration (after parsing — it can hide *semantics*, not syntax).
+  declaration.
 - **Import-level** — on an import, so a dependency is followed only on the
   targets it applies to.
 
@@ -114,14 +121,16 @@ package's I/O and allocation entry points) — by the runtime/host. There is no
 conferred by the body-less `.bni` form.
 
 `pkg.ccall` — Calling a C function is done through the built-in `__c_call` (one
-of the internal built-ins, §15.8): `__c_call("symbol", RetType, args…)` calls the
-C symbol named by the
-string literal — emitted **verbatim**, with **no name mangling** (the only such
-path; every other symbol is mangled from its package path) — with the C signature
-given as explicit Binate types (a `...` marker separates fixed from variadic
-arguments). Each argument must be a C-ABI-passable type (a scalar or pointer;
-pass a pointer for slices, structs, and managed values). `__c_call` is
-**compiled-mode only**; the bytecode VM does not perform FFI.
+of the internal foreign-function primitives, §15.8): `__c_call("symbol", RetType,
+args…)` calls the C symbol named by the string literal — emitted **verbatim**,
+with **no name mangling** (the only such path; every other symbol is mangled from
+its package path) — with the C signature given as explicit Binate types (a `...`
+marker separates fixed from variadic arguments). Each argument, and the **return
+type**, must be a C-ABI-passable type: a **scalar or pointer** (pass a pointer for
+slices, structs, and managed values). **Void and struct returns are not yet
+supported** — a void C function is called by declaring a throwaway scalar return
+and discarding it. `__c_call` is **compiled-mode only**; the bytecode VM does not
+perform FFI.
 
 > _Note._ Binate targets **C-free** systems: C is used only as the practical
 > bridge to existing OS interfaces (system calls, allocation), not as an
