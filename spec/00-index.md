@@ -14,9 +14,9 @@ dependent sibling spec.
 - **Canonical grammar:** [`binate.ebnf`](binate.ebnf) (Annex A is generated
   from it).
 
-> **Authoring status.** Chapters 3–18 (and the shared apparatus —
+> **Authoring status.** Chapters 3–19 (and the shared apparatus —
 > [`conventions.md`](conventions.md) and this index) are **authored**. Chapters
-> 1–2 and 19–21, plus annexes A–D, remain Phase-0 stubs carrying their status
+> 1–2 and 20–21, plus annexes A–D, remain Phase-0 stubs carrying their status
 > badge, rule-ID prefix, and source map. Per-chapter maturity is in the table
 > below; each chapter's own header badge governs where it could differ.
 
