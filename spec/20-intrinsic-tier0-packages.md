@@ -80,8 +80,9 @@ is a **universe primitive** type (`int`, `bool`, the sized integers, the floats,
 …). A method declaration with a universe-primitive receiver in any other package
 **shall** be rejected. (The type-checker gates this with an internal
 `AllowUniverseRecv` flag enabled only for this package.) A user **struct** opts
-into a canonical interface the ordinary way, with an explicit `impl Point :
-Comparable { … }` — there is no auto-derivation.
+into a canonical interface the ordinary way, with an explicit bodyless
+`impl Point : Comparable` (its methods declared separately, §11.3) — there is no
+auto-derivation.
 
 `pkg0.lang.force-load` — A program may call a **primitive's** canonical method
 **without importing** `pkg/builtins/lang`: the compiler **force-loads** the
