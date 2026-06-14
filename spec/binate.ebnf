@@ -409,11 +409,14 @@ PrimaryExpr   = BuiltinCall
 FuncLiteral   = "func" Signature Block ;
 
 (* A composite literal builds a struct/named value, an array, or a slice.  The
-   literal head is a QualifiedName (NOT a generic instantiation — `Foo[T]{…}` is
-   not a composite-literal form).  Element keys are parsed as expressions;
-   semantic analysis resolves a bare-identifier key as a field name or an index
-   (D6). *)
-CompositeLiteral = QualifiedName "{" [ ElementList [ "," ] ] "}"
+   literal head is a TypeName — optionally a generic instantiation, e.g.
+   `List[int]{…}` or `pkg.Pair[int, S]{…}` (D5/D9).  Element keys are parsed as
+   expressions; semantic analysis resolves a bare-identifier key as a field name
+   or an index (D6).
+   (Implementation gap: the parser does not yet build the generic-instantiated
+   head — it consumes `[…]` as instantiation/index and never enters the
+   composite-literal path; `claude-todo.md`, §13.10.) *)
+CompositeLiteral = TypeName "{" [ ElementList [ "," ] ] "}"
               | ArrayLiteral
               | ManagedSliceLiteral ;
 ArrayLiteral  = "[" ArrayLen "]" Type "{" [ ElementList [ "," ] ] "}" ;
@@ -515,7 +518,8 @@ TypeParamDecl = identifier Type ;   (* type-parameter name + interface constrain
 
    D9. PrimaryExpr ordering:
        Built-in keywords are tried first (the lexer distinguishes them from
-       identifiers).  A QualifiedName followed by "{" is a composite literal;
+       identifiers).  A TypeName followed by "{" — a QualifiedName, or a generic
+       instantiation `Ident "[" TypeArgList "]"` — is a composite literal;
        otherwise a bare identifier.
 
    D10. StructField — named field vs embedded:
