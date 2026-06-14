@@ -14,11 +14,11 @@ dependent sibling spec.
 - **Canonical grammar:** [`binate.ebnf`](binate.ebnf) (Annex A is generated
   from it).
 
-> **Authoring status.** Chapters 3–19 (and the shared apparatus —
+> **Authoring status.** Chapters 3–21 (and the shared apparatus —
 > [`conventions.md`](conventions.md) and this index) are **authored**. Chapters
-> 1–2 and 20–21, plus annexes A–D, remain Phase-0 stubs carrying their status
-> badge, rule-ID prefix, and source map. Per-chapter maturity is in the table
-> below; each chapter's own header badge governs where it could differ.
+> 1–2, plus annexes A–D, remain Phase-0 stubs carrying their status badge,
+> rule-ID prefix, and source map. Per-chapter maturity is in the table below;
+> each chapter's own header badge governs where it could differ.
 
 ## Status legend
 
@@ -59,8 +59,8 @@ every term they need is defined.
 | 17 | [Program Initialization and Execution](17-program-initialization-and-execution.md) | mixed | Stable rules; entry/termination host-dependent; panic gaps flagged | `prog` |
 | 18 | [Memory Model: Reference Counting and Object Lifetime](18-memory-model-reference-counting.md) | mixed | Stable axioms (ownership-transfer DECIDED); move is an optimization | `mem` |
 | 19 | [Execution Model: the Abstract Machine and Dual-Mode Interop](19-execution-model-dual-mode.md) | mixed | Contract Stable; in-process embedding a goal | `exec` |
-| 20 | [Intrinsic (Tier-0) Packages](20-intrinsic-tier0-packages.md) | mixed | lang Stable; rt/reflect/testing Draft/Provisional | `pkg0` |
-| 21 | [Implementation-defined, Unspecified, and Undefined Behavior](21-implementation-defined-and-undefined-behavior.md) | normative | Contracts Stable | `behavior` |
+| 20 | [Intrinsic (Tier-0) Packages](20-intrinsic-tier0-packages.md) | mixed | lang Stable (float-NaN Provisional); rt Draft (gated); reflect Draft; testing Provisional | `pkg0` |
+| 21 | [Implementation-defined, Unspecified, and Undefined Behavior](21-implementation-defined-and-undefined-behavior.md) | normative | contracts Stable; byte-order GAP open (§21.4) | `behavior` |
 | A | [Grammar Summary](annex-a-grammar-summary.md) | normative | Blocked on reconciliation | `grammar` |
 | B | [Implementation Model and Implementation-defined Index](annex-b-implementation-model-and-idb-index.md) | mixed | Split Stable | `impl` |
 | C | [Stability Status Table](annex-c-stability-status-table.md) | informative | Derived — finalize last | `status` |

@@ -200,25 +200,22 @@ natural type `[N]readonly char` and **default type** `@[]readonly char` (a
 managed-slice view); it is also assignable to the other char array/slice targets —
 `@[]char`, `*[]readonly char`, `[N]char`, and `[N]readonly char` (§6.6, §8.1).
 
-> _Open / known defects (composite literals)._ Three array-literal features in
-> the design are not correctly implemented and are flagged here pending fixes:
+> _Open / known defects (composite literals)._ Several composite-literal features
+> in the design are not correctly implemented and are flagged here pending fixes:
 > - **Indexed array literals** `[N]T{ i: v }` (e.g. `[5]int{1: 10, 3: 30}`) are
 >   **silently miscompiled** — the index keys are ignored and the values are
 >   stored positionally (`{10, 30, 0, 0, 0}` instead of `{0, 10, 0, 30, 0}`).
 >   (`expr.composite.array.indexed`, MAJOR, `claude-todo.md`.)
-> - **Over-count is not rejected** — an array literal with **more** elements than
->   `N` is accepted, and the surplus elements are stored **out of bounds** of the
->   array's storage. (`expr.composite.array.overcount`, MAJOR, `claude-todo.md`.)
 > - **Inferred-length** `[...]T{…}` is **not implemented** (rejected as a
 >   non-constant array length), though the design includes it
 >   (`expr.composite.array.inferred-len`, `claude-todo.md`).
-> - **Struct positional elements are not checked** — a positional struct-literal
->   value is not verified against its field's type, and a struct literal with more
->   positional values than the struct has fields is silently accepted (surplus
->   values discarded — benign, unlike the array over-count above). So
->   `expr.composite.struct`'s "each value must be assignable to its field" is not
->   enforced for positional elements (`expr.composite.struct.positional-unchecked`,
->   MINOR, `claude-todo.md`).
+> - **Positional struct elements are not assignability-checked** — a positional
+>   struct-literal value is type-checked for well-formedness but **not** verified
+>   to be assignable to its field's type, so `expr.composite.struct`'s "each value
+>   must be assignable to its field" is unenforced for positional elements (it
+>   **is** enforced for keyed elements). (`expr.composite.struct.positional-unchecked`,
+>   MINOR, `claude-todo.md`.) Over-count — more positional values than the struct
+>   has fields — **is** rejected.
 
 ## 13.11 Grammar disambiguation
 

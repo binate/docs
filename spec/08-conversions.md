@@ -105,8 +105,10 @@ reverse (raw → managed) is never implicit — it would invent a reference (§7
 - **Integer ↔ floating-point** and **floating-point ↔ floating-point:**
   converted by value. For **floating-point → integer**, a *finite, in-range*
   value converts by truncation toward zero; the **out-of-range / non-finite**
-  edge (a magnitude outside the target integer type's range, `±Inf`, or `NaN`)
-  is not yet well-defined — see the second Open note below.
+  edge **saturates** — a magnitude above the target type's range (including
+  `+Inf`) yields its `MAX`, below its range (including `-Inf`) yields its `MIN`
+  (`0` for unsigned), and `NaN` yields `0` (`conv.cast.float-int-saturation`
+  below; catalogued in §21.7).
 - `cast` **drops `readonly`** (it yields exactly `T`); it is the sanctioned way
   to drop element-level `readonly` (§8.3) and may combine that with a width or
   pointer-target change in one step.
@@ -125,18 +127,19 @@ defined value conversions above is therefore the programmer's responsibility
 > error; Ch.6.) Whether `cast` should fit-check constant arguments is an open
 > item (`conv.cast.literal-fit`, `claude-todo.md`).
 
-> _Open (notes vs. implementation)._ **Float → integer at the out-of-range /
-> non-finite edge is currently platform-dependent** (`conv.cast.float-int-saturation`).
-> The ratified contract (2026-06-12) is **saturate to the target integer width's
-> `[MIN, MAX]`, with `NaN` → `0`** — a single value defined identically across all
-> targets, refining Go (which leaves the result implementation-specific but
-> panic-free). The current implementation does **not** yet realize it: the LLVM
-> backend emits a bare `fptosi`/`fptoui` (`codegen/emit_ops.bn`), so an
-> out-of-range or `NaN` source is poison on that path, and the native back-ends
-> inherit their ISA's behavior (arm64 `FCVTZS` saturates; x86-64 `CVTTSD2SI`
-> yields `INT64_MIN`). Until the saturation lowering lands, this edge is a hole in
-> the no-undefined-behavior promise (§19); it is tracked as a MAJOR item
-> (`claude-todo.md`) and will be catalogued in Ch.21 once pinned.
+`conv.cast.float-int-saturation` — **Float → integer at the out-of-range /
+non-finite edge saturates** to a single value defined identically across every
+backend and the interpreter. The ratified contract (2026-06-12): a value above
+the target integer type's `[MIN, MAX]` (including `+Inf`) → `MAX`; below it
+(including `-Inf`) → `MIN` (`0` for an unsigned target); `NaN` → `0`; an in-range
+value truncates toward zero. This refines Go (which leaves the result
+implementation-specific but panic-free) by pinning a defined value, closing what
+would otherwise be a hardware-divergence gap (arm64 `FCVTZS` saturates, x86-64
+`CVTTSD2SI` yields `INT64_MIN`, a raw LLVM `fptosi` is poison). The normalization
+is emitted **once** in shared IR-gen, so every backend and the VM inherit it
+without per-backend logic; it is realized and conformant in the current tree
+(`conformance/732_float_int_saturation`). The behavior-catalogue entry is §21.7
+(`behavior.well-defined`).
 
 ## 8.6 `bit_cast` — bit reinterpretation
 
