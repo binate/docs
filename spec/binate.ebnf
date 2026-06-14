@@ -1,9 +1,11 @@
 (* ============================================================ *)
 (* Binate Formal Grammar — canonical EBNF                       *)
 (* ============================================================ *)
-(* This file is the SINGLE SOURCE OF TRUTH for Binate's syntax: Annex A and the
-   per-section inlined productions in the chapters are to be generated from it
-   (specification Decision D4).  It was reconciled from the prior working grammar
+(* This file is the canonical Binate grammar: Annex A and the per-section
+   inlined productions in the chapters are to be generated from it
+   (specification Decision D4).  Until that generation step runs, the inlined
+   per-chapter productions remain the authoritative normative text
+   (conventions.md).  It was reconciled from the prior working grammar
    (explorations/grammar.ebnf) against the parser (pkg/binate/{lexer,token,
    parser}) and the normative inlined chapter productions; where those sources
    disagreed, the parser and the chapters governed.
@@ -54,6 +56,8 @@ identifier    = letter { letter | digit } ;
     Functions: print  println  panic                                     *)
 
 (* --- Integer literals --- *)
+(* A "0"-prefixed run of digits (e.g. 0123) is not a decimal literal; the
+   scanner emits a single error token for it (use "0o…" for octal). *)
 
 decimal_lit   = "1"…"9" { digit } | "0" ;
 hex_lit       = "0" ( "x" | "X" ) hex_digit { hex_digit } ;
@@ -69,13 +73,13 @@ float_literal = digit { digit } "." { digit } [ exponent ]
 exponent      = ( "e" | "E" ) [ "+" | "-" ] digit { digit } ;
 
 (* --- String literals --- *)
-(* Adjacent string literals separated only by whitespace (including newlines)
-   are concatenated at lex time into a single literal: "foo" "bar" is "foobar".
-   There is no hidden null terminator; the stored length is exactly the
-   characters written. *)
+(* A string literal is ONE double-quoted run.  There is no hidden null
+   terminator; the value is exactly the characters written (after escape
+   decoding).  Adjacent string literals are NOT joined by the lexer — that is a
+   parse-time, expression-position operation (see PrimaryExpr; §13), so it does
+   not apply in package/import context. *)
 
-string_literal = string_piece { string_piece } ;
-string_piece   = '"' { string_char | escape_seq } '"' ;
+string_literal = '"' { string_char | escape_seq } '"' ;
 string_char    = (* any character except '"', "\", or newline *) ;
 
 (* --- Char literals --- *)
@@ -83,10 +87,12 @@ string_char    = (* any character except '"', "\", or newline *) ;
 char_literal  = "'" ( char_char | escape_seq ) "'" ;
 char_char     = (* any character except "'", "\", or newline *) ;
 
-(* The lexer accepts "\" followed by any character; the valid escape set is: *)
+(* The valid escape set is shared by string and char literals.  The lexer does
+   not validate escapes — it carries the raw text through and decoding happens
+   later.  There is NO "\u…" Unicode escape and no octal / \a \b \f \v escape
+   (§5). *)
 escape_seq    = "\" ( "n" | "r" | "t" | "\" | "'" | '"' | "0"
-              | "x" hex_digit hex_digit
-              | "u" hex_digit hex_digit hex_digit hex_digit ) ;
+              | "x" hex_digit hex_digit ) ;
 
 (* --- Operators and punctuation --- *)
 (*  +    -    *    /    %    &    |    ^    ~    <<   >>
@@ -123,13 +129,16 @@ ImportDecl    = [ Annotation ] "import" ImportSpec
               | [ Annotation ] "import" "(" { ImportSpec ";" } ")" ;
 ImportSpec    = [ identifier ] string_literal ;          (* optional alias *)
 
-TopLevelDecl  = TypeDecl
+(* An annotation block ("#[ … ]") attaches to the declaration that follows; it
+   is consumed once at the top-level declaration boundary, not within a
+   declaration's own grammar. *)
+TopLevelDecl  = [ Annotation ] ( TypeDecl
               | VarDecl
               | ConstDecl
               | FuncDecl
               | MethodDecl
               | InterfaceDecl
-              | ImplDecl ;
+              | ImplDecl ) ;
 
 
 (* ============================================================ *)
@@ -143,8 +152,8 @@ TopLevelDecl  = TypeDecl
    There is no `type X interface { … }` form — interfaces use the `interface`
    keyword (§4).  Function-local `type` declarations are rejected. *)
 
-TypeDecl      = [ Annotation ] "type" TypeSpec
-              | [ Annotation ] "type" "(" { TypeSpec ";" } ")" ;
+TypeDecl      = "type" TypeSpec
+              | "type" "(" { TypeSpec ";" } ")" ;
 TypeSpec      = identifier [ TypeParams ] TypeDef ;
 TypeDef       = "=" Type            (* alias *)
               | Type                (* distinct type (incl. `struct { … }`) *)
@@ -152,15 +161,15 @@ TypeDef       = "=" Type            (* alias *)
 
 (* --- Variable declarations --- *)
 
-VarDecl       = [ Annotation ] "var" VarSpec
-              | [ Annotation ] "var" "(" { VarSpec ";" } ")" ;
+VarDecl       = "var" VarSpec
+              | "var" "(" { VarSpec ";" } ")" ;
 VarSpec       = identifier Type [ "=" Expression ]
               | identifier "=" Expression ;              (* type inferred *)
 
 (* --- Constant declarations (a grouped block predeclares iota) --- *)
 
-ConstDecl     = [ Annotation ] "const" ConstSpec
-              | [ Annotation ] "const" "(" { ConstSpec ";" } ")" ;
+ConstDecl     = "const" ConstSpec
+              | "const" "(" { ConstSpec ";" } ")" ;
 ConstSpec     = identifier [ Type ] "=" Expression
               | identifier ;        (* repeats the previous spec's type + expr *)
 
@@ -173,8 +182,10 @@ ShortVarDecl  = IdentifierList ":=" ExpressionList ;
 (* 4. Functions, methods, interfaces, impls                     *)
 (* ============================================================ *)
 
-FuncDecl      = [ Annotation ] "func" identifier [ TypeParams ] Signature Block ;
-MethodDecl    = [ Annotation ] "func" Receiver identifier Signature Block ;
+(* In an interface file (.bni), a non-generic function or method declaration may
+   omit its Block — the signature alone is given. *)
+FuncDecl      = "func" identifier [ TypeParams ] Signature Block ;
+MethodDecl    = "func" Receiver identifier Signature Block ;
 
 Receiver      = "(" identifier ReceiverType ")" ;
 (* A receiver type is one of T, *T, *readonly T, @T, @readonly T, and must
@@ -188,8 +199,8 @@ ParameterDecl = identifier Type ;   (* name before type; each name carries its
                                        own type — grouped `a, b int` is rejected.
                                        Read-only parameters are expressed by a
                                        `readonly` type, not a parameter prefix. *)
-Result        = Type                 (* single result — no parentheses *)
-              | "(" TypeList ")" ;   (* multiple results — parenthesized *)
+Result        = Type                 (* single result, unparenthesized *)
+              | "(" TypeList ")" ;   (* parenthesized: one or more results; `(T)` ≡ T *)
 TypeList      = Type { "," Type } ;
 
 Block         = "{" { Statement ";" } "}" ;
@@ -197,15 +208,15 @@ Block         = "{" { Statement ";" } "}" ;
 (* An interface is declared at package scope.  There is no `type X interface`
    form and no anonymous interface type.  A method signature's parameter and
    result types may reference the interface being declared and may use `Self`. *)
-InterfaceDecl = [ Annotation ] "interface" identifier [ TypeParams ]
+InterfaceDecl = "interface" identifier [ TypeParams ]
                   [ ":" InterfaceList ] "{" { MethodSig ";" } "}"
-              | [ Annotation ] "interface" identifier "=" TypeName ;  (* alias *)
+              | "interface" identifier "=" TypeName ;   (* alias *)
 MethodSig     = identifier Signature ;
 InterfaceList = TypeName { "," TypeName } ;
 
 (* An `impl` is a bodyless relational assertion that the receiver type satisfies
    each listed interface; its methods are declared separately (Go-style). *)
-ImplDecl      = [ Annotation ] "impl" ReceiverType ":" InterfaceList ;
+ImplDecl      = "impl" ReceiverType ":" InterfaceList ;
 
 
 (* ============================================================ *)
@@ -218,7 +229,8 @@ ImplDecl      = [ Annotation ] "impl" ReceiverType ":" InterfaceList ;
      "*" T           → raw pointer *T            "@" T           → managed pointer @T
    For the pointer form the following type must not begin with "[" or "func";
    pointer-to-array and pointer-to-slice require parentheses — e.g. *([N]T),
-   @(*[]T). *)
+   @(*[]T).  Leniency: `@[N]T` is accepted as `@([N]T)` though `*[N]T` requires
+   the explicit parens (a known asymmetry, §7.8). *)
 
 Type          = TypeName
               | "Self"
@@ -242,11 +254,12 @@ QualifiedName = identifier [ "." identifier ] ;           (* opt. package qualif
 TypeArgList   = Type { "," Type } ;
 
 ArrayType     = "[" Expression "]" Type ;                 (* fixed-size array *)
-StructType    = [ Annotation ] "struct" StructBody ;
+StructType    = "struct" StructBody ;
 StructBody    = "{" { StructField ";" } "}" ;
 (* A field is `name Type` (named) or just `Type` / `QualifiedName` (an embedded
-   field); see disambiguation D10. *)
-StructField   = [ Annotation ] [ identifier ] Type ;
+   field); see disambiguation D10.  Struct fields are not individually
+   annotated. *)
+StructField   = [ identifier ] Type ;
 
 
 (* ============================================================ *)
@@ -261,14 +274,16 @@ Annotation      = "#" "[" [ AnnotationEntry { "," AnnotationEntry } ] "]" ;
 AnnotationEntry = AnnotationName [ "(" [ ExpressionList ] ")" ] ;
 AnnotationName  = identifier { "." identifier } ;
 
-(* A build-constraint annotation's argument is a boolean expression over target
-   predicates (e.g. is(arch, "arm64")); `is` is a contextual name, not a
-   reserved keyword. *)
-BuildExpr       = "is" "(" identifier "," string_literal ")"
-                | "!" BuildExpr
-                | BuildExpr "&&" BuildExpr
-                | BuildExpr "||" BuildExpr
-                | "(" BuildExpr ")" ;
+(* A build-constraint annotation's argument is syntactically an ordinary
+   Expression (§8); it is RESTRICTED — and validated after parsing — to the
+   shape below, where `is` is an ordinary identifier (not a reserved keyword)
+   and "&&"/"||"/"!" are the ordinary logical operators.  This is a semantic
+   restriction on Expression, not a separate parser production. *)
+(*   build-constraint  ::=  is( <predicate-name> , <string-literal> )
+                        |    ! build-constraint
+                        |    build-constraint && build-constraint
+                        |    build-constraint || build-constraint
+                        |    ( build-constraint )                          *)
 
 
 (* ============================================================ *)
@@ -322,7 +337,7 @@ ForClause     = (* empty *)                (* infinite:    for { … } *)
               | ForCClause                 (* C-style:     for init; cond; post { … } *)
               | ForInClause ;              (* range:       for x in coll { … } *)
 ForCClause    = SimpleStmt ";" [ Expression ] ";" SimpleStmt ;
-ForInClause   = IdentifierList "in" Expression ;
+ForInClause   = identifier [ "," identifier ] "in" Expression ;   (* value, or index + value *)
 
 (* A tagless switch (`switch { … }`) is the condition-less form; there is no
    fallthrough. *)
@@ -365,8 +380,9 @@ UnaryExpr     = PostfixExpr
               | "!" UnaryExpr
               | "~" UnaryExpr
               | "-" UnaryExpr
-              | "*" UnaryExpr        (* dereference *)
-              | "&" UnaryExpr ;      (* address-of *)
+              | "*" UnaryExpr          (* dereference *)
+              | "&" UnaryExpr          (* address-of *)
+              | RawSliceLiteral ;      (* *[]T{…} — distinguished from deref by the "[" (D3) *)
 
 PostfixExpr   = PrimaryExpr { PostfixOp } ;
 PostfixOp     = "." identifier                            (* field / method / pkg member *)
@@ -382,7 +398,7 @@ PrimaryExpr   = BuiltinCall
               | identifier
               | int_literal
               | float_literal
-              | string_literal
+              | string_literal { string_literal }   (* adjacent literals concatenate, §13 *)
               | char_literal
               | "true" | "false" | "nil"
               | "(" Expression ")" ;
@@ -392,12 +408,17 @@ PrimaryExpr   = BuiltinCall
    value. *)
 FuncLiteral   = "func" Signature Block ;
 
-(* A composite literal is TypeName "{" … "}" (struct / named / generic literal)
-   or an array literal.  Element keys are parsed as expressions; semantic
-   analysis resolves a bare-identifier key as a field name or an index (D6). *)
-CompositeLiteral = TypeName "{" [ ElementList [ "," ] ] "}"
-              | ArrayLiteral ;
+(* A composite literal builds a struct/named value, an array, or a slice.  The
+   literal head is a QualifiedName (NOT a generic instantiation — `Foo[T]{…}` is
+   not a composite-literal form).  Element keys are parsed as expressions;
+   semantic analysis resolves a bare-identifier key as a field name or an index
+   (D6). *)
+CompositeLiteral = QualifiedName "{" [ ElementList [ "," ] ] "}"
+              | ArrayLiteral
+              | ManagedSliceLiteral ;
 ArrayLiteral  = "[" ArrayLen "]" Type "{" [ ElementList [ "," ] ] "}" ;
+ManagedSliceLiteral = "@" "[" "]" Type "{" [ ElementList [ "," ] ] "}" ;
+RawSliceLiteral     = "*" "[" "]" Type "{" [ ElementList [ "," ] ] "}" ;
 ArrayLen      = Expression | "..." ;
 ElementList   = Element { "," Element } ;
 Element       = [ Expression ":" ] Expression ;
@@ -426,6 +447,11 @@ CCallArg      = Expression | "..." ;   (* "..." marks the C varargs boundary *)
 ExpressionList = Expression { "," Expression } ;
 IdentifierList = identifier { "," identifier } ;
 
+(* Note: where a list (arguments, parameters, type arguments/parameters, or
+   composite-literal elements) spans multiple lines, a trailing comma after the
+   last entry is permitted — and required when the closing delimiter starts the
+   next line (ASI).  The productions omit it for brevity. *)
+
 
 (* ============================================================ *)
 (* 9. Generics                                                  *)
@@ -447,20 +473,24 @@ TypeParamDecl = identifier Type ;   (* type-parameter name + interface constrain
        a compound operator → Assignment.
 
    D2. For-clause variants:
-       "for" "{" → infinite loop.  "for" IdentifierList "in" → range (lookahead
-       for "in").  "for" … ";" → C-style (lookahead for ";" after the first
-       SimpleStmt).  Otherwise "for" Expression "{" → while-style.
+       "for" "{" → infinite loop.  "for" identifier ["," identifier] "in" →
+       range (lookahead for "in").  "for" … ";" → C-style (lookahead for ";"
+       after the first SimpleStmt).  Otherwise "for" Expression "{" →
+       while-style.
 
-   D3. "*[" / "@[" slice sugar vs pointer / func value:
-       "*"/"@" then "[" "]" → slice sugar; then "func" → function-value type;
-       then "(" → a parenthesized inner type; otherwise → pointer.  A bare "*["
-       or "@[" not immediately followed by "]" is an error: pointer-to-array and
+   D3. "*[" / "@[" slice sugar / slice literal vs pointer / func value:
+       "*"/"@" then "[" "]" begins a slice — a slice TYPE in type context, or a
+       slice LITERAL (RawSliceLiteral / ManagedSliceLiteral) when a "{" follows
+       the element type; then "func" → function-value type; then "(" → a
+       parenthesized inner type; otherwise → pointer.  A bare "*[" or "@[" not
+       immediately followed by "]" is an error: pointer-to-array and
        pointer-to-slice require parentheses.
 
    D4. Composite literals in control-flow conditions:
-       In an if/for/switch condition a bare composite literal (TypeName "{" …)
-       is disallowed (its "{" is ambiguous with the block body); parenthesize it
-       as (TypeName{…}).
+       In an if/for/switch condition a bare composite literal (a QualifiedName or
+       slice/array head followed by "{") is disallowed (its "{" is ambiguous with
+       the block body); parenthesize it as (Point{…}).  (The parenthesized
+       escape is the intended rule but is currently defective; §13.11.)
 
    D5. Generic instantiation vs indexing/slicing (expression context):
        "[" … ":" … "]" → slice (the colon is unambiguous).  "[" Type "," … "]" →
@@ -485,16 +515,15 @@ TypeParamDecl = identifier Type ;   (* type-parameter name + interface constrain
 
    D9. PrimaryExpr ordering:
        Built-in keywords are tried first (the lexer distinguishes them from
-       identifiers).  A TypeName followed by "{" (including a qualified or
-       generic TypeName) is a composite literal; otherwise a bare identifier.
+       identifiers).  A QualifiedName followed by "{" is a composite literal;
+       otherwise a bare identifier.
 
    D10. StructField — named field vs embedded:
         When a field begins with an identifier, one-token lookahead decides:
-        followed by another identifier, "*", "@", "[", "(", "func", "struct",
-        "interface", or "readonly" → a named field (the identifier is the name,
-        the rest begins the type); followed by ";" or "}" → an embedded field
-        (the identifier is a TypeName); followed by "." → an embedded field with
-        a qualified name.
+        followed by another identifier, "Self", "*", "@", "[", "(", "struct", or
+        "readonly" → a named field (the identifier is the name, the rest begins
+        the type); followed by ";" or "}" → an embedded field (the identifier is
+        a TypeName); followed by "." → an embedded field with a qualified name.
 
    D11. TypeDef — TypeParams vs ArrayType when "[" follows:
         Both start with "[".  Two-token lookahead: "[" literal → ArrayType
