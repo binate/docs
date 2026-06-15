@@ -84,10 +84,16 @@ global; argument access is therefore **host-dependent** (Ch.2, hosted vs
 freestanding conformance; the providing package, where present, is a tier-0
 package, Ch.20).
 
-> _Implementation note._ Neither the existence of `main` in the `main` package
-> nor its `func main()` signature is currently enforced by a compiler diagnostic
-> — a missing or wrong-shaped `main` fails at link time rather than with a clean
-> error (`prog.main.unchecked`, `claude-todo.md`).
+> _Note (by design)._ Entry-point resolution is a **link-time / program-assembly**
+> concern, not a per-package compile-time check. The compiler processes **one
+> package at a time**, and any package may be compiled or loaded independently and
+> have its functions called across the compiled/interpreted boundary (the
+> dual-mode interop model, Ch.19); no single compilation sees the whole program,
+> so whether a valid `func main()` entry point exists **cannot** be determined
+> when a package is compiled — and requiring it would cut against that interop
+> model. A missing or wrong-shaped `main` therefore surfaces when the program is
+> **assembled** (a link-time failure). This is intrinsic to the separate-compilation
+> model, not a missing diagnostic.
 
 ## 17.4 Program termination
 

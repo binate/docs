@@ -223,8 +223,6 @@ defined-in-intent, defective-in-realization) include:
   intended rule is element-wise comparison (§13.6 `expr.compare.aggregate`). (Slices,
   interface values, and function values are **by design** never comparable — a
   Constraint, not a defect.)
-- **`main`'s existence and signature are not checked** before link time
-  (§17.3 `prog.main.unchecked`).
 - `make` / `sizeof` / `alignof` of an **opaque** type from another package not
   gated (§15.2 `builtin.opaque-gate`).
 - The interpreter's **`_Package()` reflection accessor** for non-built-in packages
