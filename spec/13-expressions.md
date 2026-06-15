@@ -46,7 +46,7 @@ apply left to right. **Comparisons do not chain**: `a < b < c` is rejected
 not expressions (§14).
 
 > _Note._ Where this precedence and the prose in `claude-notes.md` differ, this
-> table (matching `grammar.ebnf`) governs.
+> table (matching the canonical `binate.ebnf`) governs.
 
 ## 13.3 Arithmetic operators
 

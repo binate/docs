@@ -18,10 +18,9 @@ rationale lives only in Annex D and Note blocks — never in normative prose.
 
 Each feature section is presented in this fixed order:
 
-1. **Grammar** — the relevant EBNF productions (inlined; normative). Until the
-   Phase-0 grammar reconciliation produces the canonical `binate.ebnf`, the
-   inlined productions are authoritative and `binate.ebnf` is a placeholder
-   (§4.1 `notation.grammar.source`).
+1. **Grammar** — the relevant EBNF productions (inlined; normative), presenting
+   in context the same grammar as the canonical `binate.ebnf`, from which Annex A
+   is generated (§4.1 `notation.grammar.source`).
 2. **Constraints** — diagnosable static rules (what a conforming
    implementation must reject). Maps onto Binate's "compiler checks upfront /
    interpreter defers" split, and onto the conformance harness's negative
@@ -100,10 +99,10 @@ across edits.
 Keep the ISO/IEC-14977-flavored EBNF already in use: `=` definition, `|`
 alternation, `{}` repetition, `[]` optional, `()` grouping, `…` inclusive
 character range, `;` terminator, `(* *)` comments, double-quoted literal
-terminals, juxtaposition = concatenation. The canonical grammar will be
-`binate.ebnf`; Annex A and the inlined per-section productions are to be
-generated from it once the Phase-0 reconciliation completes. Until then
-`binate.ebnf` is a placeholder and the inlined productions are authoritative.
+terminals, juxtaposition = concatenation. The canonical grammar is
+[`binate.ebnf`](binate.ebnf); Annex A is generated from it
+([`scripts/gen-annex-a.py`](../scripts/gen-annex-a.py)), and the inlined
+per-section productions present the same grammar in context.
 
 ## Spec conformance tests
 

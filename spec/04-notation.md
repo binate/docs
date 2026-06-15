@@ -36,14 +36,14 @@ Nonterminals are written as identifiers (e.g. `IntegerLit`); terminals are
 either double-quoted literals or named character classes defined in prose.
 A note such as `(* any character except '"' *)` defines a terminal class.
 
-`notation.grammar.source` — The complete grammar is to be given in **Annex A**,
-generated from the single canonical source `binate.ebnf` once the Phase-0
-reconciliation completes; **until then `binate.ebnf` is a placeholder** and the
-inlined productions are authoritative. The productions relevant to a construct are
-inlined at the head of that construct's section (the **Grammar** part of the
-rubric, §4.2). Where an inlined production and Annex A could disagree, Annex A
-governs; where the grammar and this document's prose could disagree, **the prose
-governs** until the grammar reconciliation pass (see Annex A) completes.
+`notation.grammar.source` — The complete grammar is given in **Annex A**,
+generated from the single canonical source `binate.ebnf` (`scripts/gen-annex-a.py`,
+Decision D4). The productions relevant to a construct are also inlined at the head
+of that construct's section (the **Grammar** part of the rubric, §4.2), presenting
+the same grammar in context. For matters of **syntax**, `binate.ebnf` (and the
+Annex A generated from it) is authoritative; where an inlined production could
+disagree with it, `binate.ebnf` governs. For **semantics**, this document's prose
+governs.
 
 > _Note._ The retired grammar annotations `[BOOTSTRAP]` and `[DEFERRED]`
 > tracked a now-removed Go-interpreter subset; they are **not** part of this

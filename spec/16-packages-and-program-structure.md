@@ -47,8 +47,7 @@ PackageClause = "package" string_literal ;
 
 Every source file begins with a package clause (after an optional leading
 annotation block, §16.7 — the package-clause annotation slot is the build-constraint
-file gate of §16.8; the legacy `explorations/grammar.ebnf` still lacks this slot,
-and the canonical `binate.ebnf` is a placeholder). The package name
+file gate of §16.8; the canonical `binate.ebnf` carries this slot). The package name
 is a **string literal** — the
 package's **import path** — not an identifier: `package "pkg/binate/parser"`. The
 string is the same one used to `import` the package; there is no separate short
