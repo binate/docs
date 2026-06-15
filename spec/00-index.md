@@ -15,8 +15,9 @@ dependent sibling spec.
   from it).
 
 > **Authoring status.** Chapters 3–21 (and the shared apparatus —
-> [`conventions.md`](conventions.md) and this index) are **authored**. Chapters
-> 1–2, plus annexes A–D, remain Phase-0 stubs carrying their status badge,
+> [`conventions.md`](conventions.md) and this index) are **authored**, and
+> **Annex A** is generated from the canonical [`binate.ebnf`](binate.ebnf).
+> Chapters 1–2 and annexes B–D remain Phase-0 stubs carrying their status badge,
 > rule-ID prefix, and source map. Per-chapter maturity is in the table below;
 > each chapter's own header badge governs where it could differ.
 
@@ -61,14 +62,15 @@ every term they need is defined.
 | 19 | [Execution Model: the Abstract Machine and Dual-Mode Interop](19-execution-model-dual-mode.md) | mixed | Contract Stable; in-process embedding a goal | `exec` |
 | 20 | [Intrinsic (Tier-0) Packages](20-intrinsic-tier0-packages.md) | mixed | lang Stable (float-NaN Provisional); rt Draft (gated); reflect Draft; testing Provisional | `pkg0` |
 | 21 | [Implementation-defined, Unspecified, and Undefined Behavior](21-implementation-defined-and-undefined-behavior.md) | normative | contracts Stable; byte-order GAP open (§21.4) | `behavior` |
-| A | [Grammar Summary](annex-a-grammar-summary.md) | normative | Blocked on reconciliation | `grammar` |
+| A | [Grammar Summary](annex-a-grammar-summary.md) | normative | Stable (generated from `binate.ebnf`) | `grammar` |
 | B | [Implementation Model and Implementation-defined Index](annex-b-implementation-model-and-idb-index.md) | mixed | Split Stable | `impl` |
 | C | [Stability Status Table](annex-c-stability-status-table.md) | informative | Derived — finalize last | `status` |
 | D | [Rationale and Design Notes](annex-d-rationale-and-design-notes.md) | informative | n/a | `rationale` |
 
 ## Prerequisites (before dependent chapters/annex finalize)
 
-1. **Grammar reconciliation + move into the spec** (Phase 0) — produces the
-   canonical `binate.ebnf`; gates Annex A.
+1. ~~**Grammar reconciliation + move into the spec** (Phase 0) — produces the
+   canonical `binate.ebnf`; gates Annex A.~~ **Done** — `binate.ebnf` is
+   canonical and Annex A is generated from it (`scripts/gen-annex-a.py`).
 2. **`pkg/rt` review** — classify each member stay / move-to-stdlib /
    make-internal; gates §20.2.
