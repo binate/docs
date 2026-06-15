@@ -50,7 +50,9 @@ catalogued under §21.7–§21.8, **not** §21.6:
 - integer `+`/`-`/`*` overflow → **two's-complement wraparound** (§13.3);
 - division / remainder by zero and signed `MIN / -1` → **defined panics** (§13.4);
 - index / slice out of bounds → a **defined panic** (§13.9);
-- shift count ≥ width (or negative) → a **defined** result (§13.5);
+- a **non-negative** shift count ≥ width → a **defined** result; a **negative**
+  shift count → a compile-time error (constant) or a **defined panic** (runtime)
+  (§13.5);
 - float operations including division by zero and `NaN` comparisons →
   **defined** IEEE-754 (§13.3, §13.6);
 - out-of-range / `±Inf` / `NaN` float→integer conversion → **defined saturation**
@@ -170,8 +172,9 @@ hardware-divergence gap.
   conformant** in the current tree (`conformance/732_float_int_saturation`).
 - **Defined arithmetic** (§13.3–§13.6): integer `+`/`-`/`*` **two's-complement
   wraparound**; integer `/` truncates toward zero and `%` takes the sign of the
-  dividend; **defined** over-shift (`0` for logical, sign-fill for arithmetic
-  `>>`; not hardware-masked); IEEE-754 float arithmetic (division by zero →
+  dividend; **defined** over-shift for a non-negative count (`0` for logical,
+  sign-fill for arithmetic `>>`; not hardware-masked — a negative count instead
+  panics, §13.5); IEEE-754 float arithmetic (division by zero →
   `±Inf`/`NaN`, no panic) and **defined** `NaN` comparison (`<`/`==` false, `!=`
   true).
 
@@ -187,6 +190,7 @@ code (§17.4, §21.4). The set (normative home §17.5 `prog.panic`):
 | Index / slice out of bounds (on a length-carrying value) | §13.9 `expr.index.bounds` |
 | Integer division / remainder by **zero** | §13.4 `expr.arith.divzero` |
 | Signed **`MIN / -1`** overflow | §13.4 `expr.arith.minover` |
+| **Negative** shift count (runtime) | §13.5 `expr.shift.negative` |
 | `make_slice` with a **negative** length | §15.2 `builtin.make-slice` |
 | Dispatch through a **nil interface value** — defined abort; observable *form* is mode/target-dependent (§21.5) | §11.11 `iface.dispatch.nil` |
 | `panic(msg)` — defined abort; **currently realized inconsistently** (§21.9) | §15.7 `builtin.panic` |

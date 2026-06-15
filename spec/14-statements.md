@@ -1,6 +1,6 @@
 # 14. Statements
 
-> **Status:** mixed · **Maturity:** language rules Stable; two MAJOR implementation defects flagged (parallel assignment §14.4, inc/dec on a non-identifier lvalue §14.5)  
+> **Status:** mixed · **Maturity:** language rules Stable; one MAJOR implementation defect flagged (inc/dec on a non-identifier lvalue §14.5)  
 > **Rule-ID prefix:** `stmt`
 
 **Statements** specify the executable behavior of a function body. This chapter
@@ -137,20 +137,12 @@ rule of §18).
 > share a side effect; whether this order is normatively guaranteed is not yet
 > pinned (`stmt.assign.eval-order`).
 
-> _Open (MAJOR — implementation defect)._ **Parallel assignment with more than
-> one expression on each side is silently miscompiled.** The grammar permits
-> `ExpressionList "=" ExpressionList`, and the checker accepts a matched-arity
-> form such as `a, b = 1, 2` or the swap idiom `a, b = b, a` (it checks each pair
-> assignable). But code generation lowers only the single-target and
-> single-call-destructure shapes; the matched-arity multi-expression case emits
-> **no stores at all**, so `a, b = 1, 2` and `a, b = b, a` compile to a **no-op**
-> with no diagnostic. Idiomatic Binate forms tuples via multiple **return**
-> (`stmt.assign.multi`, one call) and is unaffected. The resolution is an open
-> language decision: **(A)** support parallel assignment (evaluate all
-> right-hand expressions, then store all targets, so the swap works), or **(B)**
-> reject a multi-expression right-hand side at the checker (multiple assignment
-> requires a single multi-valued call). Either way the present accept-then-drop
-> is a defect (`stmt.assign.parallel`, MAJOR, `claude-todo.md`).
+`stmt.assign.parallel` — A **parallel assignment** with a matched-arity expression
+list on each side — `a, b = e1, e2`, including the swap idiom `a, b = b, a` —
+**evaluates all right-hand expressions first**, then stores into the targets, so
+the swap exchanges the two values. Each right-hand expression must be assignable
+to its corresponding target. This is distinct from `stmt.assign.multi`, which
+distributes the results of a single multi-valued call.
 
 ## 14.5 Increment and decrement
 

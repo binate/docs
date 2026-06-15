@@ -51,7 +51,7 @@ every term they need is defined.
 | 11 | [Interfaces, impl, and Self](11-interfaces-impl-self.md) | mixed | language rules Stable; conformance mixed (CRITICAL dispatch defects resolved; alias-receiver §11.3, arm32 §11.11) | `iface` |
 | 12 | [Generics and Enumerations](12-generics-and-enumerations.md) | mixed | language rules Stable (v1 scope); two v1-restrictions unenforced | `gen` |
 | 13 | [Expressions](13-expressions.md) | normative | Stable (composite-literal defects flagged) | `expr` |
-| 14 | [Statements](14-statements.md) | mixed | language rules Stable; 2 MAJOR impl defects flagged (parallel assignment, inc/dec on non-ident lvalue) | `stmt` |
+| 14 | [Statements](14-statements.md) | mixed | language rules Stable; 1 MAJOR impl defect flagged (inc/dec on non-ident lvalue) | `stmt` |
 | 14.8 | [Control-flow statements](14b-control-flow.md) | mixed | language rules Stable; a few open semantic items | `stmt` |
 | 15 | [Built-in Operations](15-builtin-operations.md) | mixed | mostly Stable (opaque-gate + VM-panic gaps flagged; print/println provisional) | `builtin` |
 | 16 | [Packages and Program Structure](16-packages-and-program-structure.md) | mixed | Stable core | `pkg` |

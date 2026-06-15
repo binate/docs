@@ -232,9 +232,11 @@ missing-return analysis (§14.13).
 `builtin.internal` — The implementation reserves further built-in keywords that
 are **compiler-internal / low-level** and not part of the everyday surface:
 `unsafe_div` and `unsafe_rem` (the guard-free counterparts of `/` and `%`, which
-skip the divide-by-zero and signed-`MIN`/`-1` faults of §13.4); and the
-foreign-function / introspection primitives used by the runtime and tooling. They
-follow the same keyword-builtin reservation rules.
+skip the divide-by-zero and signed-`MIN`/`-1` faults of §13.4); `unsafe_shl` and
+`unsafe_shr` (the guard-free counterparts of `<<` and `>>`, which skip the
+negative-count and overshift handling of §13.5 — the caller asserts the count is
+in `[0, width)`); and the foreign-function / introspection primitives used by the
+runtime and tooling. They follow the same keyword-builtin reservation rules.
 
 `builtin.proposed` — `move(x)` (explicit ownership transfer that nils the source)
 and `ispod(T)` (a compile-time predicate: may `T` be copied by raw `memcpy` and

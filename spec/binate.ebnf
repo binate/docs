@@ -46,7 +46,7 @@ identifier    = letter { letter | digit } ;
 (* --- Keyword built-ins (operations with special call syntax; see BuiltinCall) --- *)
 (*  make      make_slice  box       cast      bit_cast  len
     sizeof    alignof     present   same      unsafe_index
-    unsafe_div  unsafe_rem  _func_handle  __c_call                       *)
+    unsafe_div  unsafe_rem  unsafe_shl  unsafe_shr  _func_handle  __c_call *)
 
 (* --- Predeclared names (NOT reserved — may be shadowed) --- *)
 (*  Types:     int  uint  int8  int16  int32  int64
@@ -443,6 +443,8 @@ BuiltinCall   = "make" "(" Type ")"
               | "unsafe_index" "(" Expression "," Expression ")"
               | "unsafe_div" "(" Expression "," Expression ")"
               | "unsafe_rem" "(" Expression "," Expression ")"
+              | "unsafe_shl" "(" Expression "," Expression ")"
+              | "unsafe_shr" "(" Expression "," Expression ")"
               | "_func_handle" "(" Expression ")"
               | "__c_call" "(" string_literal "," Type { "," CCallArg } ")" ;
 CCallArg      = Expression | "..." ;   (* "..." marks the C varargs boundary *)

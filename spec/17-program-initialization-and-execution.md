@@ -124,6 +124,7 @@ terminates. The set is:
 | Index / slice out of bounds | §13.9 | `runtime error: index out of bounds: <i> (len <n>)` |
 | Integer divide-by-zero | §13.4 | `runtime error: integer divide by zero` |
 | Signed `MIN / -1` overflow | §13.4 | `runtime error: integer overflow (MIN / -1)` |
+| Negative shift count (runtime) | §13.5 | `runtime error: negative shift count` |
 | `make_slice` negative length | §15.2 | `runtime error: make_slice with negative length` |
 | Nil-interface-value dispatch | §11.11 (`iface.dispatch.nil`) | (see below — mode-dependent) |
 | `panic(msg)` | §15.7 | (see below — currently incomplete) |

@@ -96,17 +96,22 @@ type is the value's** (left operand) type. `>>` is **arithmetic** (sign-filling)
 for a signed value and **logical** (zero-filling) for an unsigned value; `<<` is
 logical.
 
-`expr.shift.overshift` — A shift whose count is **≥ the value's bit width** (or
-negative) yields a **defined** result on every backend: `0` for a logical shift,
+`expr.shift.overshift` — A **non-negative** shift count **≥ the value's bit
+width** yields a **defined** result on every backend: `0` for a logical shift,
 and a full sign-fill (all bits equal the sign bit) for an arithmetic `>>`. (It is
-not hardware-masked.)
+not hardware-masked.) The check reads the **untruncated** count, so a runtime
+count wider than the value is detected correctly.
 
-> _Open (narrow gap)._ When the count is a *runtime* value whose type is wider
-> than the value and whose value is ≥ 2^(value-width) but congruent to a small
-> in-range residue, the count is mis-truncated and the overshift is not detected
-> (a silent wrong result). All compile-time-constant and realistic runtime counts
-> are correct. A separate residual: the native (aarch64/x64/arm32) sub-word `~`
-> and negate paths. Both are tracked (`claude-todo.md`).
+`expr.shift.negative` — A **negative** shift count is an error, not a defined
+result: a **compile-time** error for a constant count, and a **defined
+non-recoverable panic** (`runtime error: negative shift count`; §17.5) for a
+runtime count. The guard-free intrinsics `unsafe_shl(v, n)` / `unsafe_shr(v, n)`
+(§15.8) perform the shift **without** the negative-count and overshift handling —
+the caller asserts `n` is in `[0, width)`, and an out-of-range `n` is undefined
+(Ch.21).
+
+> _Open (residual)._ The native (aarch64/x64/arm32) sub-word `~` and negate paths
+> are a tracked residual (`claude-todo.md`).
 
 ## 13.6 Comparison and comparability
 
