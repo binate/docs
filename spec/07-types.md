@@ -449,21 +449,21 @@ the defining package — the cross-package encapsulation guarantee. (A
 named-distinct type with a *concrete* underlying struct is peeled and its fields
 *are* reachable; §7.3. The distinction is whether the underlying is visible.)
 
-`type.opaque.single-source` — A type is defined in exactly one place. The valid
-forms are: a full `type S struct{ … }` in the `.bni` (fields visible
-everywhere); a forward `type S` in the `.bni` plus the full body in a `.bn`
-(opaque export); or a full definition only in a `.bn` (package-private). A `.bni`
-full definition together with a *conflicting* `.bn` full definition of the same
-name is a hard error; same-shape duplicates are deduplicated; a repeated forward
-declaration is idempotent.
+`type.opaque.single-source` _(Constraint)_ — A type is declared **full** at most
+once per package. The valid forms are: a full `type S struct{ … }` in the `.bni`
+(transparent — fields visible everywhere); a forward `type S` in the `.bni` plus
+the full body in one `.bn` (opaque export); or a full definition only in a `.bn`
+(package-private). A full definition in **both** the `.bni` and a `.bn`, or two
+full definitions across `.bn` files, is rejected ("duplicate type definition";
+the `.bni`/`.bn` case reports "declared in full in both the .bni and a .bn").
+Generics are included. A repeated forward declaration is idempotent.
 
-> _Open / known gap._ The intended rule is that `make`, `sizeof`, and `alignof`
-> on an opaque type are also rejected outside the defining package (the layout is
-> unknown). The current type-checker enforces only the **field-access**
-> restriction; `make`/`sizeof`/`alignof` on an opaque type are not gated and fail
-> (if at all) downstream rather than as a clean diagnostic
-> (`type.opaque.make-sizeof-gap`, tracked in `claude-todo.md`). Opaque export is
-> for non-generic types only in this version.
+`type.opaque.builtin-rejection` _(Constraint)_ — `make`, `make_slice`, `sizeof`,
+and `alignof` on an opaque type are rejected (its layout is unknown), alongside
+the field-access restriction above; the gate peels named-distinct, alias, and
+`readonly` wrappers, so a distinct type over an opaque type is rejected too. See
+§15.2 (`builtin.opaque-gate`). Opaque export is for non-generic types only in
+this version.
 
 ## 7.13 Type Layout and Representation
 

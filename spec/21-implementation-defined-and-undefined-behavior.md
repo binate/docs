@@ -1,6 +1,6 @@
 # 21. Implementation-defined, Unspecified, and Undefined Behavior
 
-> **Status:** normative · **Maturity:** contracts Stable (one open GAP: byte order — §21.4)  
+> **Status:** normative · **Maturity:** contracts Stable (one open reconciliation gap: optional int64/float availability — §21.4)  
 > **Rule-ID prefix:** `behavior`
 
 This chapter is the **single collected catalogue** of every point where the
@@ -95,16 +95,17 @@ magnitudes are **parameterized** by `TargetInfo`.
 | The **immortal sentinel** refcount value (a deeply-negative count) | impl-defined; currently unfinalized | §18.2 `mem.immortal`; §7.13.7 `type.layout.immortal` |
 | Panic **message text**, **exit code**, and diagnostic **output stream** | impl-defined (modes must agree) | §17.4 `prog.terminate`; §17.5 `prog.panic.defined` |
 | **Symbol decoration** / name mangling (observable in consequence; the scheme is informative) | impl-defined | §16.6 `pkg.identity`; Annex B |
+| **Byte order** (endianness) of multi-byte scalars (currently little-endian; `TargetInfo` has no endianness field yet) | impl-defined (modes must agree) | §7.13.12 `type.layout.byte-order` |
 
-`behavior.impl-defined.endianness` _(Draft — OPEN GAP)_ — The **byte order**
-(endianness) of multi-byte scalars is observable through `bit_cast` and the
-representation built-ins (Ch.15), yet the layout layer currently leaves it
-**unconstrained** (`TargetInfo` carries no endianness field) — §7.13.12
-`type.layout.byte-order`. The spec **must close** this gap. The recommended
-resolution is to pin endianness as **implementation-defined** (so the two modes
-**must agree** per target) and add an endianness field to `TargetInfo`, making
-layout-dependent constant emission well-defined. **This is not yet ratified** — it
-is one of two items in this chapter still awaiting a decision (`claude-todo.md`).
+`behavior.impl-defined.endianness` — The **byte order** (endianness) of
+multi-byte scalars is **implementation-defined**: an implementation **shall** fix
+and document a single byte order per target, and both modes **shall agree** on it
+(§21.3). It is observable through `bit_cast` and the representation built-ins
+(Ch.15) — §7.13.12 `type.layout.byte-order`. The current implementation fixes
+byte order as **little-endian** on every target, and `TargetInfo` carries no
+endianness field yet; adding a `TargetInfo` endianness field (the path to
+big-endian/cross-endian targets) and big-endian support is a tracked
+implementation follow-up (`claude-todo.md`), not done.
 
 `behavior.impl-defined.optional-scalars` _(Draft — reconciliation gap)_ — The
 design treats the **64-bit and floating-point** scalar types (`int64`, `uint64`,
@@ -227,8 +228,6 @@ defined-in-intent, defective-in-realization) include:
   intended rule is element-wise comparison (§13.6 `expr.compare.aggregate`). (Slices,
   interface values, and function values are **by design** never comparable — a
   Constraint, not a defect.)
-- `make` / `sizeof` / `alignof` of an **opaque** type from another package not
-  gated (§15.2 `builtin.opaque-gate`).
 - The interpreter's **`_Package()` reflection accessor** for non-built-in packages
   (§20.3 `pkg0.reflect.vm-gap`) and a **cap** on the argument count of a cross-mode
   function-value call (the general cross-mode dispatch mechanism is in place,

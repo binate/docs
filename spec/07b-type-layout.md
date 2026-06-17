@@ -23,8 +23,10 @@ Each layout fact is classified (§3.1):
   >16-byte by-value parameter cutoff.
 - **target-parameterized** — a function of `TargetInfo`: every absolute byte
   size, offset, and alignment (all derive from `PointerSize`/`IntSize`/`MaxAlign`).
-- **implementation-defined / target-defined** — **byte order (endianness)**
-  (`type.layout.byte-order`).
+- **implementation-defined** — **byte order (endianness)**
+  (`type.layout.byte-order`): fixed and documented per target, identical across
+  modes. Currently little-endian on every target; `TargetInfo` carries no
+  endianness field yet.
 - **backend-private** — concrete type-representation spellings (e.g. LLVM
   `i8*`/`%Struct`), instruction selection, register allocation, calling-convention
   register choices, and binary/debug formats (Annex B).
@@ -179,13 +181,19 @@ must agree on.
 ## 7.13.12 Byte order
 
 `type.layout.byte-order` — The byte order (endianness) of multi-byte scalars is
-**target-defined** and is currently *unconstrained* by the layout layer
-(`TargetInfo` carries no endianness field). It is observable through `bit_cast`
-and the representation-introspection built-ins (Ch.15).
+**implementation-defined** (§21.4 `behavior.impl-defined`): an implementation
+**shall** fix and document a single byte order per target, and — where both modes
+exist — its compiled and interpreted modes **shall agree** on that order
+(§7.13.13 `type.layout.keystone`). Byte order is observable through `bit_cast` and
+the representation-introspection built-ins (Ch.15), so a per-target choice that
+disagreed across modes would be a conformance violation.
 
-> _Open._ Whether to pin byte order as implementation-defined and add an
-> endianness field to `TargetInfo` (so layout-dependent constant emission is
-> well-defined) is an open item (tracked in `claude-todo.md`).
+The current implementation fixes byte order as **little-endian** on every target,
+and `TargetInfo` (§7.13.1 `type.layout.target-info`) carries **no** endianness
+field. A complete, target-parameterized layout description (needed to describe a
+big-endian or cross-endian target) requires adding an endianness field to
+`TargetInfo`; doing so — and adding big-endian support — is a tracked
+implementation follow-up (`claude-todo.md`), not yet done.
 
 ## 7.13.13 The cross-mode agreement requirement
 

@@ -37,8 +37,8 @@ implementation's compiled and interpreted modes shall agree on a given target
 the standard permits to vary between conforming implementations, where each
 implementation **shall document** its choice, and (where both modes exist) its
 compiled and interpreted modes shall agree on a given target. Example
-candidate: the text of a runtime-panic message. (Whether **byte order** is
-implementation-defined or simply target-defined is an open decision; §7.13.12.)
+candidate: the text of a runtime-panic message; another is **byte order**
+(endianness), which is implementation-defined (§7.13.12).
 
 `term.unspecified` — **unspecified behavior** is behavior the standard permits
 to vary, within stated bounds, and does **not** require an implementation to

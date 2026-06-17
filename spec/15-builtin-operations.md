@@ -1,6 +1,6 @@
 # 15. Built-in Operations
 
-> **Status:** mixed · **Maturity:** mostly Stable (the opaque-type gate and the VM `panic` no-op are flagged; `print`/`println` formatting is provisional)  
+> **Status:** mixed · **Maturity:** mostly Stable (the VM `panic` no-op is flagged; `print`/`println` formatting is provisional)  
 > **Rule-ID prefix:** `builtin`
 
 A **built-in operation** is invoked with call syntax but is not an ordinary
@@ -94,13 +94,15 @@ interface value `@Iface` from it (Ch.11); there is no implicit boxing.
 `make`, `make_slice`, and `box` each produce a fresh managed value that, if not
 bound to an owning location, is released at the end of the statement (§18).
 
-> _Open (MAJOR — notes vs. implementation)._ The ratified design requires
-> `make(Opaque)`, `sizeof(Opaque)`, and `alignof(Opaque)` to be **rejected**
-> outside the type's defining package (its layout is unknown there, §7.12). The
-> current checker does **not** gate these — only opaque *field access* is gated —
-> so `make`/`sizeof`/`alignof` of an opaque type from another package are
-> accepted and fail later (or wrongly) downstream rather than with a clean
-> diagnostic (`builtin.opaque-gate`, `claude-todo.md`).
+`builtin.opaque-gate` _(Constraint)_ — `make(Opaque)`, `make_slice(Opaque, n)`,
+`sizeof(Opaque)`, and `alignof(Opaque)` are **rejected** for an opaque type
+whose layout is not available (a pure forward declaration, or an opaque export
+seen only through its `.bni`; §7.12), since each needs the layout. The gate
+peels `readonly`, alias, and named-distinct wrappers, so a distinct type *over*
+an opaque type (`type Handle Opaque`) is gated the same way; a distinct type
+over a *concrete* underlying stays allowed. The diagnostics are "cannot make a
+value of an opaque type", "cannot make_slice with an opaque element type", and
+"cannot take sizeof/alignof of an opaque type".
 
 ## 15.3 Conversion: `cast`, `bit_cast`
 

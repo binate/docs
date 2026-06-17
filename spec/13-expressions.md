@@ -154,10 +154,21 @@ is evaluated only if `a` is `true`; in `a || b`, `b` is evaluated only if `a` is
 `expr.unary` — The unary operators are `-` (numeric negation), `!` (logical NOT,
 on a `bool`), `~` (bitwise complement, §13.5), `*` (pointer dereference, §7.8),
 and `&` (address-of). There is **no unary `+`**. `&x` yields a **raw** pointer
-`*T` to `x`'s storage (always raw, even for a managed value; §7.8); `&` of a
-**named** constant is an error (a constant has no storage; §9.1). _Open:_ the
-checker enforces this only for named constants — taking the address of a literal
-(`&5`) is not currently diagnosed (`expr.unary.addr-literal`, `claude-todo.md`).
+`*T` to `x`'s storage (always raw, even for a managed value; §7.8).
+
+`expr.unary.addr` — The operand of `&` must be **addressable** — a value that
+has storage. Addressable operands are: a **variable**; a **struct field**
+(`&p.x`); an **array, slice, or pointer element** (`&a[i]`); a **dereference**
+(`&*p`, which equals `p`); a **composite literal** (`&Point{1, 2}` — it has a
+backing alloca); and an **imported variable** (`&pkg.v`). Taking the address of
+anything else is a compile error, because it has no storage: a **named
+constant** (§9.1); a **bare literal** — `&5`, `&3.14`, `&true`, `&'a'`, `&"s"`,
+`&nil`, or a **func literal** `&func(){}`; a **named function** `&g` or
+`&pkg.f` (a function value is obtained by naming the function directly,
+`var fp *func() = g`, not by addressing it); a **method value** `&obj.m`; a
+**method expression** `&T.m`; and any other computed value (a call result, an
+arithmetic or unary result, a `make`/cast/sub-slice result). These rules match
+Go.
 
 `expr.member` — Member access uses `.` only — there is **no `->`**. A selector
 `x.name` auto-dereferences **one** pointer level (raw or managed) to reach a
