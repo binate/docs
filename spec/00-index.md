@@ -14,11 +14,11 @@ dependent sibling spec.
 - **Canonical grammar:** [`binate.ebnf`](binate.ebnf) (Annex A is generated
   from it).
 
-> **Authoring status.** Chapters 3–21 (and the shared apparatus —
+> **Authoring status.** Chapters 1–21 (and the shared apparatus —
 > [`conventions.md`](conventions.md) and this index) are **authored**, and
 > **Annex A** is generated from the canonical [`binate.ebnf`](binate.ebnf).
-> Chapters 1–2 and annexes B–D remain Phase-0 stubs carrying their status badge,
-> rule-ID prefix, and source map. Per-chapter maturity is in the table below;
+> Annexes B–D remain Phase-0 stubs carrying their status badge, rule-ID prefix,
+> and source map. Per-chapter maturity is in the table below;
 > each chapter's own header badge governs where it could differ.
 
 ## Status legend
@@ -38,7 +38,7 @@ every term they need is defined.
 | # | Chapter | Kind | Maturity | Rule-ID |
 |---|---------|------|----------|---------|
 | 1 | [Scope and Introduction](01-scope-introduction.md) | informative | n/a (framing) |  |
-| 2 | [Conformance](02-conformance.md) | normative | Draft (skeleton) | `conf` |
+| 2 | [Conformance](02-conformance.md) | normative | Stable (cross-mode contract; embedding a goal) | `conf` |
 | 3 | [Terms and Definitions](03-terms-and-definitions.md) | normative | mostly Stable (grows with the spec) | `term` |
 | 4 | [Notation](04-notation.md) | normative | Stable (apparatus) | `notation` |
 | 5 | [Lexical Elements](05-lexical-elements.md) | normative | mostly Stable | `lex` |
