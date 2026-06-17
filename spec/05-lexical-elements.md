@@ -144,8 +144,8 @@ The base prefix letter is case-insensitive; hexadecimal digits may be upper- or
 lower-case.
 
 ```
-int_lit      = decimal_lit | hex_lit | octal_lit | binary_lit ;
-decimal_lit  = digit { digit } ;
+int_literal  = decimal_lit | hex_lit | octal_lit | binary_lit ;
+decimal_lit  = "1" … "9" { digit } | "0" ;
 hex_lit      = "0" ( "x" | "X" ) hex_digit { hex_digit } ;
 octal_lit    = "0" ( "o" | "O" ) octal_digit { octal_digit } ;
 binary_lit   = "0" ( "b" | "B" ) ( "0" | "1" ) { "0" | "1" } ;
@@ -157,13 +157,10 @@ octal_digit  = "0" … "7" ;
 `0x`/`0o`/`0b` are the only way to write hexadecimal, octal, and binary; there
 is no C-style leading-zero octal.
 
-> _Open / known defect._ A multi-digit numeral beginning with `0` and not using
-> a base prefix (e.g. `0123`, `00`) is currently **mis-scanned**: the lexer
-> emits the leading `0` as one integer token and the remaining digits as a
-> separate token, instead of a single literal or a diagnostic. Whether such a
-> form should be decimal or rejected is undecided, and the splitting behavior is
-> a defect (`lex.literal.int.leading-zero`, tracked in `claude-todo.md`). Do not
-> rely on a leading-zero multi-digit numeral until this is resolved.
+`lex.literal.int.leading-zero` — A multi-digit numeral beginning with `0` and
+not using a base prefix (`0123`, `00`) is a **lexical error**, not a decimal
+literal (`decimal_lit` admits a leading `0` only as the single digit `0`). The
+lexer reports the whole numeral as one illegal token; write `0o…` for octal.
 
 `lex.literal.int.no-sign` — An integer literal contains no sign. A leading `-`
 or `+` is a separate unary operator (Ch.13); literal typing and range are
@@ -181,11 +178,10 @@ optional exponent; an integer part with a mandatory exponent and no `.`; or a
 leading-`.` form. A trailing dot (`1.`) is permitted.
 
 ```
-float_lit  = decimals "." [ decimals ] [ exponent ]
-           | decimals exponent
-           | "." decimals [ exponent ] ;
-decimals   = digit { digit } ;
-exponent   = ( "e" | "E" ) [ "+" | "-" ] decimals ;
+float_literal = digit { digit } "." { digit } [ exponent ]
+              | digit { digit } exponent
+              | "." digit { digit } [ exponent ] ;
+exponent      = ( "e" | "E" ) [ "+" | "-" ] digit { digit } ;
 ```
 
 `lex.literal.float.range-carveout` — Two dots in a row are never part of a
