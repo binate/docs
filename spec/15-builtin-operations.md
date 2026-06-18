@@ -109,8 +109,10 @@ value of an opaque type", "cannot make_slice with an opaque element type", and
 `builtin.cast` — `cast(T, e)` converts the value `e` to type `T` and yields `T`.
 The conversion semantics — integer wrap/truncate and sign/zero extension,
 float↔int (with the saturating float→int contract), and the `readonly` drop —
-are specified in Ch.8 (`conv.cast`). At the type-checking layer `cast` is
-**unchecked**: the checker returns `T` without validating convertibility (§8.5).
+are specified in Ch.8 (`conv.cast`). At the type-checking layer a `cast` of a
+*non-constant* operand is **unchecked** (the checker returns `T` without
+validating convertibility); a **constant** operand is fit-checked against `T` and
+is not laundered (§8.5 `conv.cast.const-not-laundered`).
 
 `builtin.bit-cast` — `bit_cast(T, e)` reinterprets the bits of `e` as type `T`
 with **no** value conversion, yielding `T` — the "I know what I am doing" escape

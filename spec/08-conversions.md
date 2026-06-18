@@ -113,19 +113,44 @@ reverse (raw → managed) is never implicit — it would invent a reference (§7
   to drop element-level `readonly` (§8.3) and may combine that with a width or
   pointer-target change in one step.
 
-`conv.cast.unchecked` — At the **type-checking** layer, `cast(T, x)` is *not*
-validated for convertibility: the checker resolves `T`, checks that `x` is
-well-formed, and yields `T`. A `cast` whose source and target are not among the
-defined value conversions above is therefore the programmer's responsibility
-(its run-time meaning may be unspecified).
+`conv.cast.unchecked` — At the **type-checking** layer, a `cast` of a *typed,
+non-constant* operand is *not* validated for convertibility: the checker resolves
+`T`, checks that `x` is well-formed, and yields `T`. A `cast` whose source and
+target are not among the defined value conversions above is therefore the
+programmer's responsibility (its run-time meaning may be unspecified).
 
-> _Open (notes vs. implementation)._ The design notes describe a compile-time
-> **fit check** on a constant argument to `cast` (e.g. `cast(uint, -1)` an
-> error). The current type-checker does **not** enforce this — `cast` accepts
-> any well-formed argument. (This is distinct from the fit-check on a plain
-> *assignment* of a constant, which **is** enforced — `var x uint8 = 256` is an
-> error; Ch.6.) Whether `cast` should fit-check constant arguments is an open
-> item (`conv.cast.literal-fit`, `claude-todo.md`).
+`conv.cast.const-not-laundered` — A `cast` does **not** launder a constant. If
+`x` is a constant — an untyped literal, a constant expression, or a
+`const`-declared name, **including** one given a type by an enclosing `cast` —
+then `cast(T, x)` is **itself a constant**, and its mathematical value must fit
+`T`'s range, exactly as for a constant assignment (§6.4 `const.expr.fit`). An
+out-of-range constant cast is a **compile-time error**:
+
+```
+cast(uint, -1)                     // error: -1 not in uint range
+cast(uint8, 256)                   // error: 256 not in [0, 255]
+cast(int8, cast(int, 200))         // error: still the constant 200, not in int8
+const C int = 200; cast(int8, C)   // error: same — no constant→runtime escape
+```
+
+A `cast`, like a `const` declaration, is one of the ways a literal acquires a
+type, so there is **no** constant→runtime escape: if `const C int8 = 200` is an
+error, then every cast naming that same out-of-range value, however nested, is
+also an error. To produce an out-of-range value deliberately, **mask** for a
+different-size truncation (`cast(uint8, N & 0xff)`) or **`bit_cast`** for a
+same-size reinterpret (`bit_cast(uint64, cast(int64, neg))`; §8.6).
+
+> _Implementation note._ The constant fit-check (`types.checkCastConstFits`, at
+> the value and array-dimension positions) is implemented but **not yet in the
+> shipping toolchain**, pending integration (`claude-todo.md`); on the current
+> build an out-of-range constant `cast` is still accepted.
+
+> _Open (precision residual)._ The fit-check folds a `const`-name / arithmetic /
+> nested-cast operand through a host `int`, so a constant of magnitude **≥ 2^63**
+> can be mis-judged: `const M uint64 = 0x8000000000000000; cast(int64, M)` is
+> *not* rejected (the wrapped host value −2^63 "fits" `int64`). The direct /
+> untyped-literal path is exact. The proper fix carries the exact value on the
+> constant symbol (`conv.cast.literal-fit` residual, `claude-todo.md`).
 
 `conv.cast.float-int-saturation` — **Float → integer at the out-of-range /
 non-finite edge saturates** to a single value defined identically across every
