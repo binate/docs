@@ -140,17 +140,14 @@ also an error. To produce an out-of-range value deliberately, **mask** for a
 different-size truncation (`cast(uint8, N & 0xff)`) or **`bit_cast`** for a
 same-size reinterpret (`bit_cast(uint64, cast(int64, neg))`; §8.6).
 
-> _Implementation note._ The constant fit-check (`types.checkCastConstFits`, at
-> the value and array-dimension positions) is implemented but **not yet in the
-> shipping toolchain**, pending integration (`claude-todo.md`); on the current
-> build an out-of-range constant `cast` is still accepted.
-
-> _Open (precision residual)._ The fit-check folds a `const`-name / arithmetic /
-> nested-cast operand through a host `int`, so a constant of magnitude **≥ 2^63**
-> can be mis-judged: `const M uint64 = 0x8000000000000000; cast(int64, M)` is
-> *not* rejected (the wrapped host value −2^63 "fits" `int64`). The direct /
-> untyped-literal path is exact. The proper fix carries the exact value on the
-> constant symbol (`conv.cast.literal-fit` residual, `claude-todo.md`).
+> _Open (precision residual)._ The fit-check folds a constant operand **exactly**
+> (over `[-2^63, 2^64-1]`) for literals, `const`-names, nested casts, and
+> arithmetic. A constant reached through a **bitwise or shift** operation is not
+> yet modeled exactly and falls back to a host-`int` fold, so such an operand of
+> magnitude **≥ 2^63** can be wrongly accepted: `const A uint64 =
+> 0x4000000000000000; cast(int64, A << 1)` is *not* yet rejected. The fix is to
+> model bitwise operations in the exact fold (`conv.cast.literal-fit` residual,
+> `claude-todo.md`).
 
 `conv.cast.float-int-saturation` — **Float → integer at the out-of-range /
 non-finite edge saturates** to a single value defined identically across every
