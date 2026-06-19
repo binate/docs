@@ -207,6 +207,14 @@ value must be assignable to its field.
 omitted trailing positions are zero (`[3]int{7}` → `{7, 0, 0}`; `[N]T{}` is
 all-zero).
 
+`expr.composite.array.indexed` — An array literal may set positions **by
+index**: `[N]T{i: v}` places `v` at index `i` (a constant in `[0, N)`); positions
+not named are zero (`[5]int{1: 10, 3: 30}` → `{0, 10, 0, 30, 0}`). Keyed and
+positional elements within one literal are not mixed.
+
+`expr.composite.array.inferred-len` — `[...]T{…}` infers the array length from
+the number of elements: `[...]int{1, 2, 3}` has type `[3]int`.
+
 `expr.composite.slice` — A managed-slice literal `@[]T{…}` builds a fresh
 managed-slice (a new backing, reference count 1; managed elements are retained).
 A raw-slice literal is permitted only with **const elements**, `*[]readonly T{…}`
@@ -250,15 +258,15 @@ prose here and the design notes govern). The expression-relevant ones:
   expression statement; §14).
 - **D4** — in the condition of `if`/`for`/`switch`, a bare composite literal
   `Type{…}` is **not** recognized (the `{` begins the block); the value must be
-  produced another way. _(See the defect note below.)_
+  produced another way — e.g. by **parenthesizing** it
+  (`expr.disambiguation.d4-paren`).
 - **D5** — a postfix `[…]` is a slice when it contains `:`, a generic
   instantiation when it has multiple type arguments or its head is a generic
   function, and otherwise an index (resolved during type-checking; §12.2).
 - **D8** — `*`/`&`/`-` at the start of an operand are the unary operators; after
   a complete operand they are binary (resolved by precedence; §13.2).
 
-> _Open / known defect (D4)._ The design (like Go) says a composite literal may
-> be used in a control-flow condition by **parenthesizing** it (`if (Point{…}) ==
-> p`). The parser's composite-literal suppression is a single flag that is **not**
-> cleared on entering parentheses, so the parenthesized escape does **not**
-> currently work (`expr.disambiguation.d4-paren`, `claude-todo.md`).
+`expr.disambiguation.d4-paren` — A composite literal **may** be used in a
+control-flow condition by **parenthesizing** it: `(Point{…})` (e.g.
+`if (Point{…}).x == 9 { … }`). Entering parentheses clears the D4
+composite-literal suppression.
