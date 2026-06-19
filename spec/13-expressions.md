@@ -220,9 +220,7 @@ managed-slice view); it is also assignable to the other char array/slice targets
 instantiation**: `List[int]{…}`, `Pair[int, S]{first: …, second: …}` (§12). The
 element rules are those of the underlying struct/array/slice (above) with the
 type arguments substituted; the disambiguation between an instantiated literal
-head and indexing is the expression-context rule of §13.11. (Implementation gap:
-the parser does not yet build a generic-instantiated literal head — see the
-defects note below.)
+head and indexing is the expression-context rule of §13.11.
 
 > _Open / known defects (composite literals)._ Several composite-literal features
 > in the design are not correctly implemented and are flagged here pending fixes:
@@ -240,11 +238,6 @@ defects note below.)
 >   **is** enforced for keyed elements). (`expr.composite.struct.positional-unchecked`,
 >   MINOR, `claude-todo.md`.) Over-count — more positional values than the struct
 >   has fields — **is** rejected.
-> - **Generic-instantiated literal heads** `Foo[T]{…}` are specified
->   (`expr.composite.generic`) but **not yet built by the parser** — after the
->   head the parser consumes `[…]` as instantiation/index and never enters the
->   composite-literal path, so the trailing `{…}` is left to the statement layer
->   (`expr.composite.generic-unparsed`, `claude-todo.md`).
 
 ## 13.11 Grammar disambiguation
 
