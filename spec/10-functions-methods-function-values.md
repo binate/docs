@@ -99,12 +99,10 @@ requires an **exact** argument count.
 > the inferred-length array literal `[...]T{…}` (§13) and the `__c_call` C-ABI
 > boundary marker (Annex D). Neither is a general variadic or spread facility.
 
-> _Open / known defect._ A function with an **empty** parameter list currently
-> accepts **any** number of arguments (the extra arguments are evaluated and
-> discarded) — the over-permissive arity check the empty-parameter builtins
-> `print`/`println`/`panic` rely on (§15) is not restricted to those builtins.
-> A user `func f()` called as `f(1, 2)` should be a "too many arguments" error
-> (`func.call.zero-param-arity`, `claude-todo.md`).
+> _Note._ A function with an **empty** parameter list likewise requires an
+> exact (zero) argument count: a user `func f()` called as `f(1, 2)` is a "too
+> many arguments" error. The loose arity check is restricted to the variadic
+> builtins `print`/`println`/`panic` (§15), which alone accept extra arguments.
 
 ## 10.4 Method receivers
 

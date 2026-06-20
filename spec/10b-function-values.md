@@ -150,8 +150,7 @@ other (Ch.19); a function value carries its own interpreter handle inline.
 
 > _Implementation-conformance gaps (Annex C)._ The function-value feature has
 > known backend-specific gaps that do not change the language rules: a VM-mediated
-> indirect call is currently limited to 7 argument words; capturing closures /
+> indirect call is currently limited to 7 argument words, and capturing closures /
 > method values with certain floating-point return or register-overflow shapes
-> fail on the native backends; and a method value over a value receiver fails on
-> the 32-bit ARM backend. These are tracked, test-pinned defects (`claude-todo.md`),
-> not design holes.
+> fail on the native backends. These are tracked, test-pinned defects
+> (`claude-todo.md`), not design holes.
