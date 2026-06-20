@@ -200,9 +200,10 @@ named-distinct collection type — only an alias.)
 
 `builtin.predeclared` — `print`, `println`, and `panic` are **predeclared
 functions** in the universe scope, not keyword-builtins: they lex as ordinary
-identifiers and may be **shadowed** by an in-scope binding. They are variadic and
-checked specially (each argument is type-checked, but there is no fixed parameter
-signature). All three yield no value.
+identifiers and may be **shadowed** by an in-scope binding, and all three yield no
+value. `print` and `println` are **variadic** and checked specially (each
+argument is type-checked, but there is no fixed parameter signature); `panic` has
+a **fixed** single-parameter signature (`builtin.panic`).
 
 `builtin.print` — `print(args…)` writes its arguments to standard output;
 `println(args…)` does the same followed by a newline. Multiple arguments are
@@ -217,12 +218,20 @@ fixed-point form).
 > dispatched through an interface, gated on interfaces/generics. The exact output
 > format is therefore **not** a stable normative guarantee (§20, `claude-todo.md`).
 
-`builtin.panic` — `panic(msg)` **aborts the program unrecoverably** with the
-diagnostic `msg` — a non-recoverable abort in the same family as the defined
-runtime traps (Ch.21). Binate has **no recoverable `panic`/`recover`**: errors
-are values (§14.14), and `panic` is reserved for "this must never happen" aborts.
-A `panic(…)` expression statement is a control-flow **terminator** for the
+`builtin.panic` — `panic(msg *[]readonly char)` takes a **single** argument — the
+diagnostic message, a read-only raw char slice (a string literal passes directly,
+borrowing its static storage, so no allocation happens on the abort path) — and
+**aborts the program unrecoverably** with that message, a non-recoverable abort in
+the same family as the defined runtime traps (Ch.21). It is **not** variadic and
+yields no value. Binate has **no recoverable `panic`/`recover`**: errors are
+values (§14.14), and `panic` is reserved for "this must never happen" aborts. A
+`panic(…)` expression statement is a control-flow **terminator** for the
 missing-return analysis (§14.13).
+
+> _Note (in progress)._ The single-argument `*[]readonly char` signature is
+> **decided**; the implementation is being reworked toward it. The current
+> shipping toolchain still treats `panic` as variadic (the same machinery as
+> `print`/`println`).
 
 > _Open (MAJOR — dual-mode divergence)._ `panic` is currently a **no-op in the
 > bytecode VM**: the interpreter lowers it to nothing and silently continues
