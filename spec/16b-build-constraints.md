@@ -126,11 +126,17 @@ args…)` calls the C symbol named by the string literal — emitted **verbatim*
 with **no name mangling** (the only such path; every other symbol is mangled from
 its package path) — with the C signature given as explicit Binate types (a `...`
 marker separates fixed from variadic arguments). Each argument, and the **return
-type**, must be a C-ABI-passable type: a **scalar or pointer** (pass a pointer for
-slices, structs, and managed values). **Void and struct returns are not yet
-supported** — a void C function is called by declaring a throwaway scalar return
-and discarding it. `__c_call` is **compiled-mode only**; the bytecode VM does not
-perform FFI.
+type**, must be a C-ABI-passable **scalar or pointer** (pass a pointer for
+slices, structs, and managed values) — **except** that a **void-returning** C
+function is written with the **string literal `"void"`** in the return-type
+position (where a Binate type would otherwise go). **Struct returns are not
+supported** — pass a pointer to an out-parameter instead. `__c_call` is
+**compiled-mode only**; the bytecode VM does not perform FFI.
+
+> _Note (pending feature)._ The `"void"` return form is a **decided** feature
+> still **in progress** (2026-06-19): until it lands, the current toolchain
+> rejects a void return, and a void C function is called by declaring a
+> throwaway scalar return and discarding it.
 
 > _Note._ Binate targets **C-free** systems: C is used only as the practical
 > bridge to existing OS interfaces (system calls, allocation), not as an

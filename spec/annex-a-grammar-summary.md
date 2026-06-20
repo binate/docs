@@ -423,8 +423,9 @@ BuiltinCall   = "make" "(" Type ")"
               | "unsafe_shl" "(" Expression "," Expression ")"
               | "unsafe_shr" "(" Expression "," Expression ")"
               | "_func_handle" "(" Expression ")"
-              | "__c_call" "(" string_literal "," Type { "," CCallArg } ")" ;
-CCallArg      = Expression | "..." ;   (* "..." marks the C varargs boundary *)
+              | "__c_call" "(" string_literal "," CCallRet { "," CCallArg } ")" ;
+CCallRet      = Type | string_literal ; (* the C return type, OR the string literal "void" for a void-returning C function *)
+CCallArg      = Expression | "..." ;    (* "..." marks the C varargs boundary *)
 
 ExpressionList = Expression { "," Expression } ;
 IdentifierList = identifier { "," identifier } ;
