@@ -247,9 +247,9 @@ sequences are recognized when the literal's bytes are decoded:
 
 `lex.escape.unsupported` — There is **no** `\uHHHH` (Unicode) escape, and no
 `\a`, `\b`, `\f`, `\v`, octal (`\NNN`), or eight-digit `\U` escape. A backslash
-followed by any character not listed above is currently decoded as that
-character literally — the backslash is dropped — with no diagnostic; whether an
-unrecognized escape should instead be rejected is an open item.
+followed by any character not listed in `lex.escape.set` is an error, reported as
+`unknown escape sequence`; a malformed `\xHH` (a non-hexadecimal digit, or fewer
+than two digits) is reported as `\x escape requires two hex digits`.
 
 > _Note (lexical vs. decoding)._ The scanner does not validate or decode
 > escapes — it carries the raw text through, and decoding to bytes happens in a
