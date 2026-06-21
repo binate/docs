@@ -302,12 +302,9 @@ reserved for the slice sugar `@[]T`/`*[]T`. Likewise, parentheses disambiguate a
 managed pointer to a managed/raw pointer or interface value (e.g. `@(@T)`,
 `@(*Iface)`).
 
-> _Open / known defect._ The documented rule is that bare `@[N]T` and `*[N]T`
-> (a base after `[` other than `]`) are syntax errors requiring the parenthesized
-> form. The parser enforces this for `*[N]T` (rejected) but **silently accepts
-> `@[N]T`** as `@([N]T)`. This asymmetry is a parser leniency
-> (`type.ptr.array-parens.at-leniency`, tracked in `claude-todo.md`); the
-> parenthesized forms are canonical.
+> _Note._ Both bare `@[N]T` and bare `*[N]T` (a base after `[` other than `]`)
+> are syntax errors requiring the parenthesized form; the parser rejects each
+> with a message pointing at the canonical `@([N]T)` / `*([N]T)` spelling.
 
 `type.ptr.nullability` — In v1 all pointers are **nullable**: `nil` is assignable
 to any raw or managed pointer type. Non-nullable pointers (a future `!`
