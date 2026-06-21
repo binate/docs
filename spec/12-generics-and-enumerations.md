@@ -1,6 +1,6 @@
 # 12. Generics and Enumerations
 
-> **Status:** mixed · **Maturity:** language rules Stable (v1 scope); two v1-restrictions unenforced — see the §12.1 and §12.4 gaps  
+> **Status:** mixed · **Maturity:** language rules Stable (v1 scope); one v1-restriction unenforced — see the §12.4 gap (constraint satisfaction unchecked for generic struct/interface instantiation)  
 > **Rule-ID prefix:** `gen`
 
 This chapter covers **generics** — type-parameterized functions, structs, and
@@ -33,10 +33,9 @@ production).
 **free functions**, not on **methods**: there are no generic methods on types
 (use a generic free function instead; §10.1).
 
-> _Open / known gap._ The checker does **not** currently reject a generic-method
-> declaration — a method written with type parameters is silently accepted and
-> only fails (with a confusing index-expression error) at a call site. It should
-> be diagnosed at declaration (`gen.no-generic-methods.unenforced`, `claude-todo.md`).
+> _Note._ A generic-method declaration is **diagnosed at the declaration** — a
+> method written with type parameters is rejected with "methods cannot have type
+> parameters", not deferred to a confusing call-site error.
 
 ## 12.2 Instantiation
 
