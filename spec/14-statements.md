@@ -1,6 +1,6 @@
 # 14. Statements
 
-> **Status:** mixed · **Maturity:** language rules Stable; one MAJOR implementation defect flagged (inc/dec on a non-identifier lvalue §14.5)  
+> **Status:** normative · **Maturity:** language rules Stable  
 > **Rule-ID prefix:** `stmt`
 
 **Statements** specify the executable behavior of a function body. This chapter
@@ -157,14 +157,10 @@ statement-only** (there is no prefix `++x` and no use in expression position; cf
 §13). The operand must be of **integer** type, and a `const` operand is rejected
 (a constant has no storage to mutate).
 
-> _Open (MAJOR — implementation defect)._ `++`/`--` on a **non-identifier**
-> lvalue — `a[i]++`, `p.field++`, `(*p)++` — type-checks clean but generates
-> **no code** (a silent no-op): the checker accepts any integer lvalue, while
-> code generation lowers only the identifier case. Common idioms such as
-> `counts[i]++` and `node.count++` therefore do nothing, with no diagnostic. The
-> fix is to lower the index/field/dereference lvalue forms (as assignment already
-> does); these are legitimate lvalue mutations, not forms to forbid
-> (`stmt.incdec.lvalue`, MAJOR, `claude-todo.md`).
+> _Note._ The operand may be any integer-typed assignable location — a bare
+> identifier (`x++`), an index (`a[i]++`, `s[i]++`), a struct field (`p.f++`,
+> including a value-struct field), or a dereference (`(*p)++`) — each is
+> incremented in place; the lvalue forms lower like the corresponding assignment.
 
 ## 14.6 Short variable declarations
 
