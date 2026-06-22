@@ -96,6 +96,10 @@ FRAMEWORK_PREFIXES = {"term", "notation", "behavior"}
 UNTESTABLE_ALLOWLIST = {
     "mem.move.optimization",  # move elision is an unobservable optimization
     "mem.scope-exit",         # intra-scope release *order* is unobservable
+    "exec.hosted",            # a target-conformance-class statement (which modes
+                              # a target provides); no per-program observable
+    "exec.embedding.api",     # points to a separate, out-of-scope specification
+                              # (Ch.1); no per-program observable here
 }
 
 # Prose signals that a rule names a must-reject / error case (the other half of
