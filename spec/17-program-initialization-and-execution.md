@@ -127,7 +127,7 @@ terminates. The set is:
 | Negative shift count (runtime) | §13.5 | `runtime error: negative shift count` |
 | `make_slice` negative length | §15.2 | `runtime error: make_slice with negative length` |
 | Nil-interface-value dispatch | §11.11 (`iface.dispatch.nil`) | (see below — mode-dependent) |
-| `panic(msg)` | §15.7 | (see below — currently incomplete) |
+| `panic(msg)` | §15.7 | `panic: <msg>` |
 
 `prog.panic.defined` — Each panic in the set is a **defined** abort: the
 condition is detected (or deterministically faults) and the program stops; it is
@@ -144,14 +144,10 @@ non-constant operands.
 action. A `panic(msg)` expression statement is also a control-flow terminator for
 the missing-return analysis (§14.13).
 
-> _Open (dual-mode gaps in `panic`/dispatch)._ Two members of the set are
-> realized inconsistently across the execution modes — flagged so the dual-mode
-> contract (§19) is not read as already met:
-> - **`panic(msg)`** aborts (exit 1) in compiled mode but currently **discards
->   its message**, and is a **no-op in the bytecode VM** (it neither aborts nor
->   prints, and control falls through) — a MAJOR dual-mode gap
->   (`builtin.panic.vm-noop`, `claude-todo.md`). The intended behavior is to
->   abort with the message in both modes.
+> _Open (dual-mode gap in dispatch)._ One member of the set is realized
+> inconsistently across the execution modes — flagged so the dual-mode contract
+> (§19) is not read as already met. (`panic(msg)` previously diverged — a no-op in
+> the bytecode VM — but now aborts with its message in both modes.)
 > - **Nil-interface-value dispatch** aborts with a message in the bytecode VM
 >   (`vm: call through nil interface value`) but is a **silent deterministic
 >   fault** (a null-vtable dereference) in compiled mode; on a target with **no
