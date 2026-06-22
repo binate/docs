@@ -144,14 +144,13 @@ difference are distinguished:
   deliberate, permanent boundary, not a pending feature.
 - **Tracked defects** (to be fixed). Where the two modes currently disagree on
   **defined** behavior, that is a non-conformance to be fixed, not sanctioned
-  latitude. The known cases are tracked in `claude-todo.md`: **`panic(msg)`'s
-  abort is realized inconsistently** — the bytecode VM treats it as a **no-op**
-  (no abort, no message), and the compiled backend **aborts but discards the
-  message**; the intended behavior is to abort *with* the message in both modes
-  (`builtin.panic.vm-noop`, §15.7, §17.5). Plus bounded realization limits of the
-  interpreter — its **reflection accessor** for non-built-in packages, and a cap
-  on the **argument count** of a cross-mode function-value call (the general
-  cross-mode dispatch mechanism itself is in place).
+  latitude. (`panic(msg)` previously diverged — a **no-op** in the bytecode VM,
+  and a message-discarding abort when compiled — but now **aborts with its
+  message in both modes** (`builtin.panic.vm-noop`, §15.7, §17.5).) The remaining
+  cases are bounded realization limits of the interpreter — its **reflection
+  accessor** for non-built-in packages, and a cap on the **argument count** of a
+  cross-mode function-value call (the general cross-mode dispatch mechanism
+  itself is in place).
 
 ## 19.6 In-process embedding (a goal)
 
