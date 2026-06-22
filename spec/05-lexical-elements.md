@@ -80,6 +80,17 @@ blank identifier) is defined where it applies (Ch.9, Ch.14), not lexically.
 An identifier that spells a reserved keyword (§5.4) or a builtin-operation
 keyword (§5.5) is that keyword token; otherwise it is an identifier token.
 
+`lex.ident.reserved` _(Constraint)_ — Identifiers beginning with two
+underscores (`__`), and identifiers containing the substring `__bn_inst__`,
+are reserved for the implementation and shall not be **declared** by a
+program. The implementation synthesizes such names for internal symbols (the
+program entry wrapper, generic-instantiation symbols, closure/copy helpers);
+a user declaration spelling one would collide with a synthesized symbol. A
+single leading underscore (`_name`) is not reserved (and the blank identifier
+`_` remains valid). The restriction is on *declared* names only — it does not
+constrain references, so an implementation-provided reserved-named operation
+may still be used.
+
 ## 5.4 Keywords
 
 `lex.keywords.reserved` — The following 24 identifiers are **reserved
