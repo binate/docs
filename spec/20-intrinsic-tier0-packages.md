@@ -173,7 +173,7 @@ package's reflective metadata through three types:
 ```
 type Package      struct { Name *[]readonly char; Functions *[]@FunctionInfo; Globals *[]@GlobalInfo }
 type FunctionInfo struct { Pkg @Package; Name *[]readonly char; Value *uint8;
-                           ResultSize int; ParamSlots int; Sig *[]readonly char }
+                           RetbufSize int; ParamSlots int; Sig *[]readonly char }
 type GlobalInfo   struct { Name *[]readonly char; Addr *uint8 }
 ```
 
@@ -184,8 +184,9 @@ accessor as the last entry (so a package is reflectable through its own table).
 `Globals` lists one `GlobalInfo` per `.bni`-exported package-level `var`.
 `FunctionInfo` carries **no** structured type information — only scalars plus the
 **fully-qualified** name and an **opaque** mangled signature string (`Sig`), which
-no consumer parses; `Value` points at the function-value handle, and `ResultSize`
-is the load-bearing scalar-vs-aggregate return discriminator. `GlobalInfo.Addr`
+no consumer parses; `Value` points at the function-value handle, and `RetbufSize`
+is the load-bearing scalar-vs-aggregate return discriminator — the aggregate
+retbuf byte size (0 for a scalar/void return). `GlobalInfo.Addr`
 is the global's raw storage cell.
 
 `pkg0.reflect.accessor` — The compiler emits, for **every** compiled package, one
