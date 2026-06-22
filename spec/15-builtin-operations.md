@@ -1,6 +1,6 @@
 # 15. Built-in Operations
 
-> **Status:** mixed · **Maturity:** mostly Stable (the VM `panic` no-op is flagged; `print`/`println` formatting is provisional)  
+> **Status:** mixed · **Maturity:** mostly Stable (`print`/`println` formatting is provisional)  
 > **Rule-ID prefix:** `builtin`
 
 A **built-in operation** is invoked with call syntax but is not an ordinary
@@ -122,13 +122,6 @@ width. Like `cast`, it is unchecked at the type layer; reinterpreting between
 different sizes, or in a way that violates a type's invariants, is undefined
 (Ch.21).
 
-> _Implementation note._ `cast` to a **sub-word integer** type is currently
-> miscompiled on the **native aarch64** backend (the result is not narrowed /
-> sign-extended to the type width); it is correct on the prebuilt builder, the
-> LLVM backend, and the bytecode VM. This is an implementation defect, not a
-> change to the intended truncation/extension semantics (`claude-todo.md`,
-> `aa64-subword`).
-
 ## 15.4 Size and length: `len`, `sizeof`, `alignof`
 
 `builtin.len` — `len(e)` is the number of elements of a **slice**, **managed-slice**,
@@ -232,13 +225,6 @@ missing-return analysis (§14.13).
 > **decided**; the implementation is being reworked toward it. The current
 > shipping toolchain still treats `panic` as variadic (the same machinery as
 > `print`/`println`).
-
-> _Open (MAJOR — dual-mode divergence)._ `panic` is currently a **no-op in the
-> bytecode VM**: the interpreter lowers it to nothing and silently continues
-> (discarding the message), whereas the compiled backends abort. So a `panic`
-> does not yet behave identically across execution modes, contrary to the
-> dual-mode contract (§19); its abort semantics are realized only in compiled
-> mode (`builtin.panic.vm-noop`, `claude-todo.md`).
 
 ## 15.8 Other built-ins
 
