@@ -100,6 +100,11 @@ UNTESTABLE_ALLOWLIST = {
                               # a target provides); no per-program observable
     "exec.embedding.api",     # points to a separate, out-of-scope specification
                               # (Ch.1); no per-program observable here
+    "pkg0.testing.testfunc",  # test-function DISCOVERY predicates are observable
+                              # only through the --test runner the conformance
+                              # harness does not provide
+    "pkg0.testing.run",       # test pass/fail EXECUTION + runner output likewise
+                              # need the --test runner; no ordinary-program observable
 }
 
 # Prose signals that a rule names a must-reject / error case (the other half of
