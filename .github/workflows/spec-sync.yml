@@ -1,0 +1,27 @@
+name: Spec sync
+
+# Gate the GENERATED artifacts against their sources, so an edit to the spec
+# that forgets to regenerate is caught in review rather than landing stale:
+#   - spec/rule-ids.txt        <- scripts/extract-rule-ids.py (the rule-ID inventory)
+#   - spec/annex-a-grammar-summary.md <- scripts/gen-annex-a.py (from the canonical EBNF)
+# Both checks are read-only `--check` runs (no toolchain, no network); each exits
+# non-zero if its artifact is out of date.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  spec-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: rule-ids.txt is up to date
+        run: python3 scripts/extract-rule-ids.py --check
+
+      - name: Annex A grammar summary is up to date
+        if: always()
+        run: python3 scripts/gen-annex-a.py --check
