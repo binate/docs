@@ -113,11 +113,10 @@ switch must be **boolean** — each case expression is itself the condition (the
 condition). With a tag present, the case-vs-tag assignability rule
 `stmt.switch.tag` applies instead.
 
-> _Open._ Because a case never falls through, a `break` inside a switch case is
-> unnecessary; if written inside a `switch` that is itself inside a loop, it
-> currently breaks the **enclosing loop**, not the switch (the reverse of Go). The
-> intended semantics of an explicit `break` inside a `switch` is unresolved
-> (`stmt.switch.break`).
+`stmt.switch.break` — A `break` inside a switch case exits the **switch**
+(Go-like); an enclosing loop, if any, **continues**. A case never falls through,
+so `break` is only needed for an early exit from the middle of a case body;
+statements after it in the same case do not run.
 
 ## 14.11 Return statements
 
