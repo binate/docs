@@ -107,11 +107,11 @@ matches. Switch **exhaustiveness is not checked**, there is **no duplicate-case
 check**, and `default` is not required (except as it bears on the
 terminating-statement analysis, §14.13).
 
-> _Open._ The case expressions of a **tagless** switch are not currently
-> constrained to `bool` (the assignability check is applied only when a tag is
-> present), so `switch { case 3: … }` is accepted though `3` is not a boolean
-> condition. The intended rule is that tagless-switch cases are boolean
-> (`stmt.switch.tagless-bool`).
+`stmt.switch.tagless-bool` _(Constraint)_ — The case expressions of a **tagless**
+switch must be **boolean** — each case expression is itself the condition (the
+`switch true` form), so `switch { case 3: … }` is rejected (`3` is not a boolean
+condition). With a tag present, the case-vs-tag assignability rule
+`stmt.switch.tag` applies instead.
 
 > _Open._ Because a case never falls through, a `break` inside a switch case is
 > unnecessary; if written inside a `switch` that is itself inside a loop, it
