@@ -93,7 +93,10 @@ reference is released, not at some later collection point.
 > reference: sub-slices share one backing and one count, so the elements are
 > released once, when that shared backing's count reaches 0 (§7.6). A length-0
 > slice has **no backing** (§7.7) and therefore no reference and a no-op
-> destructor.
+> destructor. More generally, a managed-slice with an **unowned** backing — null,
+> or an immortal-sentinel static-managed allocation (§7.13.6
+> `type.layout.slice-managed.backing`) — releases as a no-op and is never freed
+> (any managed elements it holds must themselves be immortal).
 
 `mem.immortal` — **Static-managed** allocations — values emitted into the program
 image rather than heap-allocated, such as string-literal backing (§6.6) and

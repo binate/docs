@@ -257,6 +257,11 @@ raw slice, `{null, 0, null, 0}` for a managed-slice (§7.13). Empty and "nil"
 slices are therefore indistinguishable; there is no "empty view of live backing"
 state. Every slice-producing operation establishes this (`make_slice(T, 0)`, an
 empty sub-slice, and empty/static literals all yield the no-backing empty).
+Conversely, a **non-empty** managed-slice may itself have an **unowned** backing —
+null, or an immortal sentinel — when it views immortal static read-only data
+(a `@[]readonly char` literal), so a null backing does **not** by itself imply an
+empty slice. The full owned-vs-unowned backing contract is §7.13.6
+(`type.layout.slice-managed.backing`).
 
 > _Note._ This is a **representation** contract enforced when slices are produced
 > (in lowering and at run time), not a type-checker rule — the type system

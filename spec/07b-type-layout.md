@@ -100,6 +100,28 @@ Size `4W`, alignment `W`. The **first two words are byte-identical** to a raw
 slice — which is what makes the `@[]T` → `*[]T` decay (§7.6) a field extraction.
 A length-0 managed-slice has no backing: `{null, 0, null, 0}` (§7.7).
 
+`type.layout.slice-managed.backing` — The `backing` word records whether the
+slice **owns** a reference-counted allocation. The backing is **owned** — its
+`RefDec` frees it when the count reaches 0, running the element destructor across
+`backingLen` (§18.2) — **iff** `backing` is **non-null** *and* the allocation's
+reference count is a normal **positive** value. It is **unowned / immortal** —
+`RefInc`/`RefDec` are no-ops and it is never freed — in either of two forms:
+
+- **`backing == null`** (no managed header): the slice is either empty
+  (`{null, 0, null, 0}`, §7.7) **or** a view of **immortal static read-only data**
+  with a non-null `data` — a `@[]readonly char` string/char-slice literal is
+  `{data, len, null, len}`.
+- **`backing != null` carrying the immortal sentinel**: the backing is a
+  **static-managed** allocation whose `{refcount, free_fn}` header (§7.13.7) holds
+  the deeply-negative `STATIC_REFCOUNT` sentinel, so the refcount operations
+  short-circuit on the negative count (§18.2 `mem.immortal`).
+
+Consequently a **null backing does not imply an empty slice** (a non-empty static
+view also has an unowned backing), and an unowned backing may be **null *or* a
+sentinel allocation**. Because an unowned backing's `RefDec` never reaches 0, its
+element destructor never runs — so any **managed** elements held by such a backing
+must themselves be immortal.
+
 ## 7.13.7 The managed-allocation header
 
 `type.layout.header` — Every managed allocation is prefixed by a **2-word header
