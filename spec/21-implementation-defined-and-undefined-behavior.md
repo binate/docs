@@ -228,7 +228,7 @@ defined-in-intent, defective-in-realization) include:
   intended rule is element-wise comparison (§13.6 `expr.compare.aggregate`). (Slices,
   interface values, and function values are **by design** never comparable — a
   Constraint, not a defect.)
-- The interpreter's **`_Package()` reflection accessor** for non-built-in packages
+- The interpreter's **`__Package()` reflection accessor** for non-built-in packages
   (§20.3 `pkg0.reflect.vm-gap`) and a **cap** on the argument count of a cross-mode
   function-value call (the general cross-mode dispatch mechanism is in place,
   §19.5).

@@ -159,11 +159,11 @@ different-package types is rejected (§7).
 import cycle is a compile error (a message of the form `import cycle: <path>`).
 
 `pkg.package-accessor` — Every package additionally has a compiler-synthesized
-`_Package()` accessor — present in every package without any `.bni` declaration —
+`__Package()` accessor — present in every package without any `.bni` declaration —
 that returns the package's reflection descriptor (Ch.20). (The `main` package and
 program entry are Ch.17.)
 
-> _Implementation note._ The `_Package()` accessor is currently emitted only as a
+> _Implementation note._ The `__Package()` accessor is currently emitted only as a
 > native function, so the bytecode VM cannot reach it for user/standard-library
 > packages (it works for the built-in packages); the reflection descriptor it
 > returns is otherwise mode-agnostic (`claude-todo.md`).

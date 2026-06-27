@@ -179,7 +179,7 @@ type GlobalInfo   struct { Name *[]readonly char; Addr *uint8 }
 
 `Package.Name` is the package's **full import path** (not the last segment).
 `Functions` lists one `FunctionInfo` per `.bni`-exported **non-extern** function
-in declaration order, **followed by** the package's own synthesized `_Package`
+in declaration order, **followed by** the package's own synthesized `__Package`
 accessor as the last entry (so a package is reflectable through its own table).
 `Globals` lists one `GlobalInfo` per `.bni`-exported package-level `var`.
 `FunctionInfo` carries **no** structured type information — only scalars plus the
@@ -195,7 +195,7 @@ the immortal sentinel of §18.2, so acquiring/releasing it is a no-op and it is
 never freed) and a synthesized accessor
 
 ```
-func _Package() @reflect.Package
+func __Package() @reflect.Package
 ```
 
 that returns it. The accessor is **not** declared in any `.bni`; the compiler
@@ -213,14 +213,14 @@ metadata** (a `TypeInfo` surface) is a **later phase**, and its opt-in granulari
 question. Pure-C **extern** functions are **not** introspectable (the descriptor
 emitter skips them).
 
-`pkg0.reflect.vm-gap` — Under the **bytecode VM**, the `_Package()` accessor is
+`pkg0.reflect.vm-gap` — Under the **bytecode VM**, the `__Package()` accessor is
 reached only for a small fixed set of **built-in** packages (bound through
 hardcoded externs); a user or standard-library package compiled to bytecode has
-**no** native `_Package` symbol, so its `_Package()` is currently unavailable
+**no** native `__Package` symbol, so its `__Package()` is currently unavailable
 under the interpreter. This is a **tracked, deferred** interpreter-backend defect
-(Annex C, `claude-todo.md`): the conformance tests that pin `_Package().Name` ==
+(Annex C, `claude-todo.md`): the conformance tests that pin `__Package().Name` ==
 import path pass on the **compiled** modes and are **xfailed** on the VM modes.
-The proper fix emits each package's `_Package()` and its descriptor as **bytecode**
+The proper fix emits each package's `__Package()` and its descriptor as **bytecode**
 (the VM equivalent of the compiled descriptor) rather than as hardcoded externs.
 
 ## 20.4 `pkg/builtins/testing` — testing support
