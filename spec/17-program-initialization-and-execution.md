@@ -84,16 +84,19 @@ global; argument access is therefore **host-dependent** (Ch.2, hosted vs
 freestanding conformance; the providing package, where present, is a tier-0
 package, Ch.20).
 
-> _Note (by design)._ Entry-point resolution is a **link-time / program-assembly**
-> concern, not a per-package compile-time check. The compiler processes **one
-> package at a time**, and any package may be compiled or loaded independently and
-> have its functions called across the compiled/interpreted boundary (the
-> dual-mode interop model, Ch.19); no single compilation sees the whole program,
-> so whether a valid `func main()` entry point exists **cannot** be determined
-> when a package is compiled — and requiring it would cut against that interop
-> model. A missing or wrong-shaped `main` therefore surfaces when the program is
-> **assembled** (a link-time failure). This is intrinsic to the separate-compilation
-> model, not a missing diagnostic.
+> _Note (by design)._ Two facets, two phases. **(1) Shape of a present `main` —
+> compile-time.** If the `main` package declares a `func main`, its **signature**
+> (`func main()` with no parameters and no results) is checked when *that* package
+> is compiled — the `main` package's own compilation sees its own `main`, so a
+> wrong-shaped `func main(x int)` or `func main() int` is rejected at compile time.
+> **(2) Existence of a `main` package — link-time.** Whether the *program* has a
+> `main` package at all **cannot** be determined when a single package is compiled:
+> the compiler processes **one package at a time**, and any package may be compiled
+> or loaded independently and have its functions called across the
+> compiled/interpreted boundary (the dual-mode interop model, Ch.19). So a
+> **missing** `main` package (no entry) is a **link-time / program-assembly**
+> failure, intrinsic to the separate-compilation model — not a per-package
+> compile-time check.
 
 ## 17.4 Program termination
 
