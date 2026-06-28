@@ -137,7 +137,15 @@ managed-slice view of the static data). Its assignable targets are:
 | `@[]readonly char` | managed-slice borrowing the static data (zero cost) — the default |
 | `*[]readonly char` | raw slice borrowing the static data |
 | `@[]char` | allocate and copy (a mutable owned copy) |
-| `[N]readonly char` / `[N]char` | array copy (length must match) |
+| `[M]readonly char` / `[M]char` | array copy into a fixed buffer of length **M ≥ N**; the `N` bytes are copied and any tail (`M − N`) is **zero-padded** |
+
+For the array targets, the literal's `N` bytes must *fit* — `M ≥ N`. An exact
+fit (`M = N`) copies all bytes; a larger buffer (`M > N`) zero-pads the
+remaining elements (a fixed-size string buffer initialized from a shorter
+literal). An **over-long** literal (`N > M`) does not fit and is a compile-time
+error. This is a *literal-only* convenience: it applies when the source is
+syntactically a string literal, not to an arbitrary `[N]readonly char` value
+(whose array-copy rules require an exact length match — Ch.7).
 
 Assigning a string literal to `*[]char` is **not** permitted (a raw slice
 cannot own a mutable copy, and a mutable borrow of read-only static data is
