@@ -255,12 +255,25 @@ sequences are recognized when the literal's bytes are decoded:
 | `\'` `\"` | single quote, double quote |
 | `\0` | NUL (`0x00`) |
 | `\xHH` | the byte with the given two hexadecimal digits |
+| `\uHHHH` | the **UTF-8 encoding** of the Unicode code point U+HHHH (four hex digits; 1–3 bytes) |
 
-`lex.escape.unsupported` — There is **no** `\uHHHH` (Unicode) escape, and no
-`\a`, `\b`, `\f`, `\v`, octal (`\NNN`), or eight-digit `\U` escape. A backslash
-followed by any character not listed in `lex.escape.set` is an error, reported as
-`unknown escape sequence`; a malformed `\xHH` (a non-hexadecimal digit, or fewer
-than two digits) is reported as `\x escape requires two hex digits`.
+`lex.escape.unicode` — `\uHHHH` requires **exactly four** hexadecimal digits and
+denotes a Unicode **scalar value** U+HHHH (the range U+0000–U+FFFF): a UTF-16
+**surrogate** (U+D800–U+DFFF) is not a scalar value and is rejected
+(`is a UTF-16 surrogate`), and fewer than four digits is rejected (`escape
+requires four hex digits`). In a **string** literal it expands to the **UTF-8
+encoding** of the code point — 1–3 bytes — contributing that many bytes to the
+literal's length (and to its natural array type, §5.9). In a **character**
+literal it must encode to a **single byte** — code point ≤ U+007F — otherwise it
+is rejected (`char literal must be a single byte`), since a `char` is one byte
+(§5.10). There is no eight-digit `\U` escape, so code points above U+FFFF have no
+escape form.
+
+`lex.escape.unsupported` — There is no `\a`, `\b`, `\f`, `\v`, octal (`\NNN`), or
+eight-digit `\U` escape. A backslash followed by any character not listed in
+`lex.escape.set` is an error, reported as `unknown escape sequence`; a malformed
+`\xHH` (a non-hexadecimal digit, or fewer than two digits) is reported as
+`\x escape requires two hex digits`.
 
 > _Note (lexical vs. decoding)._ The scanner does not validate or decode
 > escapes — it carries the raw text through, and decoding to bytes happens in a

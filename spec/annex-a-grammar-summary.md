@@ -71,12 +71,14 @@ string_char    = (* any character except '"', "\", or newline *) ;
 char_literal  = "'" ( char_char | escape_seq ) "'" ;
 char_char     = (* any character except "'", "\", or newline *) ;
 
-(* The valid escape set is shared by string and char literals.  The lexer does
-   not validate escapes — it carries the raw text through and decoding happens
-   later.  There is NO "\u…" Unicode escape and no octal / \a \b \f \v escape
-   (§5). *)
+(* The valid escape set is shared by string and char literals (the lexer carries
+   the raw text through; decoding and validation happen later).  "\uHHHH" is a
+   Unicode code point: UTF-8-expanded in a string literal, restricted to a single
+   byte (<= U+007F) in a char literal; surrogates are rejected.  There is no octal,
+   no eight-digit "\U", and no \a \b \f \v escape (§5). *)
 escape_seq    = "\" ( "n" | "r" | "t" | "\" | "'" | '"' | "0"
-              | "x" hex_digit hex_digit ) ;
+              | "x" hex_digit hex_digit
+              | "u" hex_digit hex_digit hex_digit hex_digit ) ;
 
 (* --- Operators and punctuation --- *)
 (*  +    -    *    /    %    &    |    ^    ~    <<   >>
