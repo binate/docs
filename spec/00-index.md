@@ -60,7 +60,7 @@ every term they need is defined.
 | 17 | [Program Initialization and Execution](17-program-initialization-and-execution.md) | mixed | Stable rules; entry/termination host-dependent; panic gaps flagged | `prog` |
 | 18 | [Memory Model: Reference Counting and Object Lifetime](18-memory-model-reference-counting.md) | mixed | Stable axioms (ownership-transfer DECIDED); move is an optimization | `mem` |
 | 19 | [Execution Model: the Abstract Machine and Dual-Mode Interop](19-execution-model-dual-mode.md) | mixed | Contract Stable; in-process embedding a goal | `exec` |
-| 20 | [Intrinsic (Tier-0) Packages](20-intrinsic-tier0-packages.md) | mixed | lang Stable (float-NaN Provisional); rt Draft (gated); reflect Draft; testing Provisional | `pkg0` |
+| 20 | [Intrinsic (Tier-0) Packages](20-intrinsic-tier0-packages.md) | mixed | lang Stable; rt Draft (gated); reflect Draft; testing Provisional | `pkg0` |
 | 21 | [Implementation-defined, Unspecified, and Undefined Behavior](21-implementation-defined-and-undefined-behavior.md) | normative | contracts Stable; optional int64/float availability gap (§21.4) | `behavior` |
 | A | [Grammar Summary](annex-a-grammar-summary.md) | normative | Stable (generated from `binate.ebnf`) | `grammar` |
 | B | [Implementation Model and Implementation-defined Index](annex-b-implementation-model-and-idb-index.md) | mixed | Split Stable | `impl` |

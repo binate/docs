@@ -1,6 +1,6 @@
 # 20. Intrinsic (Tier-0) Packages
 
-> **Status:** mixed · **Maturity:** lang Stable (float-NaN corner Provisional); rt Draft (gated); reflect Draft; testing Provisional  
+> **Status:** mixed · **Maturity:** lang Stable; rt Draft (gated); reflect Draft; testing Provisional  
 > **Rule-ID prefix:** `pkg0`
 
 A small set of **tier-0 intrinsic packages** are part of the **core language**:
@@ -101,7 +101,7 @@ require type-erased dispatch). Object-safety is **per method**: `Hashable.Hash()
 does **not** mention `Self`, so `Hash` **is** callable through a `*Hashable`
 interface value even though `Compare` is not.
 
-### Primitive implementations and the float-NaN corner
+### Primitive implementations and the float-NaN total order
 
 `pkg0.lang.primitives` — `pkg/builtins/lang` ships, for **all thirteen** universe
 primitive scalar types (`int`, `int8`, `int16`, `int32`, `int64`, `uint`,
@@ -110,33 +110,28 @@ implementations of `Stringer`, `Comparable`, `Orderable`, and `Hashable`. For th
 integer and `bool` types these are fully **Stable**: `Compare` yields `-1`/`0`/`1`
 by natural ordering, and `Hash` is the (zero-extended) bit pattern.
 
-`pkg0.lang.float-nan` _(Provisional)_ — The **float** `Compare`/`Hash` impls do
-**not** yet realize a self-consistent total order at `NaN`:
+`pkg0.lang.float-nan` _(Stable)_ — The **float** `Compare`/`Hash` impls realize a
+self-consistent **total order** at `NaN`:
 
-- The shipped `float32`/`float64` `Compare` is `a < b ? -1 : a > b ? 1 : 0`. With
-  IEEE-754 operator semantics (§13), **any** comparison involving `NaN` makes both
-  `<` and `>` false, so `Compare` returns **`0`** — i.e. `NaN` compares "equal" to
-  every value, including other `NaN`s and finite values. This is **not** a total
-  order (it breaks antisymmetry and transitivity), so `impl float64 : Orderable`'s
-  promise is currently unmet at `NaN`.
-- The shipped float `Hash` reinterprets the **bit pattern**, so distinct `NaN`
-  bit patterns hash **differently** — formally inconsistent with `Compare`'s
-  "`NaN` equals `NaN`" (`pkg0.lang.hashable`'s consistency requirement).
+- `float32`/`float64` `Compare` is the **IEEE total order**: every `NaN` — any
+  sign, any payload — sorts **above** every finite value **and** above `+Inf`, and
+  all `NaN`s compare **equal** to one another, so a sequence `-Inf, …finites…,
+  +Inf, NaN` is monotonic. Among non-`NaN` values the order is the IEEE-754
+  `totalOrder` predicate on the bit pattern, which additionally distinguishes
+  `-0.0 < +0.0`. This **deliberately differs** from the §13 **operator**
+  comparison (IEEE-754 *ordered* for `<`/`==`, *unordered* for `!=`): a reader
+  **shall not** assume `a.Compare(b) < 0` tracks `a < b` when a `NaN` is involved.
+- Because `Compare` folds every `NaN` into one equivalence class, the float `Hash`
+  **canonicalizes** any `NaN` to a single value (the hash of the canonical quiet-
+  `NaN` bits), so distinct `NaN` bit patterns hash **identically** — satisfying
+  `pkg0.lang.hashable`'s consistency requirement (`Compare(a, b) == 0` ⇒
+  `Hash(a) == Hash(b)`). Non-`NaN` values still hash by bit pattern; the
+  `-0.0 < +0.0` ordering keeps signed zeros consistent (their bits already differ).
 
-The **ratified** intent is **IEEE total ordering** for float `Compare` — `NaN`
-sorts after every finite value **and** after `+Inf`, so a sequence `-Inf,
-…finites…, +Inf, NaN` is monotonic — with a matching `Hash`. The current impl is a
-tracked non-conformance against that intent, to be revised when
-`NaN`-correctness becomes load-bearing (Annex C, `claude-todo.md`). Note also that
-the ratified `Compare` total order **deliberately differs** from the §13
-**operator** comparison (which is IEEE-754 *ordered* for `<`/`==` and *unordered*
-for `!=`): a reader **shall not** assume `a.Compare(b) < 0` tracks `a < b` when a
-`NaN` is involved.
-
-> _Note._ The `Self` type, the canonical-interface signatures, and the carve-out
-> are DECIDED; what remains open is the float-`NaN` corner above. The `cmd/bni`
-> (bytecode-VM) compile path's force-loading of `pkg/builtins/lang` is a tracked
-> follow-up (Annex C); the compiled path is conformant.
+> _Note._ The `Self` type, the canonical-interface signatures, the carve-out, and
+> the float-`NaN` corner above are all DECIDED. The `cmd/bni` (bytecode-VM)
+> compile path's force-loading of `pkg/builtins/lang` is a tracked follow-up
+> (Annex C); the compiled path is conformant.
 
 ## 20.2 `pkg/builtins/rt` — the runtime contract
 

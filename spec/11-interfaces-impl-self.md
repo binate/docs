@@ -211,10 +211,10 @@ section naming them and the carve-out. (Verified against
 `pkg/builtins/lang` so the impls attach to the primitive types. Naming the
 interface **type** (`*lang.Stringer`) still requires importing the package.
 
-> _Open items (§20.1)._ The canonical floating-point `Compare` does not implement
-> IEEE total order (NaN compares equal to itself), and `float` `Hash` uses raw
-> bits (so distinct NaN bit patterns hash inconsistently with `Compare`-equality).
-> Tracked for §20.1.
+> _§20.1._ The canonical floating-point `Compare` implements the IEEE total order
+> — every `NaN` sorts above `+Inf` and all `NaN` compare equal, and `-0.0 < +0.0`
+> — and `float` `Hash` canonicalizes `NaN`, so it is consistent with
+> `Compare`-equality.
 
 ## 11.11 Dynamic dispatch
 

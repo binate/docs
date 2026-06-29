@@ -232,8 +232,6 @@ defined-in-intent, defective-in-realization) include:
   (§20.3 `pkg0.reflect.vm-gap`) and a **cap** on the argument count of a cross-mode
   function-value call (the general cross-mode dispatch mechanism is in place,
   §19.5).
-- The **float-`NaN`** corner of the canonical `Compare`/`Hash` impls
-  (§20.1 `pkg0.lang.float-nan`).
 
 > _Note (permanent carve-out, not a defect)._ The bytecode VM performs **no**
 > foreign-function calls: `__c_call` is a **compiled-mode-only** facility and will
