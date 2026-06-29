@@ -29,7 +29,10 @@ carried through verbatim); anywhere else it is an illegal character
 > _Note._ The design notes did not previously record a source-encoding
 > decision; this is the normative rule. Non-ASCII content in string/character
 > literals is stored as the literal bytes (UTF-8 is the conventional choice but
-> is not interpreted by the language).
+> is not interpreted by the language). The one place a code point is interpreted
+> is the `\uHHHH` escape (§5.11), which **encodes** its code point to UTF-8 when
+> a literal's *value* is decoded — a later literal-decoding step, distinct from
+> the raw-byte source classification specified here.
 
 `lex.source.eof` — End of input is the boundary past the last byte. An
 embedded NUL byte (`0x00`) is treated as end of input; consequently a source
