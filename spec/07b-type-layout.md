@@ -109,8 +109,8 @@ reference count is a normal **positive** value. It is **unowned / immortal** —
 
 - **`backing == null`** (no managed header): the slice is either empty
   (`{null, 0, null, 0}`, §7.7) **or** a view of **immortal static read-only data**
-  with a non-null `data` — a `@[]readonly char` string/char-slice literal is
-  `{data, len, null, len}`.
+  with a non-null `data` (e.g. a `@[]readonly char` literal **when compiled** — see
+  the environment-lifetime note below).
 - **`backing != null` carrying the immortal sentinel**: the backing is a
   **static-managed** allocation whose `{refcount, free_fn}` header (§7.13.7) holds
   the deeply-negative `STATIC_REFCOUNT` sentinel, so the refcount operations
@@ -121,6 +121,30 @@ view also has an unowned backing), and an unowned backing may be **null *or* a
 sentinel allocation**. Because an unowned backing's `RefDec` never reaches 0, its
 element destructor never runs — so any **managed** elements held by such a backing
 must themselves be immortal.
+
+> _Environment-lifetime of a `@[]readonly char` literal._ A `@[]readonly char`
+> string/char-slice literal lives **at least as long as its environment**, and its
+> `backing` form realizes that lifetime — which **differs by execution mode**. This
+> is an accepted mode-specific realization, **not** marshalling or a layout
+> divergence (§19.3 `exec.contract.layout`): the 4-word layout and the
+> reference-counting mechanism (§18) are identical in both modes, and the value is
+> self-describing (its own `backing` + refcount govern `RefInc`/`RefDec`).
+>
+> - **Compiled** — the environment is the program image, so the literal is
+>   **immortal**: `{data, len, null, len}` (a null-backing view of immortal static
+>   read-only data; `data` non-null, `backingLen == len`).
+> - **Interpreted** — the environment is the **VM instance**, which **interns** the
+>   literal and **holds a reference** to it. The backing is therefore a normal
+>   **owned** allocation (non-null, positive refcount, `backingLen == len`): the
+>   literal is created once and lives at least as long as the VM, independent of any
+>   user reference.
+>
+> **Exchanging** a **managed** reference to such a literal **across environments**
+> is safe (the holder's refcount keeps it alive) — including between distinct VM
+> instances, possibly routed through compiled code. The one unsafe case is a **raw**
+> `*[]readonly char` borrow retained **outside its originating environment** — e.g.
+> past the VM instance's teardown — which is ordinary borrow-misuse (Ch.21), not a
+> defined cross-mode guarantee.
 
 ## 7.13.7 The managed-allocation header
 
