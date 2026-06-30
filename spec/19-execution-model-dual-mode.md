@@ -74,6 +74,13 @@ values — with **no marshalling** at the boundary. Memory layout is therefore a
 **and** the interpreter; any layout divergence is **silent data corruption**.
 This is the keystone that makes the two modes share one heap.
 
+> _Note._ "Same layout" pins field **positions and sizes**; a field's *value* may
+> still differ per mode where the value is **self-describing**. The one sanctioned
+> case is a `@[]readonly char` literal's `backing` word, whose form realizes the
+> literal's environment-lifetime — immortal (null backing) when compiled, an owned
+> VM-interned allocation when interpreted — an accepted mode-specific realization,
+> not a layout divergence (`type.layout.slice-managed.backing`, §7.13).
+
 `exec.contract.errors` — Errors are **values**, not exceptions (§14.14): there is
 **no stack unwinding** to bridge across the mode boundary, so a call that crosses
 modes is an ordinary call returning ordinary values.
