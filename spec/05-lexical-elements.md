@@ -201,8 +201,11 @@ exponent      = ( "e" | "E" ) [ "+" | "-" ] digit { digit } ;
 `lex.literal.float.range-carveout` — Two dots in a row are never part of a
 float: `1..2` is the tokens `1`, `.`, `.`, `2` (the `..` is reserved for future
 range syntax), and a leading-`.` float is not recognized when the preceding
-token is `.`. A `.` followed by a non-digit is the selector operator, so
-`1.field` is `1` then `.` then `field`.
+token is `.`. The trailing-dot float form is otherwise greedy: `1.` is scanned
+as a float even when an identifier follows, so `1.field` is the float `1.` then
+`field` (matching Go), not a field selector on the integer `1`. Selecting a
+field or method on a numeric literal therefore requires parentheses:
+`(1).field`.
 
 `lex.literal.float.no-hexfloat` — There are no hexadecimal floating-point
 literals, and there is no literal syntax for the special values NaN or
