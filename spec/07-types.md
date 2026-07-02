@@ -324,15 +324,18 @@ annotation) are a *reserved* feature, not part of v1.
 `type.func.value-spelling` — A function type used as a **value** is written
 `*func(params) results` (raw) or `@func(params) results` (managed). A bare
 `func(…)` is **not** a usable type expression. Parameter names are not part of a
-function-value type (parameters are types only).
+function-value type (parameters are types only). A trailing `...T` in the
+parameter position marks a **variadic** function-value type (§10.3).
 
 `type.func.kinds` — The two function-value kinds — raw `*func(…)` and managed
 `@func(…)` — differ only in whether the capture/data pointer is reference-counted
 (a managed function value needs destruction). Function-value type identity is
 **structural** on the signature: same kind, identical parameter types in order,
-identical result types in order (names ignored); the kind is part of identity,
-so `*func(int) int` and `@func(int) int` are not identical (their `@func` →
-`*func` decay is the managed→raw rule, §7.8).
+identical result types in order, **and identical variadic-ness of the final
+parameter** (a variadic `*func(...T)` is never identical to a fixed `*func(*[]T)`;
+§10.3 `func.variadic.identity`) — names ignored; the kind is part of identity, so
+`*func(int) int` and `@func(int) int` are not identical (their `@func` → `*func`
+decay is the managed→raw rule, §7.8).
 
 `type.func.nillable` — Function-value types are **nillable** (a nil function
 value is both words zero and a meaningful state). A reference to a named

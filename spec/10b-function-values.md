@@ -15,8 +15,10 @@ and Provisional**; known implementation gaps are flagged inline.
 
 `func.value.spelling` — A function-value type is written `*func(P…) R` (raw) or
 `@func(P…) R` (managed). Parameters are types only (no names); a single result
-is bare, multiple results parenthesized. A bare `func(…)` is **not** a usable
-type — the `*`/`@` prefix is mandatory (paralleling `*[]T`/`@[]T` and
+is bare, multiple results parenthesized. A trailing `...T` in the parameter
+position marks a **variadic** function-value type (`*func(...T)` /
+`@func(A, ...T)`; §10.3 `func.variadic.identity`). A bare `func(…)` is **not** a
+usable type — the `*`/`@` prefix is mandatory (paralleling `*[]T`/`@[]T` and
 `*Iface`/`@Iface`).
 
 `func.value.repr` — A function value of either kind is **two words**
@@ -28,7 +30,9 @@ value). The concrete shim/trampoline mechanics are in Annex B.
 `func.value.identity` — Two function-value types are identical iff they have the
 **same kind** (raw vs managed — `*func(…)` and `@func(…)` are never identical)
 and structurally identical signatures (equal parameter and result counts,
-pairwise-identical types; names ignored).
+pairwise-identical types, **and identical variadic-ness of the final parameter** —
+a variadic signature is never identical to a fixed one, even one taking `*[]T`;
+§10.3 `func.variadic.identity`); names ignored.
 
 `func.value.smoothing` — A managed `@func(S)` is implicitly convertible to a raw
 `*func(S)` of identical signature — a refcount-neutral **borrow** (the `*func`
@@ -115,14 +119,17 @@ The idiom for recursion is a named top-level function.
 a named-distinct scalar such as `type Celsius int` — with method `M`) is a
 function value whose signature is `M`'s **full** signature *including* the
 receiver as the first parameter (in `M`'s declared receiver kind). Its type is a
-raw `*func(recv, args…) results`. It is a non-capturing function reference.
+raw `*func(recv, args…) results`. It is a non-capturing function reference. If
+`M` is **variadic**, the method-expression type is correspondingly variadic (its
+final `args` element is `...T`; §10.3).
 
 `func.method-value` — A **method value** `x.M` (`x` a value whose base type has
 method `M`, with no same-named field — fields take precedence) is a function
 value whose signature is `M`'s signature **minus** the receiver, which is
 captured at the selector site. Its type is a raw `*func(args…) results` (even when
-the captured receiver is managed). The receiver base is the type **as written**
-(a named-distinct type uses its own method set; §7.3).
+the captured receiver is managed), correspondingly **variadic** when `M` is
+variadic (§10.3). The receiver base is the type **as written** (a named-distinct
+type uses its own method set; §7.3).
 
 `func.method-value.capture` — The receiver is captured in the form `M` declares,
 bridging `x`'s shape to `M`'s receiver shape: a value receiver captures a copy; a
@@ -140,7 +147,12 @@ against anything, **including `nil`** (this differs from pointers, where
 `func.value.indirect-call` — Calling **through** a function value invokes the
 function it holds; the callee signature comes from the function-value type. An
 indirect call is reached when the callee is a function-value-typed variable,
-field, or element (routed ahead of method dispatch; §10.7). (Lowering: Annex B.)
+field, or element (routed ahead of method dispatch; §10.7). When the
+function-value type is **variadic**, the caller packs the individual trailing
+arguments into a `*[]T` (`func.variadic.pack`) or forwards a spread's `{data, len}`
+(`func.variadic.spread`) at the call site, *before* the single indirection; the
+call shim receives a plain `*[]T`, so variadic-ness is **erased at the ABI
+boundary** (§10.3 `func.variadic.identity`). (Lowering: Annex B.)
 
 `func.value.dual-mode` — An indirect call through a function value is
 **mode-transparent**: the same call site dispatches correctly whether the target

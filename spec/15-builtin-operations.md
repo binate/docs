@@ -194,9 +194,16 @@ named-distinct collection type — only an alias.)
 `builtin.predeclared` — `print`, `println`, and `panic` are **predeclared
 functions** in the universe scope, not keyword-builtins: they lex as ordinary
 identifiers and may be **shadowed** by an in-scope binding, and all three yield no
-value. `print` and `println` are **variadic** and checked specially (each
-argument is type-checked, but there is no fixed parameter signature); `panic` has
-a **fixed** single-parameter signature (`builtin.panic`).
+value. `print` and `println` are **heterogeneous-variadic** and checked specially
+(each argument is type-checked on its own, but there is no fixed parameter
+signature — successive arguments may have **different** types); `panic` has a
+**fixed** single-parameter signature (`builtin.panic`). These are **not** ordinary
+`...T` variadic functions (§10.3), which are **homogeneous** (one element type):
+`print`/`println` accept mixed argument types that no `...T` signature can express
+(Binate has no `any`/`interface{}`), so the general variadic feature does not
+subsume them; they remain compiler-provided. A **spread** argument `expr...`
+(§10.3) is **rejected** on `print`/`println`/`panic`: the spread applies only to a
+`...T` variadic parameter, which these forms do not have.
 
 `builtin.print` — `print(args…)` writes its arguments to standard output;
 `println(args…)` does the same followed by a newline. Multiple arguments are

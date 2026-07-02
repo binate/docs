@@ -177,11 +177,16 @@ Receiver      = "(" identifier ReceiverType ")" ;
 ReceiverType  = Type ;
 
 Signature     = "(" [ ParameterList ] ")" [ Result ] ;
-ParameterList = ParameterDecl { "," ParameterDecl } ;
+(* An optional FINAL variadic parameter `name "..." T` (at most one, last only)
+   collects the trailing call arguments; in the body it has type *[]T — a
+   raw-slice borrow (§10.3).  D12. *)
+ParameterList = ParameterDecl { "," ParameterDecl } [ "," VariadicParam ]
+              | VariadicParam ;
 ParameterDecl = identifier Type ;   (* name before type; each name carries its
                                        own type — grouped `a, b int` is rejected.
                                        Read-only parameters are expressed by a
                                        `readonly` type, not a parameter prefix. *)
+VariadicParam = identifier "..." Type ;   (* final parameter only; body type *[]T *)
 Result        = Type                 (* single result, unparenthesized *)
               | "(" TypeList ")" ;   (* parenthesized: one or more results; `(T)` ≡ T *)
 TypeList      = Type { "," Type } ;
@@ -228,8 +233,12 @@ PointerTarget = "[" "]" Type            (* slice sugar: *[]T / @[]T *)
               | Type ;                   (* pointer (Type not starting "[" or "func") *)
 
 (* A function-value type lists parameter TYPES only (no names).  A bare
-   `func(…)` is not a usable type — it must be spelled `*func(…)` or `@func(…)`. *)
-FuncTypeBody  = "(" [ TypeList ] ")" [ Result ] ;
+   `func(…)` is not a usable type — it must be spelled `*func(…)` or `@func(…)`.
+   A trailing `"..." T` marks a VARIADIC function-value type (`*func(...T)`);
+   variadic-ness is part of the signature's type identity (§10.3).  D12. *)
+FuncTypeBody   = "(" [ FuncTypeParams ] ")" [ Result ] ;
+FuncTypeParams = Type { "," Type } [ "," "..." Type ]
+               | "..." Type ;
 
 TypeName      = QualifiedName [ "[" TypeArgList "]" ] ;   (* opt. generic instantiation *)
 QualifiedName = identifier [ "." identifier ] ;           (* opt. package qualifier *)
@@ -369,7 +378,12 @@ PostfixOp     = "." identifier                            (* field / method / pk
               | "[" [ Expression ] ":" [ Expression ] "]"  (* slice *)
               | "[" TypeArgList "]"                         (* generic instantiation (D5) *)
               | CallArgs ;                                  (* call *)
-CallArgs      = "(" [ ExpressionList ] ")" ;
+(* A trailing `"..."` on the final argument is a SPREAD: it expands a slice into
+   the variadic parameter (§10.3).  The spread is exclusive — it supplies the
+   entire variadic argument and may not be mixed with individual variadic args
+   (only fixed args may precede it).  D12. *)
+CallArgs      = "(" [ ArgumentList ] ")" ;
+ArgumentList  = Expression { "," Expression } [ "..." ] ;
 
 PrimaryExpr   = BuiltinCall
               | CompositeLiteral
@@ -516,5 +530,22 @@ TypeParamDecl = identifier Type ;   (* type-parameter name + interface constrain
         "[" identifier "]" → ArrayType (expression = a single variable); "["
         identifier "," → TypeParams; "[" identifier operator → ArrayType
         expression.
+
+   D12. "..." — three roles, disambiguated purely by adjacency (never a token
+        clash; "..." is always one token):
+        - STANDALONE: `[...]T{…}` inferred array length (ArrayLen), and the
+          fixed/variadic boundary marker inside `__c_call` (CCallArg).  The
+          "..." stands alone (no adjacent Type or Expression).
+        - PREFIX on a Type: `name "..." T` in a parameter (VariadicParam) — a
+          variadic parameter, whose in-body type is *[]T; or `"..." T` in a
+          function-value type (FuncTypeParams) — a variadic function-value type
+          (no body, binds no name).  Either way §10.3.  In ParameterList,
+          ParameterDecl and VariadicParam both begin with `identifier`, so a
+          one-token peek AFTER the name resolves them: a following "..." selects
+          VariadicParam, otherwise a Type follows (ParameterDecl).  The "..."
+          immediately precedes a Type.
+        - SUFFIX on an Expression: `expr "..."` as the FINAL call argument
+          (ArgumentList) — a slice spread (§10.3).  The "..." immediately
+          follows an Expression and is the last token before the closing ")".
 *)
 ```

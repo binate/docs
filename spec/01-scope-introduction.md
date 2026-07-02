@@ -61,8 +61,7 @@ Annex D:
 - no built-in **maps**, no built-in **`string`** type (text is `@[]char` /
   `*[]char`), and no **`append`** or other built-in growable-collection
   operation — these are library concerns;
-- no **`goto`**, no package **`init`** functions, no **`defer`**, and no
-  **variadic** parameters;
+- no **`goto`**, no package **`init`** functions, and no **`defer`**;
 - no **implicit numeric or named conversions** (Ch.8);
 - and — in the **core** — no **`printf`**/formatting facility and no standard
   library at all.

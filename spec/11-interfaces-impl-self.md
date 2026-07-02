@@ -66,9 +66,10 @@ sole universal interface is `any`, which needs no impl; §11.5.)
 type must provide a method of the same name for **every** method in `I`'s full
 method set (its own methods plus all inherited from extended parents; §11.6).
 The provided method matches iff, after dropping its leading receiver, the
-non-receiver parameter and result counts are equal and each type is **identical**
+non-receiver parameter and result counts are equal, each type is **identical**
 to the interface method's corresponding type with `Self` substituted by `R`'s
-named type (§11.9). The impl method's declared receiver kind must be reachable
+named type (§11.9), and both agree on whether the final non-receiver parameter is
+**variadic** (§10.3 `func.variadic.identity`). The impl method's declared receiver kind must be reachable
 from `R`'s declared receiver kind by the same safe-direction smoothing as a
 method call (§10.5).
 

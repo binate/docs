@@ -4,8 +4,8 @@
 > **Rule-ID prefix:** `func`
 
 This chapter covers function and method declarations (§10.1), returns and
-destructuring (§10.2), the absence of variadics (§10.3), method receivers
-(§10.4–§10.6), and method dispatch (§10.7). **Function values, closures, and
+destructuring (§10.2), argument binding — variadic parameters and spread (§10.3),
+method receivers (§10.4–§10.6), and method dispatch (§10.7). **Function values, closures, and
 method values** — a recent, Provisional feature — are specified in the
 companion section **[§10.8–§10.12, Function Values](10b-function-values.md)**.
 
@@ -30,13 +30,16 @@ generic methods are not supported.
 `func.decl.params` — Each parameter is written **name before type** and is
 **individually typed** (`name Type`). There is **no** same-type shorthand:
 `a, b int` is rejected (after parameter `a` the parser expects a type but finds
-`,`). Duplicate parameter names in one signature are an error.
+`,`). Duplicate parameter names in one signature are an error. The **final**
+parameter may be **variadic** (`name ...T`; §10.3), the one position where a
+`...` precedes the type.
 
 `func.sig.identity` — A function signature's **type identity** is determined
-solely by its ordered parameter types and ordered result types; parameter names
-are not part of the type. For a method, the receiver is the first parameter of
-its signature. This same identity is shared by named function types and function
-*value* types (§10.8).
+solely by its ordered parameter types and ordered result types (and whether the
+final parameter is **variadic**; §10.3); parameter names are not part of the
+type. For a method, the receiver is the first parameter of its signature. This
+same identity is shared by named function types and function *value* types
+(§10.8).
 
 `func.decl.bni-match` — A free function declared in both a package's `.bni`
 interface file and its `.bn` implementation must agree in parameter and result
@@ -86,23 +89,131 @@ Provisional.)_
 > (Annex B). On destructuring, each extracted managed result acquires its own
 > reference for the new owner (Ch.18).
 
-## 10.3 Variadic parameters and spread (deferred)
+## 10.3 Argument binding: variadic parameters and spread
 
-`func.variadic.absent` — Binate has **no variadic parameters** and **no spread
-operator** in the current language. A parameter is exactly `name Type`; there is
-no `...T` last-parameter form, and a call's arguments are a plain comma-separated
-list with no `...` to expand a slice. Both features are **deferred** (the
-grammar reserves `...T`). A call to a function with **one or more** parameters
-requires an **exact** argument count.
+`func.call.apply` — At a call, arguments bind to parameters **positionally**. For
+a **non-variadic** callee the argument count must **exactly** equal the parameter
+count, and each argument must be **assignable** (Ch.8) to the corresponding
+parameter type; a wrong count is a "wrong number of arguments" error and a type
+mismatch is a "cannot assign" error. An **empty** parameter list requires exactly
+zero arguments (`func f()` called as `f(1, 2)` is "too many arguments"). For a
+**variadic** callee the leading arguments bind to the fixed parameters the same
+way, and the remainder form the variadic argument (`func.variadic.pack` /
+`func.variadic.spread`).
 
-> _Note._ The `...` token appears in the language only in two unrelated places:
-> the inferred-length array literal `[...]T{…}` (§13) and the `__c_call` C-ABI
-> boundary marker (Annex D). Neither is a general variadic or spread facility.
+> _Note._ The only calls that accept a loose argument count are the predeclared
+> **heterogeneous-variadic** forms `print`/`println` (§15.7), which are checked
+> specially (each argument typed on its own, no fixed signature) and are **not**
+> `...T` variadic functions. `panic` is a **fixed** single-parameter function
+> (§15.7). General `...T` variadics (below) are **homogeneous** — every variadic
+> argument has the one element type `T` — so they do not subsume `print`/`println`
+> (Binate has no `any`/`interface{}` universal type).
 
-> _Note._ A function with an **empty** parameter list likewise requires an
-> exact (zero) argument count: a user `func f()` called as `f(1, 2)` is a "too
-> many arguments" error. The loose arity check is restricted to the variadic
-> builtins `print`/`println`/`panic` (§15), which alone accept extra arguments.
+`func.variadic.decl` — A function or method may declare its **final** parameter
+as **variadic**, written `name "..." T` (`...` before the element type). At most
+**one** variadic parameter is allowed and it must be **last**; a `...` on any
+earlier parameter is an error. Inside the body the parameter has type **`*[]T`** —
+a **raw slice** (a 2-word borrow; §7.13 `type.layout.slice-raw`; ownership per §7.6
+`type.slice.ownership`), *not* a managed `@[]T`. The element type `T` is exactly as
+written and may be any type (`@Foo`, `readonly char`, an interface value, …),
+**including a type parameter** (`func f[T C](xs ...T)`): in each monomorphized
+instance the element type is that instance's `T`, and packing and spread are
+resolved per-instantiation exactly as a fixed `*[]T` parameter would be (§12).
+Element-level `readonly` (`...readonly T` → `*[]readonly T`) is part of the element
+type and thus of signature identity; an outer `readonly` on the parameter itself is
+local read-only discipline only and is **not** part of identity (§7.11).
+
+`func.variadic.identity` — Variadic-ness is part of a signature's **type
+identity** (§10.1 `func.sig.identity`; §7.9 `type.func.kinds`). A variadic
+signature is **distinct** from the otherwise-identical signature that takes a
+plain `*[]T` parameter (`func f(xs ...int)` and `func g(xs *[]int)` are different
+types, and a call binds their arguments differently). Identity propagates to
+**function-value types**: `*func(...T)` and `@func(...T)` are variadic
+function-value types (§10.8 `func.value.spelling` / `func.value.identity`), a
+variadic `func` is assignable only to a matching variadic function-value type, and
+an **interface** or **impl** method may itself be variadic (its variadic-ness is
+compared like any signature type; §11.1 `iface.impl.coverage`). At every
+**indirect** boundary — a call through a function value (§10.12) or an interface
+method vtable slot (§10.7) — variadic-ness is a static/type-checking property that
+is **erased at the ABI**: the caller performs the pack (`func.variadic.pack`) or
+spread (`func.variadic.spread`) at the call site and the shim/slot receives a
+plain `*[]T`, so an indirect variadic callee's calling convention is identical to
+a fixed `*[]T` parameter.
+
+`func.variadic.pack` — When the variadic argument is supplied as **individual
+arguments** (`f(fixed…, a, b, c)`), the zero-or-more trailing arguments are each
+assignable to `T` and are **packaged into a fresh `*[]T`** that views
+**caller-materialized temporary storage** — a contiguous array of the argument
+values that the caller materializes **before transferring control and tears down
+after the call returns** (the enclosing statement strictly contains the call, so
+the view is live for the whole call, including nested and re-entrant use). This
+packing performs **no heap allocation**, and **no reference-count change on the
+two-word slice header** itself. **Zero** variadic arguments yield the **empty** raw
+slice `{null, 0}` (`len == 0`; §7.7 `type.slice.len0-no-backing`) — emptiness is
+tested with `len(xs) == 0`, never a `nil` comparison (slices are not comparable,
+§7.6). The order in which the trailing arguments are evaluated and stored into the
+temporary array is **unspecified**, as for any argument list (operand evaluation
+order is unspecified; §3.1).
+
+> _Note (managed elements)._ For a managed element type (`...@Foo`) each trailing
+> argument is **acquired** as it is stored into the temporary array (`mem.copy`,
+> Axiom 3), and those elements are ordinary managed **temporaries of the enclosing
+> statement**, released by the **caller** at statement end (`mem.temporary`). The
+> callee receives a raw `*[]T` **borrow** and — like any `*[]T` parameter —
+> **neither acquires on entry nor releases at exit** (contrast the callee-owned
+> discipline of a fixed managed parameter, `mem.param`); to retain an element it
+> makes its own acquiring copy. The temporary array is **not** a managed-slice
+> backing (it carries no `{refcount, free_fn}` header), so the backing-iteration
+> release of `mem.destructor` does not apply to it.
+
+`func.variadic.spread` _(Constraint)_ — Alternatively the variadic argument may
+be supplied as a single **spread** `expr "..."` as the **final** argument, where
+`expr` is a **slice** (raw or managed) **assignable to `*[]T`** (an `@[]T`
+**decays** to `*[]T`, §7.6 `type.slice.decay`; element-`readonly` follows the
+capability lattice — adding `readonly` is allowed, **dropping** it requires a
+`cast`; §7.11 `type.readonly.lattice-element`). The operand must be a **slice**,
+not an array — sub-slice an array first (`arr[:]...`; a string literal has array
+type `[N]readonly char`, so spread it as `lit[:]...`). The spread **forwards the
+slice's `{data, len}` directly** — no copy, no allocation; a `len == 0` slice
+yields the same empty variadic argument as zero individual arguments. A spread is
+**exclusive**: it supplies the **entire** variadic argument and **may not be
+combined with individual variadic arguments** — `f(fixed…, s...)` is allowed, but
+`f(fixed…, a, s...)` is an error. Only **fixed** (non-variadic) arguments may
+precede a spread, and a spread supplies **only** the variadic parameter, never a
+fixed one (`f(s...)` on a callee with unfilled fixed parameters is a "wrong number
+of arguments" error). A spread into a **non-variadic** callee, or a `...` that is
+not on the last argument, is an error.
+
+`func.variadic.borrow` — The variadic `*[]T` is a **borrow**, identical to any
+`*[]T` parameter (§7.6 `type.slice.ownership`; §18.1 `mem.managed-vs-raw`, whose
+guidance is that returning a raw slice or pointer from a function is "almost always
+wrong"): it is valid only for the **duration of the call**. Retaining it past the
+call — storing it in a raw field, returning it, or escaping `&xs[0]` — is a
+use-after-free and is **undefined behavior** (`mem.raw-uaf`), **not** a diagnosed
+error (general raw-borrow escape is not statically decidable, so this is not a
+Constraint). To keep the elements, copy them into an **owned `@[]T`** (`make_slice`
+plus a per-element acquiring copy for a managed element type; `mem.copy`). This
+borrow discipline is precisely what lets `func.variadic.pack` avoid a hidden heap
+allocation.
+
+> _Draft; not yet implemented._ Variadic parameters and spread are **specified
+> ahead of implementation** (design settled; still normative-in-intent — the
+> **Draft** stability tier, `conventions.md`). The current toolchain does **not**
+> implement general `...T` variadics or the `s...` spread — only the special
+> predeclared `print`/`println` forms (§15.7). Implementation-conformance for the
+> `func.variadic.*` / `func.call.apply` rules is therefore **not yet met**; the
+> high-level implementation plan is `explorations/plan-variadics.md` (tracked in
+> `claude-todo.md` — distinct from the pre-existing C-varargs `__c_call` marker).
+
+> _Note (cross-mode)._ What the **cross-mode ABI contract** (§2.4) pins is that the
+> variadic argument is passed **as a `*[]T`** of the standard 2-word slice layout
+> (§7.13) — exactly like an ordinary raw-slice parameter — so a compiled caller and
+> an interpreted callee (or vice versa) interoperate. The **mechanism** that
+> materializes the caller-side backing array is a backend-private
+> calling-convention detail, not part of the type/layout contract (dual-mode
+> translates calling conventions, never types or layout; §19 `exec.interop.funcval`).
+> The `...` C-varargs marker inside `__c_call` (§16.9) is a **separate** mechanism
+> and is unaffected.
 
 ## 10.4 Method receivers
 
