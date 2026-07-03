@@ -199,9 +199,11 @@ value. `print` and `println` are **heterogeneous-variadic** and checked speciall
 signature — successive arguments may have **different** types); `panic` has a
 **fixed** single-parameter signature (`builtin.panic`). These are **not** ordinary
 `...T` variadic functions (§10.3), which are **homogeneous** (one element type):
-`print`/`println` accept mixed argument types that no `...T` signature can express
-(Binate has no `any`/`interface{}`), so the general variadic feature does not
-subsume them; they remain compiler-provided. A **spread** argument `expr...`
+`print`/`println` accept mixed argument types that no `...T` signature can express,
+so the general variadic feature does not subsume them; they remain compiler-provided.
+(`any` exists — §7.10 `type.iface.any` — but a `...any` signature would not help:
+`any` exposes no methods and there is no reflection yet, so per-argument formatting
+must be resolved by type at compile time.) A **spread** argument `expr...`
 (§10.3) is **rejected** on `print`/`println`/`panic`: the spread applies only to a
 `...T` variadic parameter, which these forms do not have.
 
