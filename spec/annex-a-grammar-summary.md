@@ -329,9 +329,23 @@ ForCClause    = SimpleStmt ";" [ Expression ] ";" SimpleStmt ;
 ForInClause   = identifier [ "," identifier ] "in" Expression ;   (* value, or index + value *)
 
 (* A tagless switch (`switch { … }`) is the condition-less form; there is no
-   fallthrough. *)
-SwitchStmt    = "switch" [ Expression ] "{" { CaseClause } "}" ;
+   fallthrough.  The second form is a TYPE SWITCH: the head `x.(type)` (optionally
+   bound as `v := x.(type)`) dispatches on the DYNAMIC type of an interface value,
+   and each case lists ASSERT TARGETS — a `*`/`@`/value recovery kind plus a NAMED
+   type — not expressions (§11.12, §14.10).  D13. *)
+SwitchStmt    = "switch" [ Expression ] "{" { CaseClause } "}"
+              | "switch" [ identifier ":=" ] PostfixExpr "." "(" "type" ")"
+                  "{" { TypeCaseClause } "}" ;
 CaseClause    = ( "case" ExpressionList | "default" ) ":" { Statement ";" } ;
+TypeCaseClause = ( "case" AssertTargetList | "default" ) ":" { Statement ";" } ;
+(* A type-assertion / type-switch target is a mandatory recovery kind (raw "*",
+   managed "@", or value = neither) plus an optional `readonly` and a NAMED type
+   (TypeName — a concrete type, an interface, or `any`).  It deliberately EXCLUDES
+   slice / func / array / struct / `Self` targets and pointer-to-composite: only a
+   nameable type may be asserted (§11.12).  The leading "*"/"@" is ALWAYS the
+   recovery kind here, never a pointer/slice type constructor (D13). *)
+AssertTarget  = [ "*" | "@" ] [ "readonly" ] TypeName ;
+AssertTargetList = AssertTarget { "," AssertTarget } ;
 ```
 
 ## A.8 Expressions
@@ -374,6 +388,7 @@ UnaryExpr     = PostfixExpr
 
 PostfixExpr   = PrimaryExpr { PostfixOp } ;
 PostfixOp     = "." identifier                            (* field / method / pkg member *)
+              | "." "(" AssertTarget ")"                   (* type assertion x.(K T) — D13, §11.12 *)
               | "[" Expression "]"                         (* index *)
               | "[" [ Expression ] ":" [ Expression ] "]"  (* slice *)
               | "[" TypeArgList "]"                         (* generic instantiation (D5) *)
@@ -547,5 +562,25 @@ TypeParamDecl = identifier Type ;   (* type-parameter name + interface constrain
         - SUFFIX on an Expression: `expr "..."` as the FINAL call argument
           (ArgumentList) — a slice spread (§10.3).  The "..." immediately
           follows an Expression and is the last token before the closing ")".
+
+   D13. ".(" — selector vs. type assertion vs. type-switch head.  A "." is
+        resolved by the token that follows it:
+        - "." identifier → selector (field / method / package member).
+        - "." "(" AssertTarget ")" → a type-ASSERTION expression (PostfixOp;
+          §11.12).  Inside the parens a leading "*"/"@" is ALWAYS the recovery
+          kind (never a pointer/slice type constructor), and the remainder is an
+          optional `readonly` plus a NAMED type (TypeName): `x.(@C)`, `x.(*S)`,
+          `x.(readonly C)`, `x.(pkg.T)`.  A non-nameable target (`*[]T`, `*func`,
+          an array/struct literal, `Self`) does not match AssertTarget and is
+          rejected.  A qualified `pkg.T` inside the parens is consumed wholly by
+          TypeName, so its inner "." is not a selector.
+        - "." "(" "type" ")" → the head of a TYPE SWITCH statement — the keyword
+          `type`, not a type — valid only in switch-statement position, with an
+          optional `v :=` binder (§11.12, §14.10).  `type` is reserved (§5), so
+          `.(type)` can never be an AssertTarget; it terminates the postfix loop.
+        The two `switch` alternatives are also chosen up front: `switch`
+        `identifier` ":=" begins a type switch; otherwise the parser reads the
+        scrutinee/tag (under the same composite-literal suppression as an
+        expression-switch tag, D4) and a trailing `.(type)` marks the type switch.
 *)
 ```

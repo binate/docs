@@ -118,6 +118,26 @@ condition). With a tag present, the case-vs-tag assignability rule
 so `break` is only needed for an early exit from the middle of a case body;
 statements after it in the same case do not run.
 
+`stmt.type-switch` — A **type switch** is the second `switch` form; it dispatches
+on the **dynamic type** of an interface-value scrutinee:
+
+```
+SwitchStmt     = … | "switch" [ identifier ":=" ] PostfixExpr "." "(" "type" ")"
+                   "{" { TypeCaseClause } "}" ;
+TypeCaseClause = ( "case" TypeList | "default" ) ":" { Statement ";" } ;
+```
+
+Each `case` lists **types** (each with a `*`/`@`/value recovery kind), not
+expressions; a concrete-type case matches by exact dynamic-type identity and an
+interface-type case by explicit `impl`. There is **no fallthrough**
+(`stmt.switch.no-fallthrough`) and the first match wins; `default` runs when no
+case matches and also catches an **unset** scrutinee. There is **no `case nil`**
+— interface values are not nil-comparable (test with `present`, §15.5). The
+optional `v :=` binds the recovered value **per case**. The scrutinee and target
+rules, the recovery-kind legality, and the typed-nil / unset semantics are
+specified in **§11.12** (`iface.typeswitch`, `iface.assert.kind`,
+`iface.assert.absent`). _(Draft; not yet implemented — §11.12.)_
+
 ## 14.11 Return statements
 
 `stmt.return` —
@@ -187,9 +207,9 @@ absent** (rationale in Annex D / the Go-difference notes):
 - **No `goto`** and **no labels** (hence no labeled `break`/`continue`).
 - **No `defer`** — scope-exit destructors handle cleanup (§18), RAII-style.
 - **No `fallthrough`** — switch cases never fall through (§14.10).
-- **No type-switch** and no `x.(type)` form — interface values dispatch through
-  their vtable (Ch.11); there is no type-switch statement.
-- **No `if`/`switch` init clause** (§14.8) — only `for` has init/post slots.
+- **No `if`/`switch` init clause** (§14.8) — only `for` has init/post slots. (The
+  **type switch** `switch v := x.(type)` is the one form that binds in its header;
+  §14.10, §11.12.)
 - **No `panic`/`recover` as recoverable control flow** — `panic(…)` exists only
   as an unrecoverable abort (Ch.15); there is no `recover`. Errors are values
   (Go-style multiple returns), not exceptions.

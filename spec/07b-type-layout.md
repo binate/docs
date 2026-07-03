@@ -179,8 +179,16 @@ is **always 2 words**:
 | `0` | 0 | `data` — the held value / managed pointer (the managed form reference-counts it) |
 | `W` | 1 | `vtable` — the dispatch table |
 
-Size `2W`, alignment `W`. The vtable's slot 0 is the destructor handle (the
-"dtor-first" convention); later slots are methods (Ch.11, Annex B).
+Size `2W`, alignment `W`. The vtable begins with an offset-0 **"any-block"** — the
+block every interface vtable shares (the fixed-offset upcast target, §11.6) —
+holding the destructor handle (the "dtor-first" convention) and a **`*TypeInfo`**
+pointer to the concrete type's RTTI record (§7.13.14); methods follow (Ch.11,
+Annex B). The `*TypeInfo` is what a **type assertion** reads to recover the
+dynamic type (§11.12 `iface.rtti`). Every **nested** sub-vtable (a parent's block
+inside a descendant's vtable, §11.6) carries the **same concrete-leaf-type**
+`*TypeInfo` and destructor — the any-block identifies the value's *dynamic
+(concrete)* type, not the interface the sub-vtable dispatches — so an assertion or
+type switch recovers the concrete type however far the value has been upcast.
 
 ## 7.13.9 Function values
 
@@ -203,6 +211,10 @@ must observe.
 > hardening the orders into shared helpers is a tracked follow-up
 > (`type.layout.funcval-order-hardening`, `claude-todo.md`). The orders stated
 > here are the normative contract regardless.
+
+> _Note._ A function-value vtable carries **no** `*TypeInfo`: function values are
+> not type-asserted (only interface values are; §11.12). RTTI lives only in
+> interface vtables (§7.13.8, §7.13.14).
 
 ## 7.13.10 Transparent wrappers
 
@@ -253,4 +265,35 @@ High-level slice and array operations lower to primitive load/offset sequences
 that **encode** this layout (data pointer = word 0, length = word 1, element
 stride = `SizeOf(elem)`), so a backend cannot independently choose a different
 representation. This requirement is the reason layout is a language-level
-contract rather than a backend decision (Ch.2, Annex B).
+contract rather than a backend decision (Ch.2, Annex B). It applies equally to the
+type-information record below (§7.13.14), which is likewise shared across modes.
+
+## 7.13.14 Type-information (RTTI) record
+
+`type.layout.typeinfo` — Each concrete type that can appear as the dynamic type of
+an interface value has one static **`TypeInfo`** record, referenced by the
+`*TypeInfo` pointer in every interface vtable's any-block (§7.13.8). It is the
+substrate for **type assertions and type switches** (§11.12 `iface.rtti`) and, as
+a later phase, for the reflection type-metadata surface (§20.3). A `TypeInfo`
+carries:
+
+| Field | Meaning |
+|-------|---------|
+| identity | a per-type token; a concrete assertion tests **equality** of the scrutinee's and target's `TypeInfo` (pointer-equality *within* a mode) — the equality *result*, not any particular address, is what is observable |
+| destructor | the type's destructor handle (the same one the vtable any-block holds) |
+| size, align | `SizeOf`/`AlignOf` of the type (the target's values) |
+| name | the type's name, as a `*[]readonly char` into static storage |
+| satisfaction table | an entry for **every interface the type satisfies** — each explicit `impl` plus all its transitive ancestors (`iface.extend.transitive`) — mapped to that interface's sub-vtable; satisfies an **interface** assertion by forming `{data, vtable(T, J)}` |
+
+There is **exactly one** `TypeInfo` per type **program-wide** (not per module) so
+that the **result** of an identity comparison and of a satisfaction-table lookup
+**agrees across compiled and interpreted execution** — the record is part of the
+cross-mode agreement contract (§7.13.13 `type.layout.keystone`; `conf.cross-mode.scope`,
+§2.4). Each engine may use its own native `TypeInfo` for a type and compare by
+pointer-equality *within* its mode (the same self-describing-handle model as
+vtable and function-value handles, §19.4); it is the boolean *result* that must
+coincide, not a shared address. The table is finite and known ahead of time — at
+link, or at module-load/interning for the VM — precisely because interface
+satisfaction is **explicit** (`iface.impl.nominal`). The record's exact field
+order and the table's search structure are **informative** (Annex B); normative
+are its contents and the cross-mode agreement of every assertion result.

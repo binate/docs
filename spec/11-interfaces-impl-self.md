@@ -8,8 +8,8 @@ explicit, separate `impl` declaration — there is no structural/duck typing. Th
 chapter covers interface declarations (§11.1), interface values (§11.2), `impl`
 and satisfaction (§11.3), constructing an interface value (§11.4), `any`
 (§11.5), interface extension (§11.6), aliases (§11.7), cross-package rules
-(§11.8), the `Self` type (§11.9), the primitive-impl carve-out (§11.10), and
-dynamic dispatch (§11.11).
+(§11.8), the `Self` type (§11.9), the primitive-impl carve-out (§11.10),
+dynamic dispatch (§11.11), and type assertions and type switches (§11.12).
 
 ## 11.1 Interface declarations
 
@@ -133,7 +133,9 @@ value is expected, and ancestor methods dispatch.
 
 `iface.extend.upcast` — A descendant interface value **upcasts** to an ancestor
 interface value (`*Child` → `*Parent`, `@Child` → `@Parent`) as a static,
-compile-time-known, nominal relation (Binate has no runtime type query). The
+compile-time-known, nominal relation (the **upcast** needs no runtime query; the
+opposite **downcast** direction — narrowing a value back to a descendant
+interface or a concrete type — is a runtime **type assertion**, §11.12). The
 upcast preserves the data pointer and adjusts only the vtable pointer to the
 ancestor's nested sub-vtable. Upcasting is admitted only when the source
 interface is a (transitive) descendant of the target.
@@ -222,7 +224,8 @@ interface **type** (`*lang.Stringer`) still requires importing the package.
 `iface.dispatch` — A method called through an interface value is dispatched
 **dynamically**: the method's slot is resolved at compile time, and the
 implementation is loaded from the value's vtable at run time and called with the
-value's data pointer as the receiver. Vtable slot 0 is the type's destructor;
+value's data pointer as the receiver. The vtable's offset-0 **any-block** holds
+the type's destructor and its `*TypeInfo` (§7.13.8, §7.13.14 `type.layout.typeinfo`);
 methods occupy the following slots in declaration order. There is no receiver
 smoothing on this path (it was validated when the `impl` was declared); a
 `readonly` wrapper on the interface value is peeled before dispatch. The
@@ -251,3 +254,137 @@ on a target with no memory protection the dereference may not fault at all). Use
 > The language rules above are Stable; these are platform/mode-conformance gaps
 > (tracked in `claude-todo.md`; to be recorded in Annex C once that ledger is
 > authored).
+
+## 11.12 Type assertions and type switches
+
+A **type assertion** recovers a concrete type — or a narrower interface — from an
+interface value at run time (the **downcast** direction; the static upcast is
+§11.6 `iface.extend.upcast`). Binate stays **nominally and openly** typed: no sum
+types, no exhaustiveness checking; an assertion is an **explicit, opt-in** runtime
+query, not an implicit one.
+
+`iface.assert` — A **type assertion** applies to an interface-value operand `x`
+(`*I`/`@I`, including `*any`/`@any`; asserting a non-interface value is an error)
+and names a target — a mandatory recovery kind plus a **nameable** type
+(`iface.assert.kind`; a slice / func / array / struct / `Self` target is a compile
+error). The **dynamic type** of `x` is the concrete named type recorded when `x`
+was constructed (§11.4): the boxed value's type with its `*`/`@`/outer-`readonly`
+stripped and aliases peeled, but **named-distinct wrappers preserved** (a boxed
+`Celsius` records `Celsius`, not `float64`; §7.3). A target matches as follows:
+- **Concrete target** `T`: succeeds iff `x`'s dynamic type is **exactly** `T` —
+  nominal type identity, not assignability (a stored `Celsius` matches `.(Celsius)`
+  and **not** `.(float64)`). Each generic instantiation is a distinct type with its
+  own identity (`List[int]` ≠ `List[float]`; §12). The match is on the base type,
+  independent of the recovery kind and of any `readonly`.
+- **Interface target** `J`: succeeds iff `x`'s dynamic type **satisfies** `J` — it
+  has a visible `impl … : J`, **or** an `impl` for any (transitive) **descendant**
+  of `J`, since a descendant impl transitively satisfies its ancestors
+  (`iface.impl.nominal`, `iface.extend.transitive`). Recovers a `*J`/`@J`. `any` is
+  satisfied by every present `x`.
+
+The two syntactic forms differ only in how a **miss** is handled:
+- As an **expression**, `x.(K T)` yields the recovered value; a miss is a
+  **non-recoverable abort** (a defined runtime panic, §17.5). Binate has no
+  `recover`, so — unlike Go's catchable panic — this ends the program; use it only
+  where the type is a guaranteed invariant.
+- In a **two-target** short declaration or assignment, `v, ok := x.(K T)` is the
+  **comma-ok** form — the single assertion expression yields **two** values,
+  reusing the multi-value-RHS machinery of a two-result call: a miss sets
+  `ok = false` and leaves `v` the zero/unset value, and never aborts. This is the
+  errors-as-values form and the one to prefer.
+
+`iface.assert.kind` _(Constraint)_ — The recovery kind (`@`, `*`, or a bare value)
+is **mandatory** in every assertion and type-switch case, and its legality follows
+the managed→raw ownership direction (§7.6 `type.slice.ownership` /
+`type.slice.decay`: you may borrow from anything but may never fabricate a
+reference count):
+
+| `x` is | `x.(@T)` | `x.(*T)` | `x.(T)` (value copy) |
+|--------|----------|----------|----------------------|
+| `@I`   | ✓ retain (RefInc) | ✓ borrow (no refcount churn) | ✓ copy out |
+| `*I`   | ✗ (no reference to share) | ✓ borrow | ✓ copy out |
+
+The same table governs interface targets (`@J`/`*J`). Recovering `*T` from a `@I`
+is a **borrow** with no refcount traffic — the intended low-churn path — valid
+only for the **lifetime of the box** it was taken from (bounded by `x`'s own
+reference for a `@I`, or by whatever keeps the referent alive for a `*I`); using it
+after that is a use-after-free (§18.7 `mem.raw-uaf`). A `@`-recovery from a raw
+`*I` is rejected at compile time. A **value** recovery (`x.(T)`) copies the pointee
+out field-wise, acquiring any managed fields (Axiom 3, §18.3 `mem.copy`); a value
+recovery from a **typed-nil** box (`iface.assert.absent`) would dereference a nil
+pointer, so use a `*T`/`@T` recovery plus `present` to inspect a possibly-nil box.
+On the recovered handle, **element-level** `readonly` may be **added** but not
+**dropped** (a one-way capability, §7.11 `type.readonly.lattice-element`); an
+outer/handle `readonly` is freely choosable.
+
+`iface.assert.absent` — An interface value has two "empty" states (§15.5
+`builtin.present`), and neither is a `nil` case — interface values are **not
+nil-comparable** (§13.6 `expr.compare.incomparable`):
+- **unset** (`present(x)` is `false`; the **vtable** word — word 1, §7.13.8 — was
+  never filled, so there is no vtable and hence no reachable `*TypeInfo`): it has
+  **no dynamic type**. An assertion tests the **vtable word first**; a null vtable
+  short-circuits to a miss (comma-ok → `ok = false`; the expression form aborts)
+  and a type switch runs the `default`. Only a **non-null** vtable is then
+  dereferenced to read the any-block `*TypeInfo` (matching `iface.dispatch.nil`).
+- **typed-nil** (`present(x)` is `true`; a nil pointer was boxed, so the dynamic
+  type *is* set): it **has** a dynamic type and matches that type normally,
+  recovering a value whose data is nil (Go's typed-nil; the caller re-tests with
+  `present`).
+
+There is **no `case nil`** and no `x == nil`; absence is a `present(x)` concern —
+guard with `present` before or around a switch to handle the unset case
+distinctly from an unlisted type.
+
+`iface.typeswitch` — A **type switch** dispatches on the **dynamic type** of an
+interface value:
+
+```
+SwitchStmt     = … | "switch" [ identifier ":=" ] PostfixExpr "." "(" "type" ")"
+                   "{" { TypeCaseClause } "}" ;
+TypeCaseClause = ( "case" AssertTargetList | "default" ) ":" { Statement ";" } ;
+AssertTarget   = [ "*" | "@" ] [ "readonly" ] TypeName ;
+```
+
+Each `case` lists one or more **assert targets** (`iface.assert.kind` — a recovery
+kind plus a nameable type), each legal for the scrutinee (a `*I` switch admits no
+`@T` case). A concrete-type case matches by exact dynamic-type identity; an
+interface-type case matches by satisfaction — the same criteria as `iface.assert`.
+The **first** matching case runs; there is **no fallthrough** and no duplicate-case
+check (§14.10 `stmt.switch.no-fallthrough`). Because interface cases can **overlap**
+(a type may satisfy several) and the first match wins, order cases
+**most-specific first**; no reachability diagnostic is performed. `default` runs
+when none matches and also catches an **unset** scrutinee (`iface.assert.absent`).
+An optional `v :=` binds the recovered value **per case**: in a single-target case
+`v` has that case's type and kind; in a **multi-target** case (`case @A, @B:`) or
+the `default`, `v` keeps the scrutinee's interface type (as in Go). Without a
+binder the switch is a pure dispatch. There is **no `case nil`**.
+
+`iface.rtti` — Every interface value can recover its dynamic type at run time
+through a per-type **`TypeInfo`** record reached from the vtable — the `TypeInfo`
+pointer lives in the vtable's offset-0 "any-block" alongside the destructor
+(layout §7.13.14 `type.layout.typeinfo`). A **concrete** assertion compares the
+scrutinee's `TypeInfo` against the target type's. An **interface** assertion looks
+the target up in the `TypeInfo`'s **satisfaction table** — an entry for **every
+interface the type satisfies** (each explicit `impl` *and all of its transitive
+ancestors*, `iface.extend.transitive`), each mapped to that interface's
+statically-computed sub-vtable — and, on a hit, forms `{data, vtable(T, J)}` (the
+ancestor case is exactly the static upcast of §11.6, applied after the concrete
+identity check, so it needs no search). The table is finite and known ahead of
+time precisely **because** satisfaction is explicit (`iface.impl.nominal`); this
+recoverability is what the explicit-`impl` design buys. Type **identity** is a
+per-type token whose observable **equality result** — not any particular address —
+is the normative, cross-mode-agreeing quantity (`conf.cross-mode.scope`, §2.4):
+each engine compares its own `TypeInfo` for a type (pointer-equality *within* a
+mode, like vtable/function-value handles, §19.4), and an assertion yields the same
+boolean in compiled and interpreted execution. The observable result is normative;
+the `TypeInfo`/table layout is informative (Annex B), and it is the record a future
+**reflection** type-metadata surface is intended to expose (§20.3, a later phase).
+
+> _Draft; not yet implemented._ Type assertions, type switches, and the `TypeInfo`
+> RTTI record are **specified ahead of implementation** (design settled — the
+> **Draft** tier, `conventions.md`). The current toolchain provides neither the
+> `x.(T)` expression nor the type-switch statement, and interface vtables do not
+> yet carry a `*TypeInfo` slot. Implementation-conformance for the `iface.assert*`
+> / `iface.typeswitch` / `iface.rtti` rules (and `type.layout.typeinfo`) is
+> therefore **not yet met**; the high-level plan is
+> `explorations/plan-type-assertions.md` (tracked in `claude-todo.md`).

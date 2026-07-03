@@ -16,8 +16,9 @@ shift operators (§13.5), comparison and comparability (§13.6), logical operato
 floating-point, string, character; or `true`/`false`/`nil`); an identifier or
 package-qualified selector (`pkg.name`); a parenthesized expression
 `( Expression )`; a function literal (§10.10); a built-in call (§15); or a
-composite literal (§13.10). Postfix operators — selector `.name`, index/slice
-`[…]`, and call `(args)` — then apply (§13.8, §13.9).
+composite literal (§13.10). Postfix operators — selector `.name`, type assertion
+`.(T)` (§13.8, §11.12), index/slice `[…]`, and call `(args)` — then apply (§13.8,
+§13.9).
 
 ## 13.2 Operator precedence and associativity
 
@@ -27,7 +28,7 @@ composite literal (§13.10). Postfix operators — selector `.name`, index/slice
 
 | Level | Operators |
 |-------|-----------|
-| 11 (tightest) | postfix `.` `[]` `()` |
+| 11 (tightest) | postfix `.` `.(T)` `[]` `()` |
 | 10 | unary prefix `!` `~` `-` `*` `&` |
 | 9 | `*` `/` `%` |
 | 8 | `+` `-` |
@@ -175,6 +176,17 @@ Go.
 field or method (§10.5); a field takes precedence over a same-named method. A
 selector `pkg.name` resolves a package member; `T.M` is a method expression
 (§10.11).
+
+`expr.type-assert` — A **type assertion** `x.(K T)` is a postfix on the `.`
+selector, distinguished from a `.name` selector by the `(` that follows the dot
+(the token after `.` decides; grammar D13). It recovers a concrete type — or a
+narrower interface — from an **interface-value** operand at run time. The operand
+and target rules, the **mandatory** `*`/`@`/value recovery kind, the two forms
+(the plain expression `x.(K T)` aborts on a miss; the two-target `v, ok := x.(K T)`
+is comma-ok), and the exact-vs-implements match are all specified in **§11.12**
+(`iface.assert`, `iface.assert.kind`). As a postfix it binds at the tightest
+precedence level (§13.2). The related **type switch** statement is §14.10 (§11.12
+`iface.typeswitch`).
 
 ## 13.9 Index, slice, and bounds
 

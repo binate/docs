@@ -140,6 +140,7 @@ expr.primary	positive	13-expressions.md
 expr.shift	positive	13-expressions.md
 expr.shift.negative	constraint-candidate	13-expressions.md
 expr.shift.overshift	positive	13-expressions.md
+expr.type-assert	positive	13-expressions.md
 expr.unary	positive	13-expressions.md
 expr.unary.addr	constraint-candidate	13-expressions.md
 func.call.apply	positive	10-functions-methods-function-values.md
@@ -203,6 +204,9 @@ gen.typeparams	positive	12-generics-and-enumerations.md
 iface.alias	positive	11-interfaces-impl-self.md
 iface.any	constraint-candidate	11-interfaces-impl-self.md
 iface.any.universal	positive	11-interfaces-impl-self.md
+iface.assert	constraint-candidate	11-interfaces-impl-self.md
+iface.assert.absent	positive	11-interfaces-impl-self.md
+iface.assert.kind	constraint	11-interfaces-impl-self.md
 iface.canonical.auto-available	positive	11-interfaces-impl-self.md
 iface.canonical.carveout	positive	11-interfaces-impl-self.md
 iface.construct.box	positive	11-interfaces-impl-self.md
@@ -220,8 +224,10 @@ iface.extend.upcast	positive	11-interfaces-impl-self.md
 iface.impl.coverage	constraint	11-interfaces-impl-self.md
 iface.impl.form	positive	11-interfaces-impl-self.md
 iface.impl.nominal	constraint	11-interfaces-impl-self.md
+iface.rtti	positive	11-interfaces-impl-self.md
 iface.self	positive	11-interfaces-impl-self.md
 iface.self.object-safety	constraint	11-interfaces-impl-self.md
+iface.typeswitch	positive	11-interfaces-impl-self.md
 iface.value.no-readonly-slot	positive	11-interfaces-impl-self.md
 iface.value.repr	positive	11-interfaces-impl-self.md
 iface.value.spelling	constraint-candidate	11-interfaces-impl-self.md
@@ -379,6 +385,7 @@ stmt.switch.no-fallthrough	positive	14b-control-flow.md
 stmt.switch.tag	positive	14b-control-flow.md
 stmt.switch.tagless-bool	constraint	14b-control-flow.md
 stmt.terminating	positive	14b-control-flow.md
+stmt.type-switch	positive	14b-control-flow.md
 term.abstract-machine	framework	03-terms-and-definitions.md
 term.alias	framework	03-terms-and-definitions.md
 term.any	framework	03-terms-and-definitions.md
@@ -452,6 +459,7 @@ type.layout.slice-raw	positive	07b-type-layout.md
 type.layout.struct	positive	07b-type-layout.md
 type.layout.target-info	positive	07b-type-layout.md
 type.layout.transparent	positive	07b-type-layout.md
+type.layout.typeinfo	positive	07b-type-layout.md
 type.named.assignability	positive	07-types.md
 type.named.comparison	positive	07-types.md
 type.named.func-value-nominal	positive	07-types.md

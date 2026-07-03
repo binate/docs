@@ -205,8 +205,10 @@ consumer is **dual-mode interop**, not user-facing reflection). **Not** yet
 present: types, fields, methods, impls, consts, and imports — richer **type
 metadata** (a `TypeInfo` surface) is a **later phase**, and its opt-in granularity
 (per-build flag, per-package, per-type, or always-on) is an **open** design
-question. Pure-C **extern** functions are **not** introspectable (the descriptor
-emitter skips them).
+question. When that surface lands it will be backed by the §7.13.14
+`type.layout.typeinfo` record — the same RTTI `TypeInfo` that type assertions read
+(§11.12 `iface.rtti`) — rather than a separate metadata store. Pure-C **extern**
+functions are **not** introspectable (the descriptor emitter skips them).
 
 `pkg0.reflect.vm-gap` — Under the **bytecode VM**, the `__Package()` accessor is
 reached only for a small fixed set of **built-in** packages (bound through
