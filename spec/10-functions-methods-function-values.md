@@ -199,15 +199,6 @@ plus a per-element acquiring copy for a managed element type; `mem.copy`). This
 borrow discipline is precisely what lets `func.variadic.pack` avoid a hidden heap
 allocation.
 
-> _Draft; not yet implemented._ Variadic parameters and spread are **specified
-> ahead of implementation** (design settled; still normative-in-intent — the
-> **Draft** stability tier, `conventions.md`). The current toolchain does **not**
-> implement general `...T` variadics or the `s...` spread — only the special
-> predeclared `print`/`println` forms (§15.7). Implementation-conformance for the
-> `func.variadic.*` / `func.call.apply` rules is therefore **not yet met**; the
-> high-level implementation plan is `explorations/plan-variadics.md` (tracked in
-> `claude-todo.md` — distinct from the pre-existing C-varargs `__c_call` marker).
-
 > _Note (cross-mode)._ What the **cross-mode ABI contract** (§2.4) pins is that the
 > variadic argument is passed **as a `*[]T`** of the standard 2-word slice layout
 > (§7.13) — exactly like an ordinary raw-slice parameter — so a compiled caller and
