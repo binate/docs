@@ -107,10 +107,10 @@ way, and the remainder form the variadic argument (`func.variadic.pack` /
 > `...T` variadic functions. `panic` is a **fixed** single-parameter function
 > (§15.7). General `...T` variadics (below) are **homogeneous** — every variadic
 > argument has the one element type `T` — so they do not subsume `print`/`println`,
-> whose per-argument formatting has no homogeneous element type. (`any` exists —
-> §7.10 `type.iface.any` — but `...any` would not help: `any` carries no methods,
-> and there is no reflection yet, so the formatting must be resolved per-type at
-> compile time.)
+> whose arguments have no homogeneous concrete element type. (A `...*any` variadic
+> *is* the intended long-term form for `print`/`println`, dispatching per argument
+> via a type switch / reflection once those land — §15.7 `builtin.print`; it is
+> simply not a homogeneous `...T` over a concrete type.)
 
 `func.variadic.decl` — A function or method may declare its **final** parameter
 as **variadic**, written `name "..." T` (`...` before the element type). At most

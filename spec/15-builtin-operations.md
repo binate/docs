@@ -200,10 +200,11 @@ signature — successive arguments may have **different** types); `panic` has a
 **fixed** single-parameter signature (`builtin.panic`). These are **not** ordinary
 `...T` variadic functions (§10.3), which are **homogeneous** (one element type):
 `print`/`println` accept mixed argument types that no `...T` signature can express,
-so the general variadic feature does not subsume them; they remain compiler-provided.
-(`any` exists — §7.10 `type.iface.any` — but a `...any` signature would not help:
-`any` exposes no methods and there is no reflection yet, so per-argument formatting
-must be resolved by type at compile time.) A **spread** argument `expr...`
+so the general variadic feature does not subsume them; they remain compiler-provided
+**for now**. (`any` exists — §7.10 `type.iface.any` — so a `...*any` form is
+possible, but formatting each `any` needs runtime type recovery, a type switch or
+reflection, which is not yet built; `...*any` is the intended library form — see
+`builtin.print`'s note.) A **spread** argument `expr...`
 (§10.3) is **rejected** on `print`/`println`/`panic`: the spread applies only to a
 `...T` variadic parameter, which these forms do not have.
 
@@ -213,12 +214,22 @@ separated by a single space. Each argument is formatted by its type (integers in
 decimal, `bool` as `true`/`false`, a char slice/array as its bytes, floats in a
 fixed-point form).
 
-> _Provisional._ `print`/`println` are a **transitional** facility. Their
-> per-type formatting (and the float format in particular) is bootstrap-grade,
-> deliberately not `%g`-compatible, and is implemented over temporary scaffolding;
-> the intended long-term path is per-type `Format(self) @[]char` rendering
-> dispatched through an interface, gated on interfaces/generics. The exact output
-> format is therefore **not** a stable normative guarantee (§20, `claude-todo.md`).
+> _Provisional._ `print`/`println` are a **transitional** facility. Their per-type
+> formatting (and the float format in particular) is bootstrap-grade, deliberately
+> not `%g`-compatible, and is implemented over temporary scaffolding. The intended
+> long-term path is to retire the compiler builtins in favour of an ordinary
+> **`...*any` library function** (§10.3) that dispatches per argument at **run
+> time**, in layers: a fast **type switch** (§11.12) over the built-in scalars /
+> char-slices (written directly, no allocation), then an interface assertion
+> `arg.(*Formattable)` for user types that opt into custom formatting, then
+> **reflection** (§20.3) for a struct/default rendering. It is **not** a
+> `...Formattable` parameter — Binate forbids adding methods to imported types
+> (§10.4 `func.method.receiver-base`), so a `Formattable` *constraint* could not
+> print a foreign type that had not already impl'd it; only `...*any` + runtime
+> dispatch prints an arbitrary value (as in Go's `fmt`, where `Stringer` is an
+> opt-in runtime check). Gated on type assertions/switches (§11.12) and reflection
+> (§20.3). The exact output format is therefore **not** a stable normative
+> guarantee (§20, `claude-todo.md`).
 
 `builtin.panic` — `panic(msg *[]readonly char)` takes a **single** argument — the
 diagnostic message, a read-only raw char slice (a string literal passes directly,
