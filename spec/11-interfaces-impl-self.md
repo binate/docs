@@ -363,22 +363,23 @@ binder the switch is a pure dispatch. There is **no `case nil`**.
 through a per-type **`TypeInfo`** record reached from the vtable — the `TypeInfo`
 pointer lives in the vtable's offset-0 "any-block" alongside the destructor
 (layout §7.13.14 `type.layout.typeinfo`). A **concrete** assertion compares the
-scrutinee's `TypeInfo` against the target type's. An **interface** assertion looks
-the target up in the `TypeInfo`'s **satisfaction table** — an entry for **every
-interface the type satisfies** (each explicit `impl` *and all of its transitive
-ancestors*, `iface.extend.transitive`), each mapped to that interface's
-statically-computed sub-vtable — and, on a hit, forms `{data, vtable(T, J)}` (the
-ancestor case is exactly the static upcast of §11.6, applied after the concrete
-identity check, so it needs no search). The table is finite and known ahead of
-time precisely **because** satisfaction is explicit (`iface.impl.nominal`); this
-recoverability is what the explicit-`impl` design buys. Type **identity** is a
+scrutinee's `TypeInfo` against the target type's (an identity test). An
+**interface** assertion `x.(K J)` instead consults the **distributed satisfaction
+registry** (§7.13.14 `type.layout.satisfaction`), keyed on `(dynamic-type, J)`, and
+on a hit forms `{data, vtable(T, J)}`. It is **not** a per-type table inside
+`TypeInfo`: because `impl` may live in any package (no orphan rule, §11.8
+`iface.crosspkg.no-orphan`), no single translation unit sees a type's complete impl
+set, so satisfaction entries are emitted **per `impl` site** — one for the impl'd
+interface and each of its transitive ancestors (`iface.extend.transitive`) — and
+`weak_odr`-deduplicated like the vtables they reference. Type **identity** is a
 per-type token whose observable **equality result** — not any particular address —
 is the normative, cross-mode-agreeing quantity (`conf.cross-mode.scope`, §2.4):
-each engine compares its own `TypeInfo` for a type (pointer-equality *within* a
-mode, like vtable/function-value handles, §19.4), and an assertion yields the same
-boolean in compiled and interpreted execution. The observable result is normative;
-the `TypeInfo`/table layout is informative (Annex B), and it is the record a future
-**reflection** type-metadata surface is intended to expose (§20.3, a later phase).
+each engine compares its own `TypeInfo` (pointer-equality *within* a mode, like
+vtable/function-value handles, §19.4), and both the identity test and the registry
+lookup yield the same result in compiled and interpreted execution. The observable
+result is normative; the record/registry layout is informative (Annex B), and the
+`TypeInfo` is the record a future **reflection** type-metadata surface is intended
+to expose (§20.3, a later phase).
 
 > _Draft; not yet implemented._ Type assertions, type switches, and the `TypeInfo`
 > RTTI record are **specified ahead of implementation** (design settled — the

@@ -283,17 +283,30 @@ carries:
 | destructor | the type's destructor handle (the same one the vtable any-block holds) |
 | size, align | `SizeOf`/`AlignOf` of the type (the target's values) |
 | name | the type's name, as a `*[]readonly char` into static storage |
-| satisfaction table | an entry for **every interface the type satisfies** — each explicit `impl` plus all its transitive ancestors (`iface.extend.transitive`) — mapped to that interface's sub-vtable; satisfies an **interface** assertion by forming `{data, vtable(T, J)}` |
 
 There is **exactly one** `TypeInfo` per type **program-wide** (not per module) so
-that the **result** of an identity comparison and of a satisfaction-table lookup
-**agrees across compiled and interpreted execution** — the record is part of the
-cross-mode agreement contract (§7.13.13 `type.layout.keystone`; `conf.cross-mode.scope`,
-§2.4). Each engine may use its own native `TypeInfo` for a type and compare by
-pointer-equality *within* its mode (the same self-describing-handle model as
-vtable and function-value handles, §19.4); it is the boolean *result* that must
-coincide, not a shared address. The table is finite and known ahead of time — at
-link, or at module-load/interning for the VM — precisely because interface
-satisfaction is **explicit** (`iface.impl.nominal`). The record's exact field
-order and the table's search structure are **informative** (Annex B); normative
-are its contents and the cross-mode agreement of every assertion result.
+that the **result** of an identity comparison **agrees across compiled and
+interpreted execution** — the record is part of the cross-mode agreement contract
+(§7.13.13 `type.layout.keystone`; `conf.cross-mode.scope`, §2.4). Each engine may
+use its own native `TypeInfo` for a type and compare by pointer-equality *within*
+its mode (the same self-describing-handle model as vtable and function-value
+handles, §19.4); it is the boolean *result* that must coincide, not a shared
+address. The record's exact field order is **informative** (Annex B); normative are
+its contents and the cross-mode agreement of every assertion result. Interface
+**satisfaction** is *not* carried in `TypeInfo` — see `type.layout.satisfaction`.
+
+`type.layout.satisfaction` — Interface **satisfaction** (which interfaces a type
+implements) is resolved through a **distributed registry** keyed on
+`(concrete type, interface)`, **not** a table inside `TypeInfo`. Because `impl`
+declarations may live in **any** package (no orphan rule, §11.8
+`iface.crosspkg.no-orphan`), no single translation unit — not even the type's
+defining package — sees a type's **complete** impl set, so a per-type satisfaction
+table cannot be built. Instead **each `impl T : I` site** emits a satisfaction
+entry for `I` **and every transitive ancestor of `I`** (computable there from `I`'s
+extension declaration, §11.6), mapping `(T, K)` to the corresponding sub-vtable
+`vtable(T, K)`; entries are `weak_odr`-deduplicated exactly like the `(T, I)`
+vtables they reference. An **interface** assertion `x.(K J)` looks up
+`(dynamic-type, J)` in this registry and, on a hit, forms `{data, vtable(T, J)}`
+(§11.12 `iface.rtti`). The registry's search structure is **informative** (Annex B);
+normative is that its lookup **result agrees across modes** (§2.4) and covers
+exactly the satisfaction relation (`iface.impl.nominal` + `iface.extend.transitive`).
