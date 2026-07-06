@@ -1,6 +1,9 @@
 # 10.8–10.12 Function Values, Closures, and Method Values
 
-> **Status:** mixed · **Maturity:** Provisional (recently landed)  
+> **Status:** mixed · **Maturity:** core **Stable** (implemented across all
+> backends and execution modes; conformance-mixed — tracked defects at §10.12);
+> tail-return / destructure *through* a function value Provisional (§10.2);
+> named-value-from-a-literal construction Draft/unimplemented (§10.9)  
 > **Rule-ID prefix:** `func`  
 > Part of Ch.10 ([Functions, Methods, and Function Values](10-functions-methods-function-values.md)).
 
@@ -8,8 +11,11 @@ A **function value** is a callable value: a `*func`/`@func` carrying a function
 (possibly with captured state). This block specifies function-value types and
 representation (§10.8), non-capturing literals and function references (§10.9),
 closures (§10.10), method expressions and method values (§10.11), and equality,
-indirect calls, and dual-mode dispatch (§10.12). The whole feature is **recent
-and Provisional**; known implementation gaps are flagged inline.
+indirect calls, and dual-mode dispatch (§10.12). The **core** feature is
+**Stable** — implemented across all backends and execution modes and exercised by
+the conformance suite; a few specific interactions remain **Provisional** and one
+construct is **Draft** (unimplemented), both flagged inline, and backend
+implementation-conformance defects are tracked separately (`claude-todo.md`).
 
 ## 10.8 Function-value types
 
@@ -160,9 +166,12 @@ is compiled or interpreted code, in either direction, through the value's call
 shim. This is the mechanism by which compiled and interpreted code call each
 other (Ch.19); a function value carries its own interpreter handle inline.
 
-> _Implementation-conformance gaps (Annex C)._ The function-value feature has
-> known backend-specific gaps that do not change the language rules: a VM-mediated
-> indirect call is currently limited to 7 argument words, and capturing closures /
-> method values with certain floating-point return or register-overflow shapes
-> fail on the native backends. These are tracked, test-pinned defects
-> (`claude-todo.md`), not design holes.
+> _Implementation-conformance gaps._ The function-value feature has known,
+> tracked backend-specific defects that **do not change the language rules** —
+> they are implementation-conformance issues, not design holes (`conf.defect`).
+> Examples: VM-mediated indirect-call argument-word limits, certain native-backend
+> closure / method-value floating-point-return or register-overflow shapes, and an
+> **open** cross-package **small-multi-return** shim-ABI conflict (a native-emitted
+> vs LLVM-emitted `vtable.call` shim disagreeing on the return convention). These
+> are test-pinned in `claude-todo.md`; Annex C will index them once that ledger is
+> authored.

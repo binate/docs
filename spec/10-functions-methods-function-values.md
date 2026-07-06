@@ -1,6 +1,6 @@
 # 10. Functions, Methods, and Function Values
 
-> **Status:** mixed · **Maturity:** Stable (functions/methods); function VALUES Provisional  
+> **Status:** mixed · **Maturity:** Stable (functions/methods); function values — core Stable, a few interactions Provisional, one construct Draft (§10.8)  
 > **Rule-ID prefix:** `func`
 
 This chapter covers function and method declarations (§10.1), returns and
