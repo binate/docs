@@ -55,7 +55,10 @@ list. It has **no body** and declares no methods (methods are declared
 separately, Go-style); it is a relational assertion that the receiver shape `R`
 satisfies each listed interface. `R` may be any of the five receiver shapes
 (`T`, `*T`, `*readonly T`, `@T`, `@readonly T`; §10.4) and must reduce to a
-**named** type (or, in `pkg/builtins/lang`, a universe primitive; §11.10).
+**named** type (or, in `pkg/builtins/lang`, a universe primitive; §11.10). For a
+**generic** type, `R` **binds** the type's parameters and the interface list may
+reference them — a **parameterized-receiver impl** (`impl *Cursor[T] :
+Iterator[T]`; §12.1 `gen.impl.generic-recv`).
 
 `iface.impl.nominal` _(Constraint)_ — Satisfaction is **nominal and explicit**: a
 type satisfies an interface **only** if a matching `impl` is declared. Having all

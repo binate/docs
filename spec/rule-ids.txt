@@ -193,8 +193,10 @@ gen.constraint	positive	12-generics-and-enumerations.md
 gen.crosspkg.body	positive	12-generics-and-enumerations.md
 gen.enum.bitflags	positive	12-generics-and-enumerations.md
 gen.enum.no-first-class	positive	12-generics-and-enumerations.md
+gen.impl.generic-recv	constraint	12-generics-and-enumerations.md
 gen.instantiate	positive	12-generics-and-enumerations.md
 gen.instantiate.disambiguation	positive	12-generics-and-enumerations.md
+gen.method.generic-recv	constraint	12-generics-and-enumerations.md
 gen.mono	positive	12-generics-and-enumerations.md
 gen.mono.constraint-call	positive	12-generics-and-enumerations.md
 gen.no-conditional-impls	positive	12-generics-and-enumerations.md

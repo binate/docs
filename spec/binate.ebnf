@@ -191,10 +191,20 @@ FuncDecl      = "func" identifier [ TypeParams ] Signature Block ;
 MethodDecl    = "func" Receiver identifier Signature Block ;
 
 Receiver      = "(" identifier ReceiverType ")" ;
-(* A receiver type is one of T, *T, *readonly T, @T, @readonly T, and must
-   reduce to a named type declared in the same package (or, only in
-   pkg/builtins/lang, a universe primitive). *)
-ReceiverType  = Type ;
+(* A receiver type is one of T, *T, *readonly T, @T, @readonly T (an optional
+   `*`/`@` and optional `readonly` over a named base), and must reduce to a named
+   type declared in the same package (or, only in pkg/builtins/lang, a universe
+   primitive).  If the base type is GENERIC, the receiver BINDS its type
+   parameters as fresh names — `*Cursor[T]`, `(m HashMap[K, V])` — an identifier
+   list (not type arguments).  A bracket name that resolves to a type (e.g.
+   `Cursor[int]`) is instead a specific-instantiation receiver, NOT a binder — the
+   distinction is SEMANTIC (predeclared names like `int` are ordinary identifiers,
+   §5), resolved by the checker.  Constraints are inherited from the type's
+   declaration and the count must match the type's arity; the method (or impl)
+   introduces NO type parameters of its own (no method-level `[…]`; there is no
+   `[TypeParams]` slot on MethodDecl).  Details: §12.1. *)
+ReceiverType  = [ "*" | "@" ] [ "readonly" ] ReceiverBase ;
+ReceiverBase  = QualifiedName [ "[" identifier { "," identifier } "]" ] ;
 
 Signature     = "(" [ ParameterList ] ")" [ Result ] ;
 (* An optional FINAL variadic parameter `name "..." T` (at most one, last only)
@@ -223,7 +233,10 @@ MethodSig     = identifier Signature ;
 InterfaceList = TypeName { "," TypeName } ;
 
 (* An `impl` is a bodyless relational assertion that the receiver type satisfies
-   each listed interface; its methods are declared separately (Go-style). *)
+   each listed interface; its methods are declared separately (Go-style).  A
+   PARAMETERIZED-receiver impl binds the generic type's parameters in the
+   receiver, and the interface list may reference them: `impl *Cursor[T] :
+   Iterator[T]` (§12.1). *)
 ImplDecl      = "impl" ReceiverType ":" InterfaceList ;
 
 

@@ -24,8 +24,11 @@ Signature  = "(" [ ParameterList ] ")" [ Result ] ;
 Result     = Type | "(" TypeList ")" ;
 ```
 
-Type parameters (`[T Constraint, …]`; Ch.12) may be declared on free functions;
-generic methods are not supported.
+Type parameters (`[T Constraint, …]`; Ch.12) may be declared on free functions
+and on types (structs, interfaces). A method may **not** declare its **own** type
+parameters (`gen.no-generic-methods`), but a method **on a generic type** binds
+the type's parameters through its receiver — `func (it *Cursor[T]) Next() (T, bool)`
+(§12.1 `gen.method.generic-recv`).
 
 `func.decl.params` — Each parameter is written **name before type** and is
 **individually typed** (`name Type`). There is **no** same-type shorthand:
@@ -232,7 +235,8 @@ redundant with `(r T)` (a value copy is read-only regardless).
 be receivers (§7.3). The one carve-out is the intrinsic package
 `pkg/builtins/lang`, which may declare methods on the universe primitives
 `int`/`float`/`bool` (§20.1); aliases remain rejected even there. The receiver
-name may be `_`.
+name may be `_`. If the base type is **generic**, the receiver binds its type
+parameters as fresh names (`*Cursor[T]`; §12.1 `gen.method.generic-recv`).
 
 ## 10.5 Receiver smoothing and dispatch direction
 

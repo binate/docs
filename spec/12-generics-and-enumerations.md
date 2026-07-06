@@ -1,12 +1,13 @@
 # 12. Generics and Enumerations
 
-> **Status:** mixed · **Maturity:** language rules Stable (v1 scope); one v1-restriction unenforced — see the §12.4 gap (constraint satisfaction unchecked for generic struct/interface instantiation)  
+> **Status:** mixed · **Maturity:** language rules Stable (v1 scope); methods + impls on generic types (§12.1 `gen.method.generic-recv` / `gen.impl.generic-recv`) Draft — specified, not yet implemented; one v1-restriction unenforced — see the §12.4 gap (constraint satisfaction unchecked for generic struct/interface instantiation)  
 > **Rule-ID prefix:** `gen`
 
 This chapter covers **generics** — type-parameterized functions, structs, and
-interfaces (§12.1–§12.5) — and the **enumeration** idiom (§12.6). Several v1
-restrictions (no generic methods, no conditional impls, no type inference) are
-deliberate scope choices, relaxable later, not instability.
+interfaces, including methods and impls on generic types (§12.1–§12.5) — and the
+**enumeration** idiom (§12.6). Several v1 restrictions (no **method-level** type
+parameters, no conditional impls, no type inference) are deliberate scope
+choices, relaxable later, not instability.
 
 ## 12.1 Type parameters and constraints
 
@@ -29,12 +30,70 @@ surface grammar accepts any `Type` in the constraint position; the restriction t
 other form with a diagnostic (`ConstraintName` is not a distinct grammar
 production).
 
-`gen.no-generic-methods` _(Constraint)_ — Type parameters may be declared on
-**free functions**, not on **methods**: there are no generic methods on types
-(use a generic free function instead; §10.1).
+`gen.no-generic-methods` _(Constraint)_ — A method may not declare **its own**
+type parameters — there is no `[…]` after the method name (unlike a free
+function; `MethodDecl` has no `TypeParams` slot). A would-be *generic method*
+(`func (v Vec[T]) map[U](…)`, where `map` introduces a fresh `[U]`) is rejected
+at the declaration with "methods cannot have type parameters": a vtable slot
+would have to vary per instantiation of `U`, so such a method is undispatchable —
+use a generic **free function** instead (§10.1). This does **not** forbid a
+method on a generic *type* (next rule), whose type parameters come from the
+**receiver**, not the method.
 
-> _Note._ A generic-method declaration is **diagnosed at the declaration** — a
-> method written with type parameters is rejected with "methods cannot have type
+`gen.method.generic-recv` _(Constraint)_ — A method **on a generic type** binds
+the type's parameters through its **receiver**, written as an identifier list on
+the base type: `func (it *Cursor[T]) Next() (T, bool)`, `func (m *HashMap[K, V])
+get(k K) (V, bool)`. The bracketed names are **binding** occurrences — fresh
+type-parameter names, **not** type arguments — and each **shall not** name a
+predeclared or in-scope type (predeclared names like `int` are ordinary
+identifiers, §5, so a bracket entry that resolves to a type — `Cursor[int]` — is a
+*specific-instantiation* receiver, resolved semantically, not a binder; §12.4).
+The binders' **constraints are inherited** from the type's declaration (they are
+not restated; an unconstrained `[T any]` type yields an unconstrained `T`, on
+which no method may be called — `gen.constraint`), and their count **must equal**
+the type's arity. The names are in scope for the whole signature and body; the
+method itself introduces no type parameter (`gen.no-generic-methods`). Each
+`(type, type-argument)` instantiation **monomorphizes** the method to a concrete
+signature (`Cursor[int].Next() (int, bool)`; `gen.mono`), so it occupies a fixed
+vtable slot and dispatches like any method.
+
+`gen.impl.generic-recv` _(Constraint)_ — An `impl` may have a **parameterized
+receiver** that binds the type's parameters (binder names, not type arguments,
+per `gen.method.generic-recv`), and its interface list may reference them:
+`impl *Cursor[T] : Iterator[T]` asserts that `Cursor[T]`
+satisfies `Iterator[T]` for **every** `T` (§11.3 `iface.impl.form`). The
+method-shape match (`iface.impl.coverage`) is verified **abstractly** at the `impl`
+declaration with the binders held abstract, exactly as for a non-generic impl;
+constraint satisfaction and the concrete `(Cursor[int], Iterator[int])` vtable are
+resolved **per monomorphized instantiation** (`gen.satisfy`, §12.4). A
+**conditional** impl — one carrying an extra constraint beyond the type's own, so
+it applies only for some type arguments — is disallowed (`gen.no-conditional-impls`,
+§12.4).
+
+> _Note (object-safety)._ A parameterized impl of a generic interface stays
+> **object-safe**: `iface.self.object-safety` (§11.9) forbids only `Self` in a
+> non-receiver position, which the interface's *own* type parameter (`Iterator`'s
+> `T`) does not trigger — post-monomorphization `Iterator[int]`'s methods are
+> concrete, so a `*Iterator[int]` value dispatches normally.
+
+> _Open._ A parameterized impl `impl *Cursor[T] : I` **overlaps** a
+> *specific-instantiation* impl `impl Cursor[int] : I` (which §12.4
+> `gen.no-conditional-impls` currently permits) at `T = int` — two impls of the
+> same `(Cursor[int], I)`. The coherence rule for that overlap is **unresolved**; a
+> clean v1 choice is to forbid a specific-instantiation impl where a parameterized
+> one applies (or specific-instantiation impls entirely). Tracked in
+> `claude-todo.md`.
+
+> _Draft; not yet implemented._ Methods on generic types
+> (`gen.method.generic-recv`) and parameterized-receiver impls
+> (`gen.impl.generic-recv`) are **specified ahead of implementation** (design
+> settled — the **Draft** tier, `conventions.md`). Until they land, a generic type
+> can carry no methods and thus satisfy no interface, so a generic interface (e.g.
+> `Iterator[T]`) is declarable but **not yet implementable**; the high-level plan
+> is `explorations/plan-generic-type-methods.md` (tracked in `claude-todo.md`).
+
+> _Note._ A generic-*method* declaration (a method with its own `[…]`) is
+> **diagnosed at the declaration** — rejected with "methods cannot have type
 > parameters", not deferred to a confusing call-site error.
 
 ## 12.2 Instantiation
@@ -85,15 +144,21 @@ naming the missing satisfaction. (A `[T any]` parameter always satisfies; §12.1
 > instantiations do not check the type-parameter constraint, so an unsatisfying
 > type argument (e.g. `Box[NoOrder]` for `type Box[T Orderable]`, where `NoOrder`
 > has no `impl`) is wrongly accepted (`gen.satisfy.struct-iface-unchecked`,
-> `claude-todo.md`).
+> `claude-todo.md`). **`gen.impl.generic-recv` (§12.1) makes this gap
+> load-bearing:** a parameterized impl's per-instantiation satisfaction relies on
+> the instantiation-time constraint check being performed.
 
 > _Example._ `func sort[T Orderable](xs *[]T) { … xs[i].Compare(xs[j]) … }`
 > instantiated at `T = int` works because `pkg/builtins/lang` provides
 > `impl int : Orderable` (§11.10); `int.Compare` is called directly.
 
 `gen.no-conditional-impls` — There are **no conditional impls** in v1 (an `impl`
-that applies only for certain type arguments). A specific instantiation may carry
-its own ordinary `impl` declaration.
+carrying an extra constraint beyond the type's own, so it applies only for certain
+type arguments). A **parameterized** impl that binds the type's parameters and
+applies for *all* of them is a different thing and **is** allowed (§12.1
+`gen.impl.generic-recv`). A **specific-instantiation** impl (concrete type
+arguments, `impl Cursor[int] : …`) may be declared, subject to the unresolved
+overlap-with-parameterized question flagged as _Open_ in `gen.impl.generic-recv`.
 
 ## 12.5 Cross-package generics
 
