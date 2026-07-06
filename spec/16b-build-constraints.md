@@ -151,11 +151,16 @@ For example, POSIX `environ` has C type `char **` (Binate `**char`), so
 `__c_global("environ", **char)` is a `***char` and `*` of it is the current
 `**char`.
 
-> _Note (pending feature)._ `__c_global` is a **decided** but **not-yet-implemented**
-> feature (2026-07-05) — the variable counterpart to `__c_call`, filling the gap
-> the C-**function** escape hatch left for C **globals**. Until it lands there is no
-> supported way to reach a C global. (It is unrelated to `decl.var.extern` (§9.2),
-> the Binate `.bni`/`.bn` interface/implementation split, which is not a C symbol.)
+> _Note (implementation status)._ `__c_global` — the variable counterpart to
+> `__c_call`, filling the gap the C-**function** escape hatch left for C
+> **globals** — is **implemented in compiled mode** (2026-07-06): the default
+> (LLVM) compiler backend lowers it, so it works on every hosted compiled target
+> that links libc. The direct `--backend native` backends do **not** yet lower it
+> (they reject `__c_global` at code-generation rather than mis-compile it);
+> native support is forthcoming. As specified above it remains **compiled-mode
+> only** — the bytecode VM never executes it. (It is unrelated to
+> `decl.var.extern` (§9.2), the Binate `.bni`/`.bn` interface/implementation
+> split, which is not a C symbol.)
 
 > _Note._ The recovered `*T` **borrows** foreign storage: the C global's lifetime is
 > the C side's concern, and a raw pointer read through it — e.g. an `environ` entry
