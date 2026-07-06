@@ -130,10 +130,11 @@ unsafe_index   unsafe_div   unsafe_rem   sizeof   alignof
 present   same
 ```
 
-Two further reserved builtin spellings exist for low-level operations:
-`_func_handle` (a raw function-address operation; Ch.10) and `__c_call`
-(the C-call escape hatch; Annex D). The legacy spelling `_raw_func_addr` is a
-**deprecated alias** for `_func_handle` and is slated for removal.
+Three further reserved builtin spellings exist for low-level operations:
+`_func_handle` (a raw function-address operation; Ch.10), `__c_call`
+(the C-call escape hatch; Annex D), and `__c_global` (C-global-variable access,
+§16.9). The legacy spelling `_raw_func_addr` is a **deprecated alias** for
+`_func_handle` and is slated for removal.
 
 > _Note._ Because these are reserved, identifiers such as `make`, `len`,
 > `cast`, and `present` cannot name user variables, functions, or fields.

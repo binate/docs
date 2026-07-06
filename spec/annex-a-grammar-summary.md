@@ -30,7 +30,8 @@ identifier    = letter { letter | digit } ;
 (* --- Keyword built-ins (operations with special call syntax; see BuiltinCall) --- *)
 (*  make      make_slice  box       cast      bit_cast  len
     sizeof    alignof     present   same      unsafe_index
-    unsafe_div  unsafe_rem  unsafe_shl  unsafe_shr  _func_handle  __c_call *)
+    unsafe_div  unsafe_rem  unsafe_shl  unsafe_shr  _func_handle  __c_call
+    __c_global *)
 
 (* --- Predeclared names (NOT reserved — may be shadowed) --- *)
 (*  Types:     int  uint  int8  int16  int32  int64
@@ -454,7 +455,8 @@ BuiltinCall   = "make" "(" Type ")"
               | "unsafe_shl" "(" Expression "," Expression ")"
               | "unsafe_shr" "(" Expression "," Expression ")"
               | "_func_handle" "(" Expression ")"
-              | "__c_call" "(" string_literal "," CCallRet { "," CCallArg } ")" ;
+              | "__c_call" "(" string_literal "," CCallRet { "," CCallArg } ")"
+              | "__c_global" "(" string_literal "," Type ")" ;  (* address of a C global as *T — §16.9 *)
 CCallRet      = Type | string_literal ; (* the C return type, OR the string literal "void" for a void-returning C function *)
 CCallArg      = Expression | "..." ;    (* "..." marks the C varargs boundary *)
 

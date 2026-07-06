@@ -138,6 +138,30 @@ supported** — pass a pointer to an out-parameter instead. `__c_call` is
 > rejects a void return, and a void C function is called by declaring a
 > throwaway scalar return and discarding it.
 
+`pkg.cglobal` — Reading or writing a **C global variable** is done through the
+built-in `__c_global` (another internal foreign-function primitive, §15.8):
+`__c_global("symbol", T)` yields the **address** of the C global named by the
+string literal — emitted **verbatim, with no name mangling** (like `__c_call`) —
+as a **raw pointer `*T`**, where `T` is the variable's C type. Read the global with
+`*p` and write it with `*p = …`. `T` must be a C-ABI-passable **scalar or pointer**
+(the same constraint as `__c_call`'s arguments); the result is **always raw** (`*T`,
+never `@T`) — the storage belongs to the C side and carries no reference-count
+header. `__c_global` is **compiled-mode only** (the bytecode VM performs no FFI).
+For example, POSIX `environ` has C type `char **` (Binate `**char`), so
+`__c_global("environ", **char)` is a `***char` and `*` of it is the current
+`**char`.
+
+> _Note (pending feature)._ `__c_global` is a **decided** but **not-yet-implemented**
+> feature (2026-07-05) — the variable counterpart to `__c_call`, filling the gap
+> the C-**function** escape hatch left for C **globals**. Until it lands there is no
+> supported way to reach a C global. (It is unrelated to `decl.var.extern` (§9.2),
+> the Binate `.bni`/`.bn` interface/implementation split, which is not a C symbol.)
+
+> _Note._ The recovered `*T` **borrows** foreign storage: the C global's lifetime is
+> the C side's concern, and a raw pointer read through it — e.g. an `environ` entry
+> that `setenv`/`putenv` may reallocate — can dangle. Copy out before mutating the
+> environment; this is the ordinary raw-borrow discipline (§18.7 `mem.raw-uaf`).
+
 > _Note._ Binate targets **C-free** systems: C is used only as the practical
 > bridge to existing OS interfaces (system calls, allocation), not as an
 > architectural dependency, and a pure-Binate system — OS interaction via direct
