@@ -178,9 +178,10 @@ Receiver      = "(" identifier ReceiverType ")" ;
    primitive).  If the base type is GENERIC, the receiver BINDS its type
    parameters as fresh names — `*Cursor[T]`, `(m HashMap[K, V])` — an identifier
    list (not type arguments).  A bracket name that resolves to a type (e.g.
-   `Cursor[int]`) is instead a specific-instantiation receiver, NOT a binder — the
-   distinction is SEMANTIC (predeclared names like `int` are ordinary identifiers,
-   §5), resolved by the checker.  Constraints are inherited from the type's
+   `Cursor[int]`) would be a specific-instantiation receiver, which is REJECTED
+   (§12.4) — bracket names must be fresh binders; the distinction is SEMANTIC
+   (predeclared names like `int` are ordinary identifiers, §5), resolved by the
+   checker.  Constraints are inherited from the type's
    declaration and the count must match the type's arity; the method (or impl)
    introduces NO type parameters of its own (no method-level `[…]`; there is no
    `[TypeParams]` slot on MethodDecl).  Details: §12.1. *)

@@ -199,7 +199,7 @@ gen.instantiate.disambiguation	positive	12-generics-and-enumerations.md
 gen.method.generic-recv	constraint	12-generics-and-enumerations.md
 gen.mono	positive	12-generics-and-enumerations.md
 gen.mono.constraint-call	positive	12-generics-and-enumerations.md
-gen.no-conditional-impls	positive	12-generics-and-enumerations.md
+gen.no-conditional-impls	constraint	12-generics-and-enumerations.md
 gen.no-generic-methods	constraint	12-generics-and-enumerations.md
 gen.satisfy	constraint	12-generics-and-enumerations.md
 gen.typeparams	positive	12-generics-and-enumerations.md

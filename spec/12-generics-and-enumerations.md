@@ -45,9 +45,10 @@ the type's parameters through its **receiver**, written as an identifier list on
 the base type: `func (it *Cursor[T]) Next() (T, bool)`, `func (m *HashMap[K, V])
 get(k K) (V, bool)`. The bracketed names are **binding** occurrences — fresh
 type-parameter names, **not** type arguments — and each **shall not** name a
-predeclared or in-scope type (predeclared names like `int` are ordinary
-identifiers, §5, so a bracket entry that resolves to a type — `Cursor[int]` — is a
-*specific-instantiation* receiver, resolved semantically, not a binder; §12.4).
+predeclared or in-scope type: a bracket entry that resolves to a type
+(`Cursor[int]`) would be a **specific-instantiation** receiver, which is
+**rejected** (`gen.no-conditional-impls`, §12.4). Predeclared names like `int` are
+ordinary identifiers (§5), so this is a semantic check.
 The binders' **constraints are inherited** from the type's declaration (they are
 not restated; an unconstrained `[T any]` type yields an unconstrained `T`, on
 which no method may be called — `gen.constraint`), and their count **must equal**
@@ -66,23 +67,16 @@ method-shape match (`iface.impl.coverage`) is verified **abstractly** at the `im
 declaration with the binders held abstract, exactly as for a non-generic impl;
 constraint satisfaction and the concrete `(Cursor[int], Iterator[int])` vtable are
 resolved **per monomorphized instantiation** (`gen.satisfy`, §12.4). A
-**conditional** impl — one carrying an extra constraint beyond the type's own, so
-it applies only for some type arguments — is disallowed (`gen.no-conditional-impls`,
-§12.4).
+**conditional** impl (an extra constraint beyond the type's own) and a
+**specific-instantiation** impl (concrete receiver arguments) are **both**
+disallowed (`gen.no-conditional-impls`, §12.4): the parameterized form is the
+single mechanism, so no impl-overlap can arise.
 
 > _Note (object-safety)._ A parameterized impl of a generic interface stays
 > **object-safe**: `iface.self.object-safety` (§11.9) forbids only `Self` in a
 > non-receiver position, which the interface's *own* type parameter (`Iterator`'s
 > `T`) does not trigger — post-monomorphization `Iterator[int]`'s methods are
 > concrete, so a `*Iterator[int]` value dispatches normally.
-
-> _Open._ A parameterized impl `impl *Cursor[T] : I` **overlaps** a
-> *specific-instantiation* impl `impl Cursor[int] : I` (which §12.4
-> `gen.no-conditional-impls` currently permits) at `T = int` — two impls of the
-> same `(Cursor[int], I)`. The coherence rule for that overlap is **unresolved**; a
-> clean v1 choice is to forbid a specific-instantiation impl where a parameterized
-> one applies (or specific-instantiation impls entirely). Tracked in
-> `claude-todo.md`.
 
 > _Draft; not yet implemented._ Methods on generic types
 > (`gen.method.generic-recv`) and parameterized-receiver impls
@@ -152,13 +146,16 @@ naming the missing satisfaction. (A `[T any]` parameter always satisfies; §12.1
 > instantiated at `T = int` works because `pkg/builtins/lang` provides
 > `impl int : Orderable` (§11.10); `int.Compare` is called directly.
 
-`gen.no-conditional-impls` — There are **no conditional impls** in v1 (an `impl`
+`gen.no-conditional-impls` _(Constraint)_ — Neither a **conditional** impl (one
 carrying an extra constraint beyond the type's own, so it applies only for certain
-type arguments). A **parameterized** impl that binds the type's parameters and
-applies for *all* of them is a different thing and **is** allowed (§12.1
-`gen.impl.generic-recv`). A **specific-instantiation** impl (concrete type
-arguments, `impl Cursor[int] : …`) may be declared, subject to the unresolved
-overlap-with-parameterized question flagged as _Open_ in `gen.impl.generic-recv`.
+type arguments) nor a **specific-instantiation** impl (concrete type arguments in
+the receiver, `impl Cursor[int] : …`) is allowed in v1. An `impl` on a generic type
+uses only the **parameterized** form, which binds the type's parameters and applies
+for *all* of them (§12.1 `gen.impl.generic-recv`) — the single mechanism, so no
+impl-overlap can arise. (A **plain** type implementing a generic *interface*
+instantiation — `impl IntBox : Container[int]` — is unrelated and allowed: its
+receiver is not a generic instantiation.) These restrictions are v1 scope choices,
+relaxable later.
 
 ## 12.5 Cross-package generics
 
