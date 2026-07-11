@@ -43,6 +43,11 @@ identifier    = letter { letter | digit } ;
     nil      package  readonly   return    Self      struct    switch
     true     type     var                                                *)
 
+(* --- Contextual keywords (NOT reserved — ordinary identifiers except in
+       the one position noted) --- *)
+(*  expose  — the lead-in of a top-level ExposeDecl in a .bni (§16.5.2);
+              an ordinary identifier everywhere else                        *)
+
 (* --- Keyword built-ins (operations with special call syntax; see BuiltinCall) --- *)
 (*  make      make_slice  box       cast      bit_cast  len
     sizeof    alignof     present   same      unsafe_index
@@ -141,7 +146,14 @@ TopLevelDecl  = [ Annotation ] ( TypeDecl
               | FuncDecl
               | MethodDecl
               | InterfaceDecl
-              | ImplDecl ) ;
+              | ImplDecl
+              | ExposeDecl ) ;      (* ExposeDecl is permitted only in a .bni; §16.5.2 *)
+
+(* `expose "P"` re-exports package P's entire exported surface as part of THIS
+   package's exported surface (§16.5.2); it is permitted only in a .bni
+   interface file.  `expose` is a CONTEXTUAL keyword — an ordinary identifier
+   except as the lead-in of a top-level declaration. *)
+ExposeDecl    = "expose" string_literal ;
 
 
 (* ============================================================ *)

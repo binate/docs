@@ -310,6 +310,15 @@ pkg.ccall	positive	16b-build-constraints.md
 pkg.cglobal	positive	16b-build-constraints.md
 pkg.clause	positive	16-packages-and-program-structure.md
 pkg.export	constraint-candidate	16-packages-and-program-structure.md
+pkg.expose	positive	16-packages-and-program-structure.md
+pkg.expose.bni-only	constraint	16-packages-and-program-structure.md
+pkg.expose.conflict	constraint	16-packages-and-program-structure.md
+pkg.expose.dep	positive	16-packages-and-program-structure.md
+pkg.expose.flat	positive	16-packages-and-program-structure.md
+pkg.expose.identity	positive	16-packages-and-program-structure.md
+pkg.expose.reflect	positive	16-packages-and-program-structure.md
+pkg.expose.surface	positive	16-packages-and-program-structure.md
+pkg.expose.transitive	positive	16-packages-and-program-structure.md
 pkg.extern	positive	16b-build-constraints.md
 pkg.files	constraint-candidate	16-packages-and-program-structure.md
 pkg.files.test	positive	16-packages-and-program-structure.md

@@ -132,6 +132,76 @@ the **one exception to binary-only distribution**: a package can otherwise ship
 as interface + compiled library with no source, but a package exporting a generic
 must ship that generic's body in its `.bni`.
 
+### 16.5.2 Whole-package re-export (`expose`)
+
+`pkg.expose` — An `expose` declaration in a package's `.bni` re-exports another
+package's **entire exported surface** as part of this package's surface:
+
+```
+ExposeDecl = "expose" string_literal ;
+```
+
+Written `expose "P"` in package **A**'s `.bni`, it makes every member of package
+**P**'s exported surface (§16.4) part of A's surface, so a consumer that
+`import`s A may reference P's member `X` as `A.X`. `expose` is a **contextual
+keyword**: it is recognized only as the lead-in of a top-level declaration and
+is an ordinary identifier everywhere else, so it reserves nothing language-wide
+(§5). A **forwarder** — a `.bni` with one or more `expose` declarations and no
+implementation directory — is a valid `.bni`-only package (§16.1); a package may
+equally combine its own declarations with `expose`s to present several packages
+as one surface (an aggregator). The two motivating uses are **refactor/rename**
+(promote `pkg/stdx/foo` to `pkg/std/foo` and leave `pkg/stdx/foo.bni` as
+`expose "pkg/std/foo"`, so existing `import "pkg/stdx/foo"` consumers keep
+compiling against the same entities and migrate at leisure) and **internal
+structuring**.
+
+`pkg.expose.bni-only` _(Constraint)_ — `expose` is permitted **only in a
+`.bni`** — it defines part of the package's public surface, which lives in the
+`.bni` (§16.4). An `expose` in a `.bn` is a compile error (a message of the form
+`expose is permitted only in .bni interface files`).
+
+`pkg.expose.identity` — Re-export is by **identity, never a copy**: the member
+reached as `A.X` **is** P's original entity `X` — the same *type identity* for a
+type, the same *storage* for a `var`, the same *symbol* for a `func`, the same
+*value* for a `const`. Consequently code written against `A.X` and code written
+against `P.X` name one entity and interoperate. (An exposed **interface** is
+re-exported through the interface-identity form; a type's `impl`s dispatch
+through the exposed type without re-export, since impl and type identity already
+key on the resolved target package, Ch.11.)
+
+`pkg.expose.surface` — `expose` extends **only A's exported surface**; it does
+**not** bring P's names into A's own scope. It is **not** an import, and Binate
+has no dot-import — references are always qualified (§16.3). If A's
+implementation needs to *use* P, it writes an ordinary `import "P"` separately.
+An exposed package's names therefore can never collide with A's package-private
+(`.bn`-only) names.
+
+`pkg.expose.flat` — Re-exported members appear **flat**: a consumer sees `A.X`,
+not `A.P.X` (a package is neither a value nor a member of another package).
+
+`pkg.expose.transitive` — `expose` is **transitive**: if P exposes Q, then a
+package A that exposes P also re-exports Q's members. Injection proceeds in
+dependency order, so a chain `A → P → Q` surfaces Q's members through A.
+
+`pkg.expose.conflict` _(Constraint)_ — A name reachable through **two** `expose`
+declarations, or through an `expose` **and** A's own exported declaration of the
+same name, is a **compile error**; the diagnostic names both origins. (Because
+`expose` is surface-only, A's private names are never involved in a collision.)
+
+`pkg.expose.dep` — `expose "P"` makes A **depend on** P: P is loaded, checked,
+and initialized before A, exactly as an `import` edge would (Ch.17). `expose`
+and `import` edges share one import graph, so a cycle involving an `expose` is
+rejected by the acyclicity constraint (§16.6, `pkg.acyclic`). A **pure forwarder
+emits no code, no storage, and no initializer**: importing A only adds the
+dependency edge to P, and every `A.X` resolves to P's entity, so the forwarder
+has no runtime footprint of its own.
+
+`pkg.expose.reflect` — An exposed member is reflected under its **home
+package**: `A.X` is described by P's reflection descriptor entry for `X`
+(Ch.20), not by a copy synthesized in A — a direct consequence of
+`pkg.expose.identity` (a pure forwarder emits no descriptor entries for the
+members it exposes).
+
 ## 16.6 Package resolution and identity
 
 `pkg.resolve` — An import path is resolved to files on disk by searching a list
