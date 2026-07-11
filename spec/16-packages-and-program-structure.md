@@ -164,10 +164,10 @@ structuring**.
 reached as `A.X` **is** P's original entity `X` — the same *type identity* for a
 type, the same *storage* for a `var`, the same *symbol* for a `func`, the same
 *value* for a `const`. Consequently code written against `A.X` and code written
-against `P.X` name one entity and interoperate. (An exposed **interface** is
-re-exported through the interface-identity form; a type's `impl`s dispatch
-through the exposed type without re-export, since impl and type identity already
-key on the resolved target package, Ch.11.)
+against `P.X` name one entity and interoperate. (An exposed **interface** shares
+P's interface type identity directly — no alias node is synthesized — and a
+type's `impl`s dispatch through the exposed type without re-export, since impl
+and type identity already key on the resolved target package, Ch.11.)
 
 `pkg.expose.surface` — `expose` extends **only A's exported surface**; it does
 **not** bring P's names into A's own scope. It is **not** an import, and Binate
@@ -185,8 +185,11 @@ dependency order, so a chain `A → P → Q` surfaces Q's members through A.
 
 `pkg.expose.conflict` _(Constraint)_ — A name reachable through **two** `expose`
 declarations, or through an `expose` **and** A's own exported declaration of the
-same name, is a **compile error**; the diagnostic names both origins. (Because
-`expose` is surface-only, A's private names are never involved in a collision.)
+same name, is a **compile error** that names both origins — a message of the
+form `X: exposed by both "P" and "Q"` (two exposes) or `X: exposed by "P"
+conflicts with this package's own declaration of the same name` (expose vs. own
+declaration). (Because `expose` is surface-only, A's private names are never
+involved in a collision.)
 
 `pkg.expose.dep` — `expose "P"` makes A **depend on** P: P is loaded, checked,
 and initialized before A, exactly as an `import` edge would (Ch.17). `expose`
