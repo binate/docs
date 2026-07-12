@@ -1,6 +1,6 @@
 # 16.7–16.9 Annotations, build constraints, and the FFI boundary
 
-> **Status:** mixed · **Maturity:** the annotation/build-constraint surface is an `arch`/`os` MVP (most predicates deferred); `__c_call` is compiled-mode only  
+> **Status:** mixed · **Maturity:** the annotation/build-constraint surface is an `arch`/`os` MVP (most predicates deferred); `__c_call` is compiled-mode only; the outbound `#[c_export]` / linker-placement surface (§16.9) is **Draft/pending**  
 > **Rule-ID prefix:** `pkg`
 
 This continues [Ch.16 Packages and Program Structure](16-packages-and-program-structure.md)
@@ -191,10 +191,12 @@ package's `.bni` (§16.4) — may be `#[c_export]`'d: a two-level gate (package-
 
 `pkg.cexport.signature` — An exported function's signature must be **C-ABI-replicable**: because
 Binate already uses the platform C ABI (§7.13), every parameter and result type maps to a C type the
-C side can declare — a scalar → the matching C scalar; `*T`/`@T` → a pointer; a raw slice `*[]T` →
-a 2-word `{T* data; size_t len}`; a managed-slice `@[]T` → its 4-word
-`{data, len, backing, backingLen}` (whose first two words match the raw-slice head, §7.13
-`type.layout.slice-managed`); an interface value → a 2-word `{data, vtable}`; a **function value**
+C side can declare — a scalar → the matching C scalar; `*T` / `@T` → a pointer (a `@` form
+additionally carries the refcount-borrow discipline of the Note below); a raw slice `*[]T` → a
+2-word `{T* data; ptrdiff_t len}` (the slice `len` is a **signed** target-width int, §7.13.6 — not
+C's unsigned `size_t`); a managed-slice `@[]T` → its 4-word `{data, len, backing, backingLen}`
+(whose first two words match the raw-slice head, §7.13.6 `type.layout.slice-managed`); an interface
+value → a 2-word `{data, vtable}`; a **function value**
 → a 2-word `{vtable, data}`, the **reverse** field order of an interface value
 (§7.13.9 `type.layout.func-value`), which a C typedef must match; a struct by-value or by-reference
 per the ≤16-byte cutoff (§7.13.11 `type.layout.byval-cutoff`); a multi-return as its packed

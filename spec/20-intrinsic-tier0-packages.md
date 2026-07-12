@@ -282,9 +282,11 @@ name. Both read the returned `@[]char` and branch on `len(result) > 0`.
 `pkg0.platform-init` — `pkg/builtins/platform_init` is the **fifth** tier-0 package: the home for
 **platform startup / entry glue**, distinct from `pkg/builtins/rt` (runtime *services* —
 allocation, refcounting, exit; §20.2) in that this is *startup*. Like the other tier-0 packages it
-is **path-special** — the compiler gives it bespoke treatment: it may run **pre-init** and is
-**force-included** even though nothing imports it (mirroring the `lang` primitive-impl carve-out
-§20.1 and the `rt` runtime contract §20.2). It holds the **build-conditional** (§16.8) entry
+is **path-special** — the compiler gives it bespoke treatment: it may run **pre-init** and (like
+the compiler-emitted entry today) is **force-included** into the link even though no Binate package
+imports it, inheriting the path-special treatment the tier-0 packages already receive (cf. the
+`lang` primitive-impl carve-out §20.1 and `reflect`'s force-load §20.3). It holds the
+**build-conditional** (§16.8) entry
 functions of `prog.entry.pluggable` (§17.3.2) — a hosted C `main` (`#[c_export("main")]`, argv
 capture), a freestanding `_start` (`#[section]` / `#[link_at]`, §16.9 `pkg.link-placement`), and a
 C-library `_init` — each calling the well-known `bn_init` / `bn_entry` glue symbols
