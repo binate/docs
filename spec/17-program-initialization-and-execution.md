@@ -69,10 +69,13 @@ parameters and no results**. Command-line arguments are not delivered as `main`
 parameters, and a return value from `main` is not consumed; argument access and
 the process exit code are host-dependent (§17.3.1, §17.4).
 
-`prog.entry.sequence` — On entry, the runtime calls a single synthesized entry
-point that (1) runs every package's initialization in dependency order (§17.2),
-then (2) calls `main`. This entry point is the runtime's sole entry into Binate
-code; all program-startup semantics live behind it.
+`prog.entry.sequence` — On entry, the runtime (1) runs every package's
+initialization in dependency order (§17.2), then — for a program — (2) calls
+`main`. This init-then-`main` sequence is the runtime's sole entry into Binate
+code; all program-startup semantics live behind it. It is realized by the
+compiler's entry glue (`prog.entry.glue`, §17.3.2); the build root is `main` for
+a program but need not be for other artifacts such as a C library
+(`prog.entry.pluggable`, §17.3.2).
 
 ### 17.3.1 Command-line arguments
 
@@ -97,6 +100,37 @@ package, Ch.20).
 > **missing** `main` package (no entry) is a **link-time / program-assembly**
 > failure, intrinsic to the separate-compilation model — not a per-package
 > compile-time check.
+
+### 17.3.2 Entry glue and pluggable platform startup
+
+> _Status (Draft / pending)._ `prog.entry.glue`, `prog.entry.pluggable`, and
+> `prog.init.idempotent` are **specified but not yet implemented** — the FFI-export
+> feature (§16.9). They generalize `prog.entry.sequence`: the entry becomes pluggable
+> package code so the program's startup glue can be written in Binate and a *set* of
+> Binate packages can be exposed as a C library. Design: `explorations/design-ffi-export.md`.
+> Symbol names (`bn_init`, `bn_entry`) are provisional but the linkage contract is decided.
+
+`prog.entry.glue` — The compiler emits two hardcoded, well-known glue symbols,
+**referenceable by literal name** (a linkage-ABI contract, the `bn_` family):
+**`bn_init`** runs every package's initialization (`prog.init.order`) over the **build
+root's** transitive dependency closure — the build root is `main` for a program and the
+facade package for a C library (§16.9), generalizing a `main`-rooted dispatcher — and
+**`bn_entry`** = `bn_init()` then `main.main()`.
+
+`prog.entry.pluggable` — The platform entry — a hosted C `main` (capturing `argc`/`argv`),
+a freestanding `_start` (placed via a linker-placement annotation, §16.9
+`pkg.link-placement`), or a C library's `_init` — is **build-conditional** (§16.8) **package
+code** in a tier-0 package (`pkg/builtins/platform_init`, §20 `pkg0.platform-init`), **not
+compiler-hardcoded**. Each entry function is an ordinary function (typically `#[c_export]`'d)
+that calls `bn_init`/`bn_entry`. The **set of wired-up entry symbols is the build "mode"**:
+a `#[c_export("main")]` entry → a hosted program, a `_init` → a C library, a placed `_start`
+→ a freestanding image — no separate mode flag. Argument capture (`bn_argc`/`bn_argv`) is that
+package's hosted-only, build-conditional code, consistent with `prog.argv`.
+
+`prog.init.idempotent` — `bn_init` (`prog.entry.glue`) is **idempotent**: a run-once guard
+makes a second call a no-op, so a host may call more than one C-library `_init` (each
+forwarding to the one shared `bn_init`), or re-enter, without double-initializing shared
+package globals. The guard mechanism and its storage are implementation-defined.
 
 ## 17.4 Program termination
 

@@ -307,6 +307,9 @@ pkg.build.errors	constraint	16b-build-constraints.md
 pkg.build.gate	positive	16b-build-constraints.md
 pkg.build.variants	positive	16b-build-constraints.md
 pkg.ccall	positive	16b-build-constraints.md
+pkg.cexport	positive	16b-build-constraints.md
+pkg.cexport.eligible	constraint	16b-build-constraints.md
+pkg.cexport.signature	positive	16b-build-constraints.md
 pkg.cglobal	positive	16b-build-constraints.md
 pkg.clause	positive	16-packages-and-program-structure.md
 pkg.export	constraint-candidate	16-packages-and-program-structure.md
@@ -324,6 +327,7 @@ pkg.files	constraint-candidate	16-packages-and-program-structure.md
 pkg.files.test	positive	16-packages-and-program-structure.md
 pkg.identity	constraint-candidate	16-packages-and-program-structure.md
 pkg.import	positive	16-packages-and-program-structure.md
+pkg.link-placement	positive	16b-build-constraints.md
 pkg.package-accessor	positive	16-packages-and-program-structure.md
 pkg.resolve	positive	16-packages-and-program-structure.md
 pkg.resolve.public	positive	16-packages-and-program-structure.md
@@ -337,6 +341,7 @@ pkg0.lang.primitives	positive	20-intrinsic-tier0-packages.md
 pkg0.lang.self-safety	positive	20-intrinsic-tier0-packages.md
 pkg0.lang.stringer	positive	20-intrinsic-tier0-packages.md
 pkg0.lang.surface	positive	20-intrinsic-tier0-packages.md
+pkg0.platform-init	positive	20-intrinsic-tier0-packages.md
 pkg0.reflect.accessor	positive	20-intrinsic-tier0-packages.md
 pkg0.reflect.scope	positive	20-intrinsic-tier0-packages.md
 pkg0.reflect.surface	positive	20-intrinsic-tier0-packages.md
@@ -348,7 +353,10 @@ pkg0.testing.testfunc	untestable	20-intrinsic-tier0-packages.md
 pkg0.testing.testresult	positive	20-intrinsic-tier0-packages.md
 pkg0.tier0	positive	20-intrinsic-tier0-packages.md
 prog.argv	constraint-candidate	17-program-initialization-and-execution.md
+prog.entry.glue	positive	17-program-initialization-and-execution.md
+prog.entry.pluggable	positive	17-program-initialization-and-execution.md
 prog.entry.sequence	positive	17-program-initialization-and-execution.md
+prog.init.idempotent	positive	17-program-initialization-and-execution.md
 prog.init.order	positive	17-program-initialization-and-execution.md
 prog.init.vars	positive	17-program-initialization-and-execution.md
 prog.main.package	positive	17-program-initialization-and-execution.md

@@ -11,7 +11,7 @@ specification — still in early design and **not** defined here; the core spec
 only reserves a pointer to it (Ch.1). `pkg/bootstrap` is temporary scaffolding
 and is **not** part of the language.
 
-`pkg0.tier0` — The tier-0 packages are exactly four, each carrying its **own**
+`pkg0.tier0` — The tier-0 packages are exactly five, each carrying its **own**
 maturity status:
 
 | Package | Role | Maturity |
@@ -20,6 +20,7 @@ maturity status:
 | `pkg/builtins/rt` | the runtime contract (§20.2) | **Draft** — gated on the `pkg/rt` review |
 | `pkg/builtins/reflect` | reflection / introspection (§20.3) | **Draft** — incomplete |
 | `pkg/builtins/testing` | testing support + the `*_test.bn` convention (§20.4) | **Provisional** |
+| `pkg/builtins/platform_init` | platform startup / entry glue (§20.5) | **Draft** — pending (FFI-export, §16.9/§17.3.2) |
 
 Because tier 0 is not uniformly mature, several sections below are **Draft** or
 **Provisional** — specified-in-intent and marked honestly (§4.3).
@@ -271,3 +272,21 @@ name. Both read the returned `@[]char` and branch on `len(result) > 0`.
 > **drifted** (the VM runner does not resolve an unqualified local `TestResult`
 > alias), and `--skip` is honored only by the VM-based runners. These are
 > Provisional-status rough edges to be reconciled (Annex C).
+
+## 20.5 `pkg/builtins/platform_init` — platform startup / entry glue
+
+> _Status (Draft / pending)._ `pkg0.platform-init` is **specified but not yet implemented** —
+> part of the FFI-export feature (§16.9, §17.3.2). Design: `explorations/design-ffi-export.md`.
+> The package name is provisional.
+
+`pkg0.platform-init` — `pkg/builtins/platform_init` is the **fifth** tier-0 package: the home for
+**platform startup / entry glue**, distinct from `pkg/builtins/rt` (runtime *services* —
+allocation, refcounting, exit; §20.2) in that this is *startup*. Like the other tier-0 packages it
+is **path-special** — the compiler gives it bespoke treatment: it may run **pre-init** and is
+**force-included** even though nothing imports it (mirroring the `lang` primitive-impl carve-out
+§20.1 and the `rt` runtime contract §20.2). It holds the **build-conditional** (§16.8) entry
+functions of `prog.entry.pluggable` (§17.3.2) — a hosted C `main` (`#[c_export("main")]`, argv
+capture), a freestanding `_start` (`#[section]` / `#[link_at]`, §16.9 `pkg.link-placement`), and a
+C-library `_init` — each calling the well-known `bn_init` / `bn_entry` glue symbols
+(`prog.entry.glue`). It is where the C startup glue currently in `runtime/binate_runtime.c` moves
+(as C first, then rewritten in Binate) — the C-free end state.

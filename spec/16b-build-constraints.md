@@ -29,8 +29,10 @@ its first segment determines who must understand it:
 
 - An **unqualified** name (no dot) is language-standard and **must be recognized**
   by the compiler — an unknown unqualified name is a **compile error** (this
-  catches typos). The only unqualified annotation currently defined is `build`
-  (§16.8). _Caveat (current impl):_ this typo check fires only where build
+  catches typos). The unqualified annotation implemented today is `build`
+  (§16.8); the FFI-export annotations `c_export` and the linker-placement
+  `section` / `link_at` (§16.9) are unqualified/compiler-recognized too, but are
+  **Draft / pending** (specified, not yet implemented). _Caveat (current impl):_ this typo check fires only where build
   constraints are evaluated — i.e. when a build configuration is resolved
   (§16.8). With no build configuration (the REPL, the bytecode tool, unit tests),
   annotation names are not currently validated, so a typo'd unqualified name is
@@ -166,6 +168,57 @@ For example, POSIX `environ` has C type `char **` (Binate `**char`), so
 > the C side's concern, and a raw pointer read through it — e.g. an `environ` entry
 > that `setenv`/`putenv` may reallocate — can dangle. Copy out before mutating the
 > environment; this is the ordinary raw-borrow discipline (§18.7 `mem.raw-uaf`).
+
+### Exporting Binate functions to C (`#[c_export]`)
+
+> _Status (Draft / pending)._ The rules in this subsection (`pkg.cexport`,
+> `pkg.cexport.eligible`, `pkg.cexport.signature`, `pkg.link-placement`) are **specified but
+> not yet implemented**. They are the *outbound* counterpart to `__c_call`/`__c_global`: those
+> call *into* C, `#[c_export]` makes a Binate function callable *from* C (and lets the program's
+> entry/startup glue be written in Binate — see §17). Design: `explorations/design-ffi-export.md`.
+> Naming (`c_export`, `section`, `link_at`) is provisional.
+
+`pkg.cexport` — A `#[c_export("name")]` annotation on a **top-level function** declaration emits an
+**additional, unmangled** C symbol `name` aliasing that function; the function's mangled Binate
+symbol is **unchanged** (Binate callers are unaffected, and multiple `#[c_export]` entries/arguments
+produce multiple C names). The C symbol is emitted **verbatim, with no `bn_` mangling** — the same
+verbatim-symbol path as `__c_call`/`__c_global`. `c_export` is an **unqualified, compiler-recognized**
+annotation (§16.7 `pkg.annotation.namespace`), joining `build`.
+
+`pkg.cexport.eligible` _(Constraint)_ — Only a **package-public** function — one declared in the
+package's `.bni` (§16.4) — may be `#[c_export]`'d: a two-level gate (package-visible, then C-named).
+`#[c_export]` on a package-private declaration, or on a non-function declaration, is a compile error.
+
+`pkg.cexport.signature` — An exported function's signature must be **C-ABI-replicable**: because
+Binate already uses the platform C ABI (§7.13), every parameter and result type maps to a C type the
+C side can declare — a scalar → the matching C scalar; `*T`/`@T` → a pointer; a raw slice `*[]T` →
+a 2-word `{T* data; size_t len}`; a managed-slice `@[]T` → its 4-word
+`{data, len, backing, backingLen}` (whose first two words match the raw-slice head, §7.13
+`type.layout.slice-managed`); an interface value → a 2-word `{data, vtable}`; a **function value**
+→ a 2-word `{vtable, data}`, the **reverse** field order of an interface value
+(§7.13.9 `type.layout.func-value`), which a C typedef must match; a struct by-value or by-reference
+per the ≤16-byte cutoff (§7.13.11 `type.layout.byval-cutoff`); a multi-return as its packed
+anonymous result struct or `sret`. Unlike `__c_call`/`__c_global` above (restricted to a scalar or
+pointer), the *export* direction rejects **nothing** at the ABI level.
+
+> _Note (managed-value discipline, not an ABI gate)._ A managed value (`@T`/`@[]T`/`@Iface`) handed
+> to C is a **borrow** for the call — the same ownership rule a Binate callee has (§18). A C caller
+> that *retains* it beyond the call must balance the reference count via the runtime `RefInc`/`RefDec`
+> entry points (whether/how those become C-visible is open; §20.2 `pkg/rt` review). Treating a managed
+> value as an opaque struct/pointer is fine at the ABI level; the refcount contract is the caller's
+> responsibility, not an export restriction. (A function-value **parameter** is likewise *passable*
+> but awkward to *call* from C — it needs the trampoline: "hard to use," not "can't export.")
+
+`pkg.link-placement` — A **linker-placement** annotation on a top-level function directs the
+backend/linker to place the emitted symbol in a named output section (`#[section(".init")]`) or, where
+a target supports it, at an absolute load address (`#[link_at(addr)]`) — for a freestanding entry
+point (§17) that a reset vector / linker script must find.
+
+> _Status (`pkg.link-placement`)._ **Draft, semantics not fully pinned:** the exact spelling
+> (`section` vs `link_at`), how the annotation reaches the backend/linker, and the division of labor
+> with a baremetal linker script (which usually owns addresses) are open. Registered here so the
+> *name* is a compiler-recognized unqualified annotation (§16.7); the *rule* firms up once those are
+> decided.
 
 > _Note._ Binate targets **C-free** systems: C is used only as the practical
 > bridge to existing OS interfaces (system calls, allocation), not as an
