@@ -138,6 +138,16 @@ rejected ("not yet implemented"). The intended rule is element-wise comparison
 yield a `bool`; they are not defined on pointers or aggregates. **No chaining**:
 `a < b < c` is an error (§13.2).
 
+`expr.compare.typeparam` — None of the comparison operators (`==`, `!=`, `<`,
+`>`, `<=`, `>=`) is available on a value whose type is a **generic type parameter**
+(§12): a type parameter is never one of the concrete numeric/comparable types the
+rules above require, **regardless of its interface constraints** — an interface
+constraint does not make an operator applicable. Generic code compares through the
+constraint's **method** instead: `a.Compare(b) == 0` for equality and
+`a.Compare(b) < 0` (etc.) for order, on a `Comparable`/`Orderable`-constrained type
+parameter (§11.10, §20.1). (Comparison over an interface *value* is likewise a
+`Compare` call, not an operator — interface values are `expr.compare.incomparable`.)
+
 `expr.compare.float` — Floating-point comparisons are the ordered IEEE-754
 predicates: `==`, `<`, `<=`, `>`, `>=` are **false** when either operand is NaN,
 and `!=` is **true** when either operand is NaN. In particular `x == x` is false
