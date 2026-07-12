@@ -44,16 +44,16 @@ every term they need is defined.
 | 5 | [Lexical Elements](05-lexical-elements.md) | normative | mostly Stable | `lex` |
 | 6 | [Constants](06-constants.md) | normative | Stable | `const` |
 | 7 | [Types](07-types.md) | mixed | mostly Stable (caveats) | `type` |
-| 7.13 | [Type Layout & Representation](07b-type-layout.md) | normative | Stable (ABI contract); TypeInfo/RTTI §7.13.14 Draft (specified, not yet implemented) | `type.layout` |
+| 7.13 | [Type Layout & Representation](07b-type-layout.md) | normative | Stable (ABI contract); TypeInfo/RTTI §7.13.14 implemented | `type.layout` |
 | 8 | [Conversions](08-conversions.md) | normative | Stable | `conv` |
 | 9 | [Declarations and Scope](09-declarations-and-scope.md) | normative | Stable | `decl` |
 | 10 | [Functions, Methods, and Function Values](10-functions-methods-function-values.md) | mixed | Stable (functions/methods); variadics + spread §10.3 Draft (implemented) | `func` |
 | 10.8 | [Function Values, Closures, Method Values](10b-function-values.md) | mixed | core Stable; a few interactions Provisional / one construct Draft (§10.9) | `func` |
-| 11 | [Interfaces, impl, and Self](11-interfaces-impl-self.md) | mixed | language rules Stable; conformance mixed (CRITICAL dispatch defects resolved; alias-receiver §11.3, arm32 §11.11); type assertions + type switches §11.12 Draft (specified, not yet implemented) | `iface` |
+| 11 | [Interfaces, impl, and Self](11-interfaces-impl-self.md) | mixed | language rules Stable; conformance mixed (CRITICAL dispatch defects resolved; alias-receiver §11.3, arm32 §11.11); type assertions + type switches §11.12 implemented | `iface` |
 | 12 | [Generics and Enumerations](12-generics-and-enumerations.md) | mixed | language rules Stable (v1 scope); methods/impls on generic types §12.1 Draft (specified, not yet implemented); two v1-restrictions unenforced | `gen` |
-| 13 | [Expressions](13-expressions.md) | normative | Stable (composite-literal defects flagged); type-assertion expr §13.8 Draft (§11.12) | `expr` |
+| 13 | [Expressions](13-expressions.md) | normative | Stable (composite-literal defects flagged); type-assertion expr §13.8 implemented (§11.12) | `expr` |
 | 14 | [Statements](14-statements.md) | mixed | language rules Stable; 1 MAJOR impl defect flagged (inc/dec on non-ident lvalue) | `stmt` |
-| 14.8 | [Control-flow statements](14b-control-flow.md) | mixed | language rules Stable; a few open semantic items; type-switch stmt §14.10 Draft (§11.12) | `stmt` |
+| 14.8 | [Control-flow statements](14b-control-flow.md) | mixed | language rules Stable; a few open semantic items; type-switch stmt §14.10 implemented (§11.12) | `stmt` |
 | 15 | [Built-in Operations](15-builtin-operations.md) | mixed | mostly Stable (opaque-gate + VM-panic gaps flagged; print/println provisional) | `builtin` |
 | 16 | [Packages and Program Structure](16-packages-and-program-structure.md) | mixed | Stable core | `pkg` |
 | 16.7 | [Annotations, Build Constraints, FFI](16b-build-constraints.md) | mixed | arch/os MVP; most predicates deferred | `pkg` |

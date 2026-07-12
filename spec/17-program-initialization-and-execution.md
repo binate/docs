@@ -165,12 +165,12 @@ terminates. The set is:
 | `make_slice` negative length | §15.2 | `runtime error: make_slice with negative length` |
 | Nil-interface-value dispatch | §11.11 (`iface.dispatch.nil`) | (see below — mode-dependent) |
 | `panic(msg)` | §15.7 | `panic: <msg>` |
-| Failed type assertion, expression form — _Draft_ | §11.12 (`iface.assert`) | `runtime error: type assertion failed: <dyn> is not <T>` |
+| Failed type assertion, expression form | §11.12 (`iface.assert`) | `runtime error: type assertion failed: <dyn> is not <T>` |
 
-> _Draft._ The **failed-type-assertion** member is specified ahead of
-> implementation (§11.12); every other member is implemented. It is listed so the
-> closed set stays complete once type assertions land. The **comma-ok** form
-> (`v, ok := x.(K T)`) does **not** panic — only the expression form does.
+> _Note._ Only the **expression** form of a failed type assertion panics; the
+> **comma-ok** form (`v, ok := x.(K T)`) does **not** panic — it yields
+> `{recovered, false}`. `<dyn>` is the value's dynamic-type name (or `<unset>` for
+> a typed-nil / null-vtable value) and `<T>` the asserted type's name.
 
 `prog.panic.defined` — Each panic in the set is a **defined** abort: the
 condition is detected (or deterministically faults) and the program stops; it is

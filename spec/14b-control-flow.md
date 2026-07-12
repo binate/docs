@@ -136,7 +136,7 @@ case matches and also catches an **unset** scrutinee. There is **no `case nil`**
 optional `v :=` binds the recovered value **per case**. The scrutinee and target
 rules, the recovery-kind legality, and the typed-nil / unset semantics are
 specified in **§11.12** (`iface.typeswitch`, `iface.assert.kind`,
-`iface.assert.absent`). _(Draft; not yet implemented — §11.12.)_
+`iface.assert.absent`).
 
 ## 14.11 Return statements
 

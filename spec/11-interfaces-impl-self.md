@@ -384,11 +384,9 @@ result is normative; the record/registry layout is informative (Annex B), and th
 `TypeInfo` is the record a future **reflection** type-metadata surface is intended
 to expose (§20.3, a later phase).
 
-> _Draft; not yet implemented._ Type assertions, type switches, and the `TypeInfo`
-> RTTI record are **specified ahead of implementation** (design settled — the
-> **Draft** tier, `conventions.md`). The current toolchain provides neither the
-> `x.(T)` expression nor the type-switch statement, and interface vtables do not
-> yet carry a `*TypeInfo` slot. Implementation-conformance for the `iface.assert*`
-> / `iface.typeswitch` / `iface.rtti` rules (and `type.layout.typeinfo`) is
-> therefore **not yet met**; the high-level plan is
-> `explorations/plan-type-assertions.md` (tracked in `claude-todo.md`).
+> _Implemented._ Type assertions (`x.(K T)` and the comma-ok form), type switches,
+> and the `TypeInfo` RTTI record are implemented and conformance-green in every
+> execution mode — the `iface.assert*` / `iface.typeswitch` / `iface.rtti` rules
+> and `type.layout.typeinfo`, including the cross-mode agreement of every
+> assertion result (a value produced by a compiled package and asserted in the
+> bytecode VM resolves to the same result).
