@@ -169,7 +169,7 @@ func.method.object-const	constraint-candidate	10-functions-methods-function-valu
 func.method.one-per-name	constraint	10-functions-methods-function-values.md
 func.method.receiver-base	constraint	10-functions-methods-function-values.md
 func.method.receiver-kinds	positive	10-functions-methods-function-values.md
-func.method.smoothing	positive	10-functions-methods-function-values.md
+func.method.smoothing	constraint-candidate	10-functions-methods-function-values.md
 func.method.value-recv	positive	10-functions-methods-function-values.md
 func.ref.decay	positive	10b-function-values.md
 func.return.count	positive	10-functions-methods-function-values.md

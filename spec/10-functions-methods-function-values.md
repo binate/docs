@@ -244,10 +244,23 @@ parameters as fresh names (`*Cursor[T]`; §12.1 `gen.method.generic-recv`).
 **smoothed one level** to the method's declared receiver kind, in the safe
 (permissive → restrictive) direction only: a managed `@T` can reach any kind; a
 raw `*T` can reach `*T`/`*readonly T`/value; a value can take its address to
-reach `*T`/`*readonly T`. The only rejected **indirection** is reaching a
+reach `*T`/`*readonly T` — **but only when the receiver expression is
+addressable** (`expr.addressable`, §13), because that adjustment is an implicit
+`&x`. So a `*T`- or `*readonly T`-receiver call on a **non-addressable** receiver
+— a field or element of a by-value call result (`getBox().inner.bump()`) or any
+other computed value with no storage — is **rejected**, exactly as
+`&getBox().inner` is (§13); the `*readonly T` case is rejected on that same
+addressability ground even though a read-only temporary would be harmless — the
+reject is deliberately uniform. The call is **accepted** when the receiver is
+addressable: an addressable variable, a value reached **through a returned
+pointer** (`getBoxPtr().inner.bump()`), or a **composite literal**
+(`Point{1, 2}.bump()`) — a literal has a real backing alloca (§13), so the
+implicit `&` addresses genuine storage, unlike the ephemeral nothing of a call
+result. A method whose declared receiver is a plain **value** (needing no address
+of the source) is always callable. A second rejected indirection is reaching a
 **managed `@T`** receiver from a non-managed source (never value→`@T`, never
-`*T`→`@T`) — that would fabricate a reference count. (The separate
-object-`readonly` direction below is the other rejection.)
+`*T`→`@T`) — it would fabricate a reference count; dropping object-`readonly`
+(below) is a third.
 
 `func.method.object-const` — Dispatch keys off **object** read-only-ness, not
 handle read-only-ness (§7.11). A read-only handle to a mutable object

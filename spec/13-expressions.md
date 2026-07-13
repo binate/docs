@@ -168,8 +168,9 @@ and `&` (address-of). There is **no unary `+`**. `&x` yields a **raw** pointer
 `*T` to `x`'s storage (always raw, even for a managed value; §7.8).
 
 `expr.addressable` — An expression is **addressable** when it denotes storage
-whose address exists; both `&` (`expr.unary.addr`) and an assignment target
-(`stmt.assign.simple`, §14) require it. Addressability is **recursive**:
+whose address exists; `&` (`expr.unary.addr`), an assignment target
+(`stmt.assign.simple`, §14), and the implicit `&` of receiver smoothing
+(`func.method.smoothing`, §10) all require it. Addressability is **recursive**:
 
 - a **variable** — a local, a parameter, or an imported package variable
   (`pkg.v`) — is addressable;
