@@ -110,6 +110,7 @@ exec.machine	positive	19-execution-model-dual-mode.md
 exec.modes	positive	19-execution-model-dual-mode.md
 exec.same-ir	positive	19-execution-model-dual-mode.md
 exec.vm.runtime-floor	positive	19-execution-model-dual-mode.md
+expr.addressable	positive	13-expressions.md
 expr.arith.defined	positive	13-expressions.md
 expr.arith.divzero	constraint-candidate	13-expressions.md
 expr.arith.float	positive	13-expressions.md

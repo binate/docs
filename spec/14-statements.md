@@ -98,12 +98,19 @@ compound_assign_op = "+=" | "-=" | "*=" | "/=" | "%="
 Assignment is a **statement, not an expression** — there is no `x = y = 5` and no
 assignment in expression position.
 
-`stmt.assign.simple` — In a simple assignment `L = R`, each left-hand operand is
-an assignable location (an addressable variable, a slice or array element `s[i]`,
-a struct field `s.f`, or a pointer dereference `*p`), and the right-hand value
-must be **assignable** to it (Ch.8). A **constant** target — an unqualified
-`const` name, a package-qualified `pkg.C`, or a location of `readonly` (const)
-type — is rejected (`stmt.assign.const-target`; "cannot assign to const …").
+`stmt.assign.simple` — In a simple assignment `L = R`, each left-hand operand —
+other than a blank `_` (`stmt.assign.blank`) — must be an **addressable** location
+(`expr.addressable`, §13): a variable, a field selector `s.f`, an index `s[i]`, or
+a pointer dereference `*p`. The right-hand value must in turn be **assignable** to
+it (Ch.8). A target follows the same recursion as address-of: one whose base is a
+**by-value call result** (`getStruct().f = …`) is rejected for the same reason
+`&getStruct().f` is — it denotes no storage — while a target reached through a
+returned pointer (`getStructPtr().f = …`) is allowed. The same addressability
+requirement governs the target(s) of compound (`stmt.assign.compound`), multiple
+(`stmt.assign.multi`), and parallel (`stmt.assign.parallel`) assignment. A
+**constant** target — an unqualified `const` name, a package-qualified `pkg.C`, or
+a location of `readonly` (const) type — is rejected (`stmt.assign.const-target`;
+"cannot assign to const …").
 
 `stmt.assign.compound` — A compound assignment `L op= R` requires **exactly one**
 operand on each side. It is defined as `L = L op R` evaluated once: the operand

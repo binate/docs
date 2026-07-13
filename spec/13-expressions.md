@@ -167,19 +167,41 @@ on a `bool`), `~` (bitwise complement, §13.5), `*` (pointer dereference, §7.8)
 and `&` (address-of). There is **no unary `+`**. `&x` yields a **raw** pointer
 `*T` to `x`'s storage (always raw, even for a managed value; §7.8).
 
-`expr.unary.addr` — The operand of `&` must be **addressable** — a value that
-has storage. Addressable operands are: a **variable**; a **struct field**
-(`&p.x`); an **array, slice, or pointer element** (`&a[i]`); a **dereference**
-(`&*p`, which equals `p`); a **composite literal** (`&Point{1, 2}` — it has a
-backing alloca); and an **imported variable** (`&pkg.v`). Taking the address of
-anything else is a compile error, because it has no storage: a **named
-constant** (§9.1); a **bare literal** — `&5`, `&3.14`, `&true`, `&'a'`, `&"s"`,
-`&nil`, or a **func literal** `&func(){}`; a **named function** `&g` or
-`&pkg.f` (a function value is obtained by naming the function directly,
-`var fp *func() = g`, not by addressing it); a **method value** `&obj.m`; a
-**method expression** `&T.m`; and any other computed value (a call result, an
-arithmetic or unary result, a `make`/cast/sub-slice result). These rules match
-Go.
+`expr.addressable` — An expression is **addressable** when it denotes storage
+whose address exists; both `&` (`expr.unary.addr`) and an assignment target
+(`stmt.assign.simple`, §14) require it. Addressability is **recursive**:
+
+- a **variable** — a local, a parameter, or an imported package variable
+  (`pkg.v`) — is addressable;
+- a **dereference** `*p` (raw or managed) is addressable: it denotes the pointee's
+  storage (so `&*p` equals `p`);
+- a **composite literal** `T{…}` is addressable: it has a backing alloca (so
+  `&Point{1, 2}` is valid);
+- a **field selector** `x.f` is addressable **iff** `x` is addressable **or** `x`
+  is a pointer (raw or managed) — a pointer base auto-dereferences one level
+  (`expr.member`), and the pointee has storage;
+- an **index** `x[i]` is addressable when `x` is a **slice** or a **pointer** — it
+  reaches storage through the data/base pointer, even when `x` itself is an
+  ephemeral value — or an **array** whose base `x` is itself addressable (so
+  `getArray()[i]`, indexing a by-value array result, is **not** addressable).
+
+Every **other** operand is a computed value with **no storage** and is **not**
+addressable: a **named constant** (§9.1); a **bare literal** (`5`, `3.14`, `true`,
+`'a'`, `"s"`, `nil`, or a func literal `func(){}`); a **named function** (`g`,
+`pkg.f`) — a function value is obtained by naming the function directly,
+`var fp *func() = g`, not by addressing it — or a **method value** (`obj.m`) /
+**method expression** (`T.m`); and the result of a **call**, an arithmetic /
+unary / comparison expression, or a `make` / `cast` / `bit_cast` / sub-slice
+operation. By the recursion, a field or element **of a by-value call result** —
+`getStruct().f`, `getArray()[i]` — is therefore **not** addressable (the result
+is ephemeral, with no storage), whereas one reached **through a returned pointer**
+— `getStructPtr().f` — **is**, via the auto-deref. These rules match Go, except
+that a composite literal is addressable in its own right (Go permits only the
+`&T{…}` address-of shortcut, not general addressability).
+
+`expr.unary.addr` — The operand of `&` must be **addressable** (`expr.addressable`):
+addressing a non-addressable value — most commonly a call result or other computed
+value with no storage — is a compile error.
 
 `expr.member` — Member access uses `.` only — there is **no `->`**. A selector
 `x.name` auto-dereferences **one** pointer level (raw or managed) to reach a
