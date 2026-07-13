@@ -360,6 +360,7 @@ prog.entry.pluggable	positive	17-program-initialization-and-execution.md
 prog.entry.sequence	positive	17-program-initialization-and-execution.md
 prog.init.idempotent	positive	17-program-initialization-and-execution.md
 prog.init.order	positive	17-program-initialization-and-execution.md
+prog.init.var-cycle	constraint	17-program-initialization-and-execution.md
 prog.init.vars	positive	17-program-initialization-and-execution.md
 prog.main.package	positive	17-program-initialization-and-execution.md
 prog.main.signature	positive	17-program-initialization-and-execution.md

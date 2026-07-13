@@ -168,7 +168,9 @@ requiring prototypes (Ch.17). A non-interactive program is fully validated
 before execution begins.
 
 `decl.order.init` — Packages are initialized in **dependency order** (a package's
-imports are initialized before it; the dependency graph is acyclic). There is
-**no `init()` function**: a package has no implicit initializer hook beyond the
-initialization of its package-level variables. Program startup and the `main`
-entry point are specified in Ch.17.
+imports are initialized before it; the dependency graph is acyclic), and a
+package's own top-level `var` initializers likewise run in dependency order (§17.2
+`prog.init.order` / `prog.init.var-cycle`). There is **no `init()` function**: a
+package has no implicit initializer hook beyond the initialization of its
+package-level variables. Program startup and the `main` entry point are specified
+in Ch.17.

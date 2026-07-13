@@ -36,14 +36,31 @@ which is an interactive facility, not part of a compiled program; §19.)
 
 `prog.init.order` — Packages are initialized in **dependency order**: a package's
 imports are fully initialized before it (the dependency graph is acyclic,
-`pkg.acyclic`). Within a package, the package-level `var` initializers run in
-**source-declaration order** (across the package's merged files), so a later
-global may read an earlier one's initialized value.
+`pkg.acyclic`). Within a package, the package-level `var` initializers **also run
+in dependency order**: each runs after the initializers of the package-level vars
+its initializer **directly reads** — identifiers named in the initializer
+expression, including inside an immediately-invoked function literal — regardless
+of declaration position or which file each is in, so such a reference observes the
+referenced global's initialized value, not a zero. A package var reached only
+**indirectly** — through a call to a named function, or captured by a function
+literal that is not immediately invoked — does **not** form an ordering dependency
+and may be observed at its zero value. Vars with no ordering dependency between
+them run in an unspecified but stable order.
+
+`prog.init.var-cycle` _(Constraint)_ — A **cycle** in these initialization
+dependencies (`prog.init.order`) — a var whose initializer depends on its own value
+directly or transitively (e.g. `var a = a + 1`, or mutual `var a = b; var b = a`)
+— is a **compile error**. Only the direct-read dependencies above form cycle edges;
+a read reached only indirectly (through a called named function, or a
+not-immediately-invoked function literal) forms no edge, so it is neither ordered
+nor diagnosed.
 
 `prog.init.vars` — Initialization runs each package-level `var x T = e` as the
 assignment `x = e`, in the order above. A `var` declared without an initializer
-is zero-initialized (§9.2) and does no work at init time. A **blank** (`_`)
-global is not initialized (it binds no storage). **Constants** are not part of
+is zero-initialized (§9.2) and does no work at init time. A **blank** (`_`) global
+binds no storage, so no value is ever stored — but a blank *with* an initializer
+(`var _ = e`) still **evaluates** `e` at init time (for its effects, and its reads
+still order it after the vars it depends on). **Constants** are not part of
 initialization: a `const` has no storage and each use is replaced by its value
 at compile time (§9.1), so it is never runtime-initialized.
 
