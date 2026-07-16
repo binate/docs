@@ -295,6 +295,27 @@ address. The record's exact field order is **informative** (Annex B); normative 
 its contents and the cross-mode agreement of every assertion result. Interface
 **satisfaction** is *not* carried in `TypeInfo` — see `type.layout.satisfaction`.
 
+> _Note (name-less types)._ A type with **no nominal identity** — a slice, or any
+> other unnamed composite (unnamed struct / array / function type) — can still be
+> **boxed** into `any` (`conv.assignable` case 7), so it too needs a well-formed
+> any-block. Boxing a name-less type produces a **valid** `TypeInfo` (not a
+> half-built box), and a concrete assertion over it is a **guaranteed miss** that
+> falls to `default`, never a crash. The baseline gives every name-less type **one
+> shared opaque** `TypeInfo` — sound because no assertion target can name such a
+> type (§11.12 `iface.assert`), so its identity is never compared against a written
+> target. _(The current toolchain does **not** yet conform: boxing a slice into
+> `any` emits a malformed box and a match over it crashes — a tracked MAJOR, Annex
+> C / `claude-todo.md`.)_
+>
+> _Pending (`proposal-slice-type-identity`)._ The pending slice-target extension
+> (§11.12 `iface.assert.slice`) upgrades **slices** from the shared opaque record
+> to a **distinct structural** `TypeInfo` per slice spelling — keyed on `{ managed
+> | raw, element-readonly?, element-type }`, so `@[]char` and `*[]int` compare
+> unequal. The unnamed struct / array / function constructors keep the shared
+> opaque record until (if ever) they gain their own structural identity. The record
+> **layout is unchanged** either way: a slice's `name` field is its structural
+> spelling, its destructor the slice's element-drop.
+
 `type.layout.satisfaction` — Interface **satisfaction** (which interfaces a type
 implements) is resolved through a **distributed registry** keyed on
 `(concrete type, interface)`, **not** a table inside `TypeInfo`. Because `impl`
