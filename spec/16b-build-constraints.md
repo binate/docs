@@ -1,6 +1,6 @@
 # 16.7–16.9 Annotations, build constraints, and the FFI boundary
 
-> **Status:** mixed · **Maturity:** the annotation/build-constraint surface is an `arch`/`os` MVP (most predicates deferred); `__c_call` is compiled-mode only; the outbound `#[c_export]` / linker-placement surface (§16.9) is **Draft/pending**  
+> **Status:** mixed · **Maturity:** the annotation/build-constraint surface covers `arch`/`os` membership plus a compiler-`version` matcher (further predicates deferred); `__c_call` is compiled-mode only; the outbound `#[c_export]` / linker-placement surface (§16.9) is **Draft/pending**  
 > **Rule-ID prefix:** `pkg`
 
 This continues [Ch.16 Packages and Program Structure](16-packages-and-program-structure.md)
@@ -59,22 +59,53 @@ in or out of compilation for the active target. `EXPR` is a single boolean
 expression over **membership clauses**:
 
 ```
-BuildExpr   = "is" "(" predicate "," string_literal ")"
+BuildExpr   = Clause
             | "!" BuildExpr
             | BuildExpr "&&" BuildExpr
             | BuildExpr "||" BuildExpr
             | "(" BuildExpr ")" ;
+Clause      = ( "is" | "at_least" | "at_most" ) "(" predicate "," string_literal ")" ;
 ```
 
-An atomic clause is `is(predicate, "tag")` — true when the target's `predicate`
-matches `tag`. Clauses combine only with `&&`, `||`, and `!`. (A *comparison*
-operator such as `==` is **not** accepted — membership, not equality, because a
-target belongs to overlapping descriptor sets.) The two predicates currently
-defined are:
+An atomic clause is a predicate call `<fn>(predicate, "tag")`. Clauses combine only
+with `&&`, `||`, and `!` — a bare *comparison* operator such as `==` or `<` is
+**not** accepted (see below). The predicates defined are:
 
-- **`arch`** — `"x64"`, `"aarch64"`, `"arm32"` (with the assembler aliases
-  `"x86_64"` = `x64`, `"arm64"` = `aarch64`, `"arm"` = `arm32`).
-- **`os`** — `"linux"`, `"darwin"`, `"baremetal"` (no aliases yet).
+- **`arch`** (*membership*) — `is(arch, "…")`: `"x64"`, `"aarch64"`, `"arm32"` (with
+  the assembler aliases `"x86_64"` = `x64`, `"arm64"` = `aarch64`, `"arm"` = `arm32`).
+- **`os`** (*membership*) — `is(os, "…")`: `"linux"`, `"darwin"`, `"baremetal"` (no
+  aliases yet).
+- **`version`** (*ordered*) — the **compiling compiler's own** version
+  (`pkg.build.version`), **not** a target property. `at_least(version, "X.Y.Z")`
+  (≥), `at_most(version, "X.Y.Z")` (≤), and `is(version, "X.Y.Z")` (exact); the
+  remaining three relations come from `!` (`!at_least` = `<`, `!at_most` = `>`,
+  `!is` = `≠`).
+
+`arch` and `os` are **membership** predicates — a target belongs to overlapping
+descriptor sets, so equality is meaningless; only `is` applies, which is why a bare
+comparison operator is rejected. `version` is the one **ordered** predicate:
+`at_least`/`at_most` apply **only** to it, and although they denote a real numeric
+comparison they are still written as named calls, never with `<`/`>`.
+
+`pkg.build.version` — The `version` predicate compares the **compiling compiler's
+own** version against the literal — not the target (unlike `arch`/`os`), so it gates
+an element on *which compiler is building it* (its use is bootstrap staging: a
+declaration that must exist only once a new-enough compiler compiles it). The
+literal is a strict **`X.Y.Z[-pre[N]]`**: exactly three dot-separated decimal
+components, optionally followed by a **hyphenated** `-pre` and optional digits.
+Anything else — a missing or 4th component, a non-digit component, a
+**non-hyphenated** `preN`, or an unknown tag (`-rc1`, `beta`) — is a hard error
+(`pkg.build.errors`); there is no best-effort parse. (A leading `bnc-` is
+defensively tolerated and stripped — `bnc-0.0.11` parses as `0.0.11` — though the
+compiler's own version string never carries that prefix.) The comparison
+**discards** the
+`-pre[N]` suffix, then compares `(major, minor, patch)` **numerically** (`0.0.11` >
+`0.0.9`, not lexically). A prerelease therefore compares **equal** to its release:
+on a `0.0.11-pre3` compiler, `at_least(version, "0.0.11")` **and** `is(version,
+"0.0.11")` are both true — `is` is "exact" only up to the discarded prerelease
+suffix. `at_least`/`at_most` apply only to `version` (an ordered matcher on
+`arch`/`os` is a hard error), and the literal must be a single string (an
+adjacent-concatenated `"0.0" ".11"` is rejected).
 
 `pkg.build.gate` — The annotation gates at three granularities:
 
@@ -94,11 +125,14 @@ error. (Overlapping conditions that leave two definitions live for some target i
 a duplicate-definition error for that target.)
 
 `pkg.build.errors` _(Constraint)_ — A constraint that evaluates to **false**
-cleanly excludes its element; a constraint that **fails to evaluate** — an
-unknown unqualified annotation, an unknown predicate or tag, a non-`is` call, a
-comparison or other disallowed operator, a malformed expression — is a **hard
-error that aborts the build**. A silent skip is never used: it would drop the
-element's symbols and surface later as a confusing "undefined" far from the cause.
+cleanly excludes its element; a constraint that **fails to evaluate** — an unknown
+unqualified annotation, an unknown predicate or tag, an **unknown predicate
+function** (only `is` / `at_least` / `at_most` exist), an **ordered matcher on a
+non-`version` key** (`at_least(arch, …)`), a **malformed or adjacent-concatenated
+`version` literal** (`pkg.build.version`), a comparison or other disallowed
+operator, or a malformed expression — is a **hard error that aborts the build**. A
+silent skip is never used: it would drop the element's symbols and surface later as
+a confusing "undefined" far from the cause.
 
 > _Note._ The active target (the `arch`/`os` values `is(...)` is tested against)
 > is taken from the `pkg/builtins/build` package, which the build tooling
@@ -107,11 +141,11 @@ element's symbols and surface later as a confusing "undefined" far from the caus
 > REPL, the bytecode tool, unit tests), gating is **inactive** and every file and
 > declaration is kept.
 
-> _Provisional._ `is` is the only predicate function and `arch`/`os` are the only
-> predicates today. Further predicates (`triple`, `backend`, `libc`, `ptrsize`,
-> `version`, `os.version`, an open `tag.*`) and ordered matchers (for numeric
-> predicates) are **reserved for future work** — the stable surface is
-> `is(arch|os, "tag")` combined with `&& || !`.
+> _Provisional._ The predicate functions are `is` (membership for `arch`/`os`,
+> exact for `version`) and the ordered `at_least`/`at_most` (`version` only).
+> Further predicates (`triple`, `backend`, `libc`, `ptrsize`, `os.version`, an open
+> `tag.*`) are **reserved for future work** — the stable surface is `is(arch|os,
+> "tag")` plus the `version` matchers, combined with `&& || !`.
 
 ## 16.9 The foreign-function boundary
 
