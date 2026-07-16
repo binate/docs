@@ -127,11 +127,13 @@ never comparable** with `==`/`!=` — not even to `nil`. Test presence with
 `present(x)` (§15), or, for slices, with `len`. (These types *are* nil-assignable
 but not nil-comparable — a deliberate asymmetry with pointers.)
 
-`expr.compare.aggregate` — Struct and array types are comparable in principle
-(element-wise, comparable iff every field/element is). **Implementation gap:**
-this lowering is not implemented, so `==`/`!=` on a struct or array is currently
-rejected ("not yet implemented"). The intended rule is element-wise comparison
-(`claude-todo.md`).
+`expr.compare.aggregate` — A **struct** or **array** type supports `==` / `!=`
+**iff every field / element type is comparable** (applied recursively for nested
+aggregates). The comparison is **element-wise**: two values are equal when all
+corresponding fields / elements compare equal (each by its own `==`), and `!=` is
+the negation. A struct or array containing a non-comparable component (e.g. a
+function-typed field) is itself not comparable. The relational operators (`<`, `>`,
+`<=`, `>=`) are never defined on aggregates (`expr.compare.relational`).
 
 `expr.compare.relational` — `<`, `>`, `<=`, `>=` require **numeric** operands
 (integer or floating-point, including named types over a numeric underlying) and

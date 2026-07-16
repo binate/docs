@@ -140,15 +140,6 @@ also an error. To produce an out-of-range value deliberately, **mask** for a
 different-size truncation (`cast(uint8, N & 0xff)`) or **`bit_cast`** for a
 same-size reinterpret (`bit_cast(uint64, cast(int64, neg))`; §8.6).
 
-> _Open (precision residual)._ The fit-check folds a constant operand **exactly**
-> (over `[-2^63, 2^64-1]`) for literals, `const`-names, nested casts, and
-> arithmetic. A constant reached through a **bitwise or shift** operation is not
-> yet modeled exactly and falls back to a host-`int` fold, so such an operand of
-> magnitude **≥ 2^63** can be wrongly accepted: `const A uint64 =
-> 0x4000000000000000; cast(int64, A << 1)` is *not* yet rejected. The fix is to
-> model bitwise operations in the exact fold (`conv.cast.literal-fit` residual,
-> `claude-todo.md`).
-
 `conv.cast.float-int-saturation` — **Float → integer at the out-of-range /
 non-finite edge saturates** to a single value defined identically across every
 backend and the interpreter. The ratified contract (2026-06-12): a value above
