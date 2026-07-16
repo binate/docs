@@ -72,6 +72,15 @@ identifier before the path string. An imported member is referenced
 **qualified** as `name.Member`, where `name` is the import path's last segment (or
 the alias, when given).
 
+`pkg.import.blank` — When the import alias is the **blank identifier** `_` (`import
+_ "pkg/foo"`), the import binds **no** qualifier — the package's members cannot be
+referenced through it — but the package still joins the import graph (`pkg.acyclic`)
+and is **initialized** in dependency order (§17.2 `prog.init.order`). Such a
+**side-effect-only** import runs a package's initialization without naming it. It is
+intentional, so it is exempt from the `unused-import` **lint** (`bnlint`) — the
+compiler itself never diagnoses an unused import (Binate emits no compiler
+warnings).
+
 ## 16.4 The exported surface and visibility
 
 `pkg.export` — A package's **exported surface is its `.bni`**: a symbol is
