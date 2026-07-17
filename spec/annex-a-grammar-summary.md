@@ -359,19 +359,25 @@ ForInClause   = identifier [ "," identifier ] "in" Expression ;   (* value, or i
    fallthrough.  The second form is a TYPE SWITCH: the head `x.(type)` (optionally
    bound as `v := x.(type)`) dispatches on the DYNAMIC type of an interface value,
    and each case lists ASSERT TARGETS — a `*`/`@`/value recovery kind plus a NAMED
-   type — not expressions (§11.12, §14.10).  D13. *)
+   type, or a slice type (§11.12 iface.assert.slice) — not expressions (§11.12,
+   §14.10).  D13. *)
 SwitchStmt    = "switch" [ Expression ] "{" { CaseClause } "}"
               | "switch" [ identifier ":=" ] PostfixExpr "." "(" "type" ")"
                   "{" { TypeCaseClause } "}" ;
 CaseClause    = ( "case" ExpressionList | "default" ) ":" { Statement ";" } ;
 TypeCaseClause = ( "case" AssertTargetList | "default" ) ":" { Statement ";" } ;
-(* A type-assertion / type-switch target is a mandatory recovery kind (raw "*",
-   managed "@", or value = neither) plus an optional `readonly` and a NAMED type
-   (TypeName — a concrete type, an interface, or `any`).  It deliberately EXCLUDES
-   slice / func / array / struct / `Self` targets and pointer-to-composite: only a
-   nameable type may be asserted (§11.12).  The leading "*"/"@" is ALWAYS the
-   recovery kind here, never a pointer/slice type constructor (D13). *)
-AssertTarget  = [ "*" | "@" ] [ "readonly" ] TypeName ;
+(* A type-assertion / type-switch target is EITHER (a) a mandatory recovery kind
+   (raw "*", managed "@", or value = neither) plus an optional `readonly` and a
+   NAMED type (TypeName — a concrete type, an interface, or `any`); OR (b) a SLICE
+   type — managed "@[]T" or raw "*[]T", element `readonly` written inside — matched
+   by STRUCTURAL identity and recovered by VALUE (§11.12 iface.assert.slice;
+   Draft — ratified, not yet implemented).  A slice is the ONE composite target
+   admitted; func / array / struct / `Self` and pointer-to-composite targets are
+   still rejected — only a nameable type or a slice may be asserted (§11.12).  In
+   form (a) the leading "*"/"@" is the recovery kind; in form (b) it is the slice's
+   own managed/raw marker (D3/D13: "*"/"@" then "[" begins a slice). *)
+AssertTarget  = ( [ "*" | "@" ] [ "readonly" ] TypeName )
+              | ( ( "*" | "@" ) "[" "]" Type ) ;
 AssertTargetList = AssertTarget { "," AssertTarget } ;
 ```
 
@@ -595,13 +601,15 @@ TypeParamDecl = identifier Type ;   (* type-parameter name + interface constrain
         resolved by the token that follows it:
         - "." identifier → selector (field / method / package member).
         - "." "(" AssertTarget ")" → a type-ASSERTION expression (PostfixOp;
-          §11.12).  Inside the parens a leading "*"/"@" is ALWAYS the recovery
-          kind (never a pointer/slice type constructor), and the remainder is an
-          optional `readonly` plus a NAMED type (TypeName): `x.(@C)`, `x.(*S)`,
-          `x.(readonly C)`, `x.(pkg.T)`.  A non-nameable target (`*[]T`, `*func`,
-          an array/struct literal, `Self`) does not match AssertTarget and is
-          rejected.  A qualified `pkg.T` inside the parens is consumed wholly by
-          TypeName, so its inner "." is not a selector.
+          §11.12).  Inside the parens a leading "*"/"@" FOLLOWED BY "[" begins a
+          SLICE type target (`x.(*[]char)`, `x.(@[]readonly char)`) — value
+          recovery, structural identity (iface.assert.slice); otherwise a leading
+          "*"/"@" is the recovery kind, and the remainder is an optional `readonly`
+          plus a NAMED type (TypeName): `x.(@C)`, `x.(*S)`, `x.(readonly C)`,
+          `x.(pkg.T)`.  Other non-nameable targets (`*func`, an array/struct
+          literal, `Self`) do not match AssertTarget and are rejected.  A qualified
+          `pkg.T` inside the parens is consumed wholly by TypeName, so its inner
+          "." is not a selector.
         - "." "(" "type" ")" → the head of a TYPE SWITCH statement — the keyword
           `type`, not a type — valid only in switch-statement position, with an
           optional `v :=` binder (§11.12, §14.10).  `type` is reserved (§5), so

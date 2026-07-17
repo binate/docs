@@ -307,14 +307,14 @@ its contents and the cross-mode agreement of every assertion result. Interface
 > `any` emits a malformed box and a match over it crashes — a tracked MAJOR, Annex
 > C / `claude-todo.md`.)_
 >
-> _Pending (`proposal-slice-type-identity`)._ The pending slice-target extension
-> (§11.12 `iface.assert.slice`) upgrades **slices** from the shared opaque record
-> to a **distinct structural** `TypeInfo` per slice spelling — keyed on `{ managed
-> | raw, element-readonly?, element-type }`, so `@[]char` and `*[]int` compare
-> unequal. The unnamed struct / array / function constructors keep the shared
-> opaque record until (if ever) they gain their own structural identity. The record
-> **layout is unchanged** either way: a slice's `name` field is its structural
-> spelling, its destructor the slice's element-drop.
+> _Draft — ratified, not yet implemented (`proposal-slice-type-identity`)._ The
+> slice-target extension (§11.12 `iface.assert.slice`) upgrades **slices** from the
+> shared opaque record to a **distinct structural** `TypeInfo` per slice spelling —
+> keyed on `{ managed | raw, element-readonly?, element-type }`, so `@[]char` and
+> `*[]int` compare unequal. The unnamed struct / array / function constructors keep
+> the shared opaque record until (if ever) they gain their own structural identity.
+> The record **layout is unchanged** either way: a slice's `name` field is its
+> structural spelling, its destructor the slice's element-drop.
 
 `type.layout.satisfaction` — Interface **satisfaction** (which interfaces a type
 implements) is resolved through a **distributed registry** keyed on

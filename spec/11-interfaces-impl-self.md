@@ -1,6 +1,6 @@
 # 11. Interfaces, impl, and Self
 
-> **Status:** mixed · **Maturity:** language rules Stable; implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3) and the 32-bit-ARM platform gap (§11.11) remain)  
+> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice` — Draft: design ratified, not yet implemented); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3), the name-less-box crash (§11.12), and the 32-bit-ARM platform gap (§11.11) remain)  
 > **Rule-ID prefix:** `iface`
 
 Binate interfaces are **nominal**: a type satisfies an interface only through an
@@ -268,10 +268,9 @@ query, not an implicit one.
 
 `iface.assert` — A **type assertion** applies to an interface-value operand `x`
 (`*I`/`@I`, including `*any`/`@any`; asserting a non-interface value is an error)
-and names a target — a mandatory recovery kind plus a **nameable** type
-(`iface.assert.kind`; a func / array / struct / `Self` target is a compile error —
-and, today, a **slice** target, which a pending extension would admit,
-`iface.assert.slice`). The **dynamic type** of `x` is the concrete named type recorded when `x`
+and names a target — either a **nameable** type with a mandatory recovery kind, or
+a **slice** type (`iface.assert.kind`, `iface.assert.slice`; a func / array /
+struct / `Self` target is a compile error). The **dynamic type** of `x` is the concrete named type recorded when `x`
 was constructed (§11.4): the boxed value's type with its `*`/`@`/outer-`readonly`
 stripped and aliases peeled, but **named-distinct wrappers preserved** (a boxed
 `Celsius` records `Celsius`, not `float64`; §7.3). A target matches as follows:
@@ -323,8 +322,8 @@ outer/handle `readonly` is freely choosable.
 
 `iface.assert.slice` — A **slice** type is admitted as an assertion /
 type-switch target — `x.(*[]char)`, `case @[]readonly char:` — even though a slice
-is unnamed. It is the **one** composite target the extension permits; a func /
-array / struct / `Self` target stays a compile error (`iface.assert`). A slice
+is unnamed. It is the **one** composite target admitted; a func / array / struct /
+`Self` target stays a compile error (`iface.assert`). A slice
 target matches by **structural identity**: the identity of a slice type is the
 tuple `{ managed | raw, element-readonly?, element-type }`, applied **recursively**
 to the element (so `@[]@[]char` is distinct from `@[]char`). Thus `@[]char`,
@@ -345,20 +344,20 @@ The `TypeInfo` backing a slice's structural identity reuses the ordinary record
 layout (§7.13.14 `type.layout.typeinfo`), its **name** field carrying the
 structural spelling and its **destructor** the slice's element-drop.
 
-> _Pending._ `iface.assert.slice` is **Draft** (§4.4 — specified-in-intent, **not
-> yet ratified or implemented**; `proposal-slice-type-identity`). Two points are
-> open for ratification: **(1)** treating element-`readonly` and managed-vs-raw as
-> *distinct* identities (the sound choice — collapsing them would silently drop or
-> add `readonly`, or confuse the 2-word/4-word representations — but a design
-> decision to confirm); and **(2)** the **grammar**: the canonical `AssertTarget`
-> (§11.12 grammar; `binate.ebnf`) admits only a `TypeName` today and would gain a
-> slice-type alternative — `AssertTarget = ( [ "*" | "@" ] [ "readonly" ] TypeName
-> ) | SliceType` — on ratification (deliberately absent from the canonical grammar
-> until then). The enabling use is fmt's `...*any` fast-path (`builtin.print`,
-> §15.7; `claude-notes.md:252`): a string is a raw char-slice, so recovering a
-> string operand needs a slice target. Because the string spellings are distinct
-> identities, a formatter enumerates one `case` per spelling it accepts — a
-> library concern, not a language one.
+> _Draft — ratified, not yet implemented._ The **design** of `iface.assert.slice`
+> is **ratified** (`proposal-slice-type-identity`): both the **exact-match**
+> identity — element-`readonly` and managed-vs-raw are *distinct* (the sound choice;
+> collapsing them would silently drop/add `readonly` or confuse the 2-word/4-word
+> representations) — and the **grammar** are settled, and the `AssertTarget`
+> production (§11.12 grammar; canonical `binate.ebnf`) now carries the slice-type
+> alternative. The rule is **Draft** on the stability axis (§4.4) only because it is
+> **not yet implemented** — Axis-2 non-conformant, tracked by
+> `explorations/plan-slice-type-identity.md` and gated behind the name-less-box
+> crash fix (Annex C / `claude-todo.md`). The enabling use is fmt's `...*any`
+> fast-path (`builtin.print`, §15.7; `claude-notes.md:252`): a string is a raw
+> char-slice, so recovering a string operand needs a slice target. Because the four
+> string spellings are distinct identities, a formatter enumerates one `case` per
+> spelling it accepts — a library concern, not a language one.
 
 `iface.assert.absent` — An interface value has two "empty" states (§15.5
 `builtin.present`), and neither is a `nil` case — interface values are **not
@@ -385,12 +384,14 @@ interface value:
 SwitchStmt     = … | "switch" [ identifier ":=" ] PostfixExpr "." "(" "type" ")"
                    "{" { TypeCaseClause } "}" ;
 TypeCaseClause = ( "case" AssertTargetList | "default" ) ":" { Statement ";" } ;
-AssertTarget   = [ "*" | "@" ] [ "readonly" ] TypeName ;
+AssertTarget   = ( [ "*" | "@" ] [ "readonly" ] TypeName )   (* nameable-type target *)
+               | ( ( "*" | "@" ) "[" "]" Type ) ;            (* slice-type target — iface.assert.slice *)
 ```
 
 Each `case` lists one or more **assert targets** (`iface.assert.kind` — a recovery
-kind plus a nameable type), each legal for the scrutinee (a `*I` switch admits no
-`@T` case). A concrete-type case matches by exact dynamic-type identity; an
+kind plus a nameable type, or a slice type, `iface.assert.slice`), each legal for
+the scrutinee (a `*I` switch admits no `@T` case). A concrete-type case matches by
+exact dynamic-type identity (a slice case by structural identity); an
 interface-type case matches by satisfaction — the same criteria as `iface.assert`.
 The **first** matching case runs; there is **no fallthrough** and no duplicate-case
 check (§14.10 `stmt.switch.no-fallthrough`). Because interface cases can **overlap**
@@ -430,8 +431,9 @@ to expose (§20.3, a later phase).
 > and `type.layout.typeinfo`, including the cross-mode agreement of every
 > assertion result (a value produced by a compiled package and asserted in the
 > bytecode VM resolves to the same result). **Two exceptions:** `iface.assert.slice`
-> is Draft (pending; see its note); and boxing a **name-less** dynamic type (such
-> as a slice) into `any` currently emits a malformed box, so a match over it
-> crashes instead of falling to `default` — a tracked MAJOR non-conformance
-> (§7.13.14 name-less-types note; Annex C / `claude-todo.md`) whose fix is
-> independent of, and forward-compatible with, the pending slice extension.
+> is Draft — its design is ratified but it is **not yet implemented** (see its
+> note); and boxing a **name-less** dynamic type (such as a slice) into `any`
+> currently emits a malformed box, so a match over it crashes instead of falling to
+> `default` — a tracked MAJOR non-conformance (§7.13.14 name-less-types note; Annex
+> C / `claude-todo.md`) whose fix is independent of, and forward-compatible with,
+> the slice extension.
