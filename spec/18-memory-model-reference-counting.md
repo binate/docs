@@ -98,12 +98,18 @@ reference is released, not at some later collection point.
 > `type.layout.slice-managed.backing`) — releases as a no-op and is never freed
 > (any managed elements it holds must themselves be immortal).
 
-`mem.immortal` — **Static-managed** allocations — values emitted into the program
-image rather than heap-allocated, such as string-literal backing (§6.6) and
-package descriptors (Ch.20) — carry an **immortal** sentinel count (a negative
-refcount). Acquire and release both short-circuit on an immortal count (no
-increment, no decrement, no free), so such a value is never mutated and never
-freed.
+`mem.immortal` — An **immortal** value carries a sentinel count (a deeply-negative
+refcount) marking it as outliving **every reference** to it: acquire and release
+both short-circuit on that count (no increment, no decrement, no free), so it is
+never freed through the reference count. The contract is **lifetime**, not storage
+class. The canonical producers are **static-managed** allocations — values emitted
+into the program image rather than heap-allocated, such as string-literal backing
+(§6.6) and package descriptors (Ch.20), which are additionally **read-only** (never
+mutated) — but the mechanism applies to **any** value guaranteed to outlive its
+references, including on a target with **no** program-image / read-only-data
+section, where an immortal reference is how such data is held at all. (The
+null-backing managed-slice view of §7.13.6 realizes the same lifetime contract by a
+*different* mechanism — an absent backing pointer rather than a sentinel count.)
 
 ## 18.3 Copy semantics and assignment
 

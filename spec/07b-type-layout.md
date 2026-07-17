@@ -108,19 +108,29 @@ reference count is a normal **positive** value. It is **unowned / immortal** —
 `RefInc`/`RefDec` are no-ops and it is never freed — in either of two forms:
 
 - **`backing == null`** (no managed header): the slice is either empty
-  (`{null, 0, null, 0}`, §7.7) **or** a view of **immortal static read-only data**
-  with a non-null `data` (e.g. a `@[]readonly char` literal **when compiled** — see
-  the environment-lifetime note below).
+  (`{null, 0, null, 0}`, §7.7) **or** a non-owning **view of effectively-immortal
+  storage** — storage that outlives **every reference** to the slice — with a
+  non-null `data`. The operational contract is purely lifetime-based: an unowned
+  backing makes `RefInc`/`RefDec` no-ops and is never freed (§18.2 `mem.immortal`),
+  and it does **not** require the storage to be static, read-only, or in a program
+  image. Immortal static read-only data — a compiled `@[]readonly char` literal
+  (the environment-lifetime note below) — is the **canonical example, not the
+  definition**: the same mechanism represents any effectively-immortal storage, and
+  on a target with no read-only-data section it is how such data is held at all.
+  Soundness rests on the borrow discipline (§18.1 `mem.managed-vs-raw`, §18.7
+  `mem.raw-uaf`): a null backing is a borrow carried in a managed slice's owning
+  slot, so — the reference-count machinery being inert — the **producer** must
+  guarantee the referent outlives every reference, exactly as for a raw borrow.
 - **`backing != null` carrying the immortal sentinel**: the backing is a
   **static-managed** allocation whose `{refcount, free_fn}` header (§7.13.7) holds
   the deeply-negative `STATIC_REFCOUNT` sentinel, so the refcount operations
   short-circuit on the negative count (§18.2 `mem.immortal`).
 
-Consequently a **null backing does not imply an empty slice** (a non-empty static
-view also has an unowned backing), and an unowned backing may be **null *or* a
-sentinel allocation**. Because an unowned backing's `RefDec` never reaches 0, its
-element destructor never runs — so any **managed** elements held by such a backing
-must themselves be immortal.
+Consequently a **null backing does not imply an empty slice** (a non-empty view of
+effectively-immortal storage also has an unowned backing), and an unowned backing
+may be **null *or* a sentinel allocation**. Because an unowned backing's `RefDec`
+never reaches 0, its element destructor never runs — so any **managed** elements
+held by such a backing must themselves be immortal.
 
 > _Environment-lifetime of a `@[]readonly char` literal._ A `@[]readonly char`
 > string/char-slice literal lives **at least as long as its environment**, and its
