@@ -118,6 +118,23 @@ package, Ch.20).
 > failure, intrinsic to the separate-compilation model — not a per-package
 > compile-time check.
 
+> _Note (script mode — reference tooling; Draft, `proposal-shebang`)._ Where the
+> host provides a command line, the reference **source-executing interpreter**
+> (`bni` in this toolchain) runs a **single source file as a script** with `bni -x
+> <file> [args…]`: `<file>` is taken as the program's **sole source**, and every
+> argument **after** it becomes the program's **argv** — the script path as element
+> `0`, the user arguments following — delivered through the host/runtime argument
+> mechanism (`prog.argv`), rather than being taken as **additional source files** (the default
+> multi-file / directory invocation). Combined with the `#!` shebang skip (§5.2
+> `lex.shebang`), this makes a `chmod +x` Binate file directly executable; the
+> intended shebang is `#!/usr/bin/env -S bni -x` (the `-S` splits the two words, so
+> the kernel runs `bni -x <script> <user-args…>`). A bare `#!/usr/bin/env bni`
+> (no `-x`) still **parses** — the line is skipped — but in the default mode treats
+> trailing arguments as further source files, so an argument-taking script **should**
+> use `-x`. This is **host-dependent tooling** (the command line is not part of the
+> core language, Ch.2); another host or interpreter may provide a different
+> mechanism. Not yet implemented.
+
 ### 17.3.2 Entry glue and pluggable platform startup
 
 > _Status (Draft / pending)._ `prog.entry.glue`, `prog.entry.pluggable`, and

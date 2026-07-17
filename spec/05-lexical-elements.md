@@ -1,6 +1,6 @@
 # 5. Lexical Elements
 
-> **Status:** normative · **Maturity:** mostly Stable  
+> **Status:** normative · **Maturity:** mostly Stable (the `#!` shebang rule, §5.2 `lex.shebang`, is Draft — ratified, not yet implemented)  
 > **Rule-ID prefix:** `lex`
 
 This chapter defines how the source text of a Binate file is partitioned into
@@ -64,6 +64,33 @@ comment has no special meaning, and the first `*/` closes the comment.
 > an open item (`lex.comment.unterminated`, see §5.14).
 
 A comment is treated as whitespace.
+
+`lex.shebang` — A source file **may begin** with a **shebang line**: if its
+**first two bytes** are `#!` (a `#` immediately followed by `!`, at byte offset
+`0`), the entire first line — every byte up to and **including** the terminating
+newline (`0x0A`), **or end of input** if the shebang is the file's last line (no
+further `0x0A`; recall an embedded NUL is end of input, §5.1 `lex.source.eof`) — is
+**skipped**, treated as whitespace. It produces no token and
+triggers no semicolon insertion (§5.13); the newline **is** counted for line
+numbering, so a diagnostic on the following package clause reports **line 2**. The
+shebang is recognized **only** at the very start of the file: a `#!` anywhere else
+— after any byte, including whitespace — is **not** a shebang and lexes as ordinary
+tokens (a `#` is the annotation sigil that opens `#[…]`, §16.7; it is never a
+comment). A file **without** a leading `#!` is unaffected, and (because a shebang
+begins `#!` while an annotation begins `#[`) the rule never masks an annotation.
+
+This narrow, offset-`0` rule — rather than a general `#`-to-end-of-line comment —
+exists precisely because Binate reserves `#` as the annotation sigil, so `#`
+**cannot** be a comment; the rule lets a Binate source file carry a
+`#!`-interpreter line and run directly under a source-executing interpreter without
+that line being a syntax error. (Languages whose `#` is likewise reserved take the
+same approach.)
+
+> _Draft — ratified, not yet implemented (`proposal-shebang`)._ The design is
+> settled; no implementation skips the line yet. The reference interpreter's `-x`
+> **script mode** — how a `#!` Binate script is invoked and receives its arguments
+> — is described at §17.3.1 (`prog.argv`); it is host/tooling behavior, not a
+> core-language rule.
 
 ## 5.3 Identifiers
 
