@@ -1,6 +1,6 @@
 # 11. Interfaces, impl, and Self
 
-> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice` — Draft: design ratified, not yet implemented); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3), the name-less-box crash (§11.12), and the 32-bit-ARM platform gap (§11.11) remain)  
+> **Status:** mixed · **Maturity:** language rules Stable (except two Draft rules — §11.4 `iface.construct.value-borrow` and §11.12 `iface.assert.slice`, both design-ratified, not yet implemented); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3), the name-less-box crash (§11.12), and the 32-bit-ARM platform gap (§11.11) remain)  
 > **Rule-ID prefix:** `iface`
 
 Binate interfaces are **nominal**: a type satisfies an interface only through an
@@ -89,12 +89,14 @@ method call (§10.5).
 ## 11.4 Constructing an interface value
 
 `iface.construct.no-implicit` — Constructing an interface value from a
-non-interface source admits **no implicit conversions** — no implicit copy, no
-implicit address-of, no implicit `box`. The source must already be
-pointer-shaped (`*T` or `@T`), with any required conversion written explicitly.
-(Rationale: an interface value can outlive its source, so the language refuses to
-silently capture a reference or copy.) Whether `*T`/`@T` may construct a given
-`*Iface`/`@Iface` is **impl-gated** (§11.3).
+non-interface source admits **no implicit copy** and **no implicit `box`**; the
+source must be pointer-shaped (`*T` or `@T`), with any required conversion written
+explicitly. (Rationale: an interface value can outlive its source, so the language
+refuses to silently capture a reference or copy.) Whether `*T`/`@T` may construct a
+given `*Iface`/`@Iface` is **impl-gated** (§11.3). The **one** relaxation is an
+implicit *address-of* when a **value** source constructs a **raw** `*Iface`
+(`iface.construct.value-borrow`, Draft); a **managed** `@Iface` is never
+constructed implicitly (the source must be `@T`, or an explicit `box(t)`).
 
 `iface.construct.managed` — A `@T` constructing a `@Iface` takes its **own**
 reference (the interface value's data slot is reference-counted; Ch.18). A `@T`
@@ -103,7 +105,45 @@ may instead construct a raw `*Iface` (a borrow — no reference taken). A **raw
 
 `iface.construct.box` — A **value**-typed source must be made pointer-shaped
 first: write `&t` (a `*T` borrow) to construct a `*Iface`, or `box(t)` (which
-heap-allocates a managed copy, yielding `@T`; §15) to construct a `@Iface`.
+heap-allocates a managed copy, yielding `@T`; §15) to construct a `@Iface`. For a
+raw `*Iface`, the `&t` may be left **implicit** in the positions
+`iface.construct.value-borrow` (Draft) permits; the `box(t)` for a `@Iface` is
+always explicit.
+
+`iface.construct.value-borrow` — A **value**-typed source (not `*T`/`@T`)
+constructing a **raw** `*Iface` (including `*any`) is admitted via an **implicit
+borrow** — so `fmt.Print("hi", 42)` and `Opts{Any: v}` need no explicit `&`. It
+applies only to a genuinely value-typed source; a `*T`/`@T` source is unchanged
+(`iface.construct.managed` — a borrow, no reference taken). Two cases:
+
+- An **addressable** source (an lvalue — a variable, field, or element) borrows by
+  an implicit **address-of**: `Opts{Any: x}` is exactly `Opts{Any: &x}` — the same
+  `*T` borrow, lifetime, and use-after-free contract (§18.7 `mem.raw-uaf`), in
+  **any** position an explicit `&x` is permitted.
+- A **non-addressable** source (a literal, an expression, or a call result) is
+  **materialized into a temporary** and borrowed. Because a temporary is released
+  at the **end of its statement** (§18.4 `mem.temporary`), this is permitted
+  **only** where the borrow cannot outlive it: an **argument** position, or a
+  **`var`/`:=` initializer** (the temporary co-scopes with the new binding). In a
+  position that stores into a **pre-existing** location outliving the statement — an
+  **assignment**, a **field or element store**, or a **`return`** — it is a
+  **compile error** (a stack temporary would dangle at the statement's end); such a
+  store must name a longer-lived source, or `box(t)` for a heap copy.
+
+Construction **borrows; it does not copy** (unlike Go's interface conversion): a
+stored raw interface value observes later mutations of its source and — being a raw
+borrow — dangles if it outlives that source (§18.7). A **managed** `@Iface` from a
+value is **never** implicit; it requires explicit `box(t)` (`iface.construct.box`),
+since an implicit managed box would be a hidden heap allocation.
+
+> _Draft — ratified, not yet implemented (`proposal-implicit-any-borrow`)._ The
+> enabling "boxing" half of the `...*any` `fmt` direction (`builtin.print`, §15.7);
+> its dual is the slice/scalar **recovery** in a type switch (§11.12
+> `iface.assert.slice`). Because the implicit lvalue borrow carries **no visible
+> `&`**, an escaping raw interface value built from a local is a use-after-free that
+> reads like value construction — a `bnlint` rule should flag it (the compiler emits
+> no such diagnostic; unused/dangling detection is a lint concern, not a compiler
+> one).
 
 ## 11.5 The empty interface `any`
 

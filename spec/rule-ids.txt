@@ -217,6 +217,7 @@ iface.canonical.carveout	positive	11-interfaces-impl-self.md
 iface.construct.box	positive	11-interfaces-impl-self.md
 iface.construct.managed	positive	11-interfaces-impl-self.md
 iface.construct.no-implicit	positive	11-interfaces-impl-self.md
+iface.construct.value-borrow	positive	11-interfaces-impl-self.md
 iface.construct.visible-impl	constraint	11-interfaces-impl-self.md
 iface.crosspkg.method-package	constraint	11-interfaces-impl-self.md
 iface.crosspkg.no-orphan	positive	11-interfaces-impl-self.md
