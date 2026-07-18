@@ -47,7 +47,7 @@ governs assignment, argument passing, return, and field and element stores
 > _Note._ The interface-satisfaction case (7) is stated fully in Ch.11
 > (construction and dispatch); §8 lists it only for completeness of the implicit
 > set. A **value** source satisfying `I` constructing a **raw** `*I`/`*any` is
-> admitted via the implicit borrow of §11.4 `iface.construct.value-borrow` (Draft,
+> admitted via the implicit borrow of §11.4 `iface.construct.value-borrow` (Provisional,
 > position-restricted); a **managed** `@I`/`@any` from a value still requires an
 > explicit `box` (no implicit heap).
 
