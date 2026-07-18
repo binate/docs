@@ -1,6 +1,6 @@
 # 11. Interfaces, impl, and Self
 
-> **Status:** mixed · **Maturity:** language rules Stable (except two Draft rules — §11.4 `iface.construct.value-borrow` and §11.12 `iface.assert.slice`, both design-ratified, not yet implemented); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3), the name-less-box crash (§11.12), and the 32-bit-ARM platform gap (§11.11) remain)  
+> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice`, Draft — design-ratified, not yet implemented — and §11.4 `iface.construct.value-borrow`, Provisional — implemented, design may still change); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3), the name-less-box crash (§11.12), and the 32-bit-ARM platform gap (§11.11) remain)  
 > **Rule-ID prefix:** `iface`
 
 Binate interfaces are **nominal**: a type satisfies an interface only through an
@@ -95,7 +95,7 @@ explicitly. (Rationale: an interface value can outlive its source, so the langua
 refuses to silently capture a reference or copy.) Whether `*T`/`@T` may construct a
 given `*Iface`/`@Iface` is **impl-gated** (§11.3). The **one** relaxation is an
 implicit *address-of* when a **value** source constructs a **raw** `*Iface`
-(`iface.construct.value-borrow`, Draft); a **managed** `@Iface` is never
+(`iface.construct.value-borrow`, Provisional); a **managed** `@Iface` is never
 constructed implicitly (the source must be `@T`, or an explicit `box(t)`).
 
 `iface.construct.managed` — A `@T` constructing a `@Iface` takes its **own**
@@ -107,7 +107,7 @@ may instead construct a raw `*Iface` (a borrow — no reference taken). A **raw
 first: write `&t` (a `*T` borrow) to construct a `*Iface`, or `box(t)` (which
 heap-allocates a managed copy, yielding `@T`; §15) to construct a `@Iface`. For a
 raw `*Iface`, the `&t` may be left **implicit** in the positions
-`iface.construct.value-borrow` (Draft) permits; the `box(t)` for a `@Iface` is
+`iface.construct.value-borrow` (Provisional) permits; the `box(t)` for a `@Iface` is
 always explicit.
 
 `iface.construct.value-borrow` — A **value**-typed source (not `*T`/`@T`)
@@ -136,8 +136,9 @@ borrow — dangles if it outlives that source (§18.7). A **managed** `@Iface` f
 value is **never** implicit; it requires explicit `box(t)` (`iface.construct.box`),
 since an implicit managed box would be a hidden heap allocation.
 
-> _Draft — ratified, not yet implemented (`proposal-implicit-any-borrow`)._ The
-> enabling "boxing" half of the `...*any` `fmt` direction (`builtin.print`, §15.7);
+> _Provisional — implemented; the design may still change
+> (`proposal-implicit-any-borrow`)._ The enabling "boxing" half of the `...*any`
+> `fmt` direction (`builtin.print`, §15.7);
 > its dual is the slice/scalar **recovery** in a type switch (§11.12
 > `iface.assert.slice`). Because the implicit lvalue borrow carries **no visible
 > `&`**, an escaping raw interface value built from a local is a use-after-free that
