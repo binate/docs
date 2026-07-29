@@ -1,9 +1,11 @@
 # A Guide to Binate (for Go Programmers)
 
 > **Status:** informative — the [language specification](spec/00-index.md) is the
-> authority wherever this guide and the spec could disagree. A few recent features
-> are marked Draft/Provisional in the spec; this guide describes the language as
-> specified and skips per-feature maturity notes.
+> authority wherever this guide and the spec could disagree. This guide describes
+> the language as specified and skips per-feature maturity notes; a few recently
+> added features carry Draft/Provisional markers in the spec (some of which lag
+> behind their already-landed, conformance-tested implementations — the spec's
+> per-rule notes are the word on stability, not availability).
 
 Binate is a systems programming language with **Go-family syntax and very
 un-Go semantics**. That resemblance is the number-one hazard for a Go
@@ -228,10 +230,11 @@ Two pointer types:
   the C-style escape hatch, and it's how you break reference cycles (a raw
   "weak" reference).
 
-Managed values come **only** from `make(T)` (zero-initialized `@T`),
-`make_slice(T, n)`, and `box(v)` (heap copy of a value). **`&x` always yields
-a raw `*T`**, even when `x` is managed — there is no address-of that produces
-a managed pointer. `.` auto-dereferences one level for both kinds (no `->`).
+A managed pointer `@T` comes **only** from `make(T)` (zero-initialized) or
+`box(v)` (heap copy of a value); managed-slices come from `make_slice(T, n)`
+and slice/string literals (§3–4), and a capturing `@func` literal
+heap-allocates its captures (§7). **`&x` always yields a raw `*T`**, even when
+`x` is managed — there is no address-of that produces a managed pointer. `.` auto-dereferences one level for both kinds (no `->`).
 
 The rules the compiler enforces (the "axioms"):
 
@@ -401,6 +404,7 @@ target — `@T` (retain), `*T` (borrow), or `T` (copy out) — legal per the
 source (`*I` can't yield `@T`; you can't mint a refcount from a borrow):
 
 ```binate
+var v @any = box(makeSomething())   // @any: all three recovery kinds legal below
 n, ok := v.(*int)             // comma-ok; never aborts
 switch x := v.(type) {
 case *int:      println(*x)
@@ -468,8 +472,12 @@ var v Vec[@[]char]
 ## 12. Expressions and arithmetic: defined, strict
 
 - Operands of a binary op must be the same type (§2). `~` is bitwise
-  complement (Go's unary `^`); `^` is XOR only. Precedence is Go's (bitwise
-  binds tighter than comparison, unlike C).
+  complement (Go's unary `^`); `^` is XOR only. **Precedence is not Go's**:
+  like Go, all bitwise/shift operators bind tighter than comparisons — but the
+  levels are C's distinct ladder (`* / %` > `+ -` > `<< >>` > `&` > `^` > `|`),
+  not Go's collapsed one. So `x << 1 + 2` is `x << 3` (Go: `(x << 1) + 2`) and
+  `x & 3 + 1` is `x & 4` (Go: `(x & 3) + 1`) — parenthesize mixed
+  shift/arithmetic expressions.
 - Assignment is a statement (no `a = b = c`); `x++`/`x--` are statements,
   postfix only. Parallel assignment `a, b = b, a` works (RHS evaluated
   first). `:=` **rebinds silently** — there is no "at least one new variable"
