@@ -5,9 +5,9 @@
 > Binate has Go-family syntax and deliberately different semantics, and this
 > page is mostly about the differences.
 
-**Identity.** A systems language that is both **compiled** (`bnc`, native
-backends incl. 32-bit and bare-metal ARM) and **interpreted** (`bni`, a
-bytecode VM) from one front end: both modes share identical type layouts and
+**Identity.** A systems language that is both **compiled** (`bnc` — LLVM and
+native backends; 32-bit targets including bare-metal ARM) and **interpreted**
+(`bni`, a bytecode VM) from one front end: both modes share identical type layouts and
 one heap, so compiled and interpreted code call each other through ordinary
 function values, no marshalling. Memory is **reference-counted** — no GC, no
 borrow checker; raw pointers are the unsafe escape hatch. **Single-threaded**:
@@ -43,7 +43,8 @@ func main() {                               // no params, no results; no init() 
 
 - Scalars: `bool`, `int`/`uint` (word-sized; no `uintptr`), sized ints,
   `float32/64`, `char`. **`char` = `byte` = `uint8`** — one byte, not a rune.
-  No `string`, no `rune`, no `complex`. Source and identifiers are ASCII.
+  No `string`, no `rune`, no `complex`. Source and identifiers are ASCII
+  (non-ASCII bytes only inside literals and comments, carried verbatim).
 - **Two pointers**: `@T` managed (copy = refcount++), `*T` raw (plain
   address, C-style). **Two slices**: `@[]T` managed-owning (4 words), `*[]T`
   raw borrow (2 words); bare `[]T` is illegal. `@X → *X` decays implicitly
@@ -60,9 +61,9 @@ func main() {                               // no params, no results; no init() 
   cross, except unnamed-composite underlyings assign freely); `type X = U` is
   an alias; `type X` forward-declares opaquely. Package-level only. Enums =
   `type` + `const`/`iota`, as in Go.
-- `readonly` is a type modifier (left-binding: `*readonly int` = mutable
-  handle, read-only int). Adding element-`readonly` is implicit; dropping
-  needs `cast`. `const` is compile-time **scalars only**; immutable non-scalar
+- `readonly` is a prefix type modifier binding to the type on its right
+  (`*readonly int` = mutable handle, read-only int). Adding
+  element-`readonly` is implicit; dropping needs `cast`. `const` is compile-time **scalars only**; immutable non-scalar
   storage is `var x readonly T`.
 - Zero values as in Go; but `nil` is assignable **only** to pointers and
   function values — **slices and interface values are never nil** (a zero
@@ -105,7 +106,8 @@ func main() {                               // no params, no results; no init() 
 - Construction needs a pointer-shaped source (`&t`, `@T`, or `box(t)` for
   `@Iface`) and **borrows** — a stored `*any` sees later mutations of its
   source. A plain value where a raw `*Iface` is expected auto-borrows (an
-  implicit `&`) at argument/initializer positions.
+  implicit `&`): an addressable value anywhere `&x` is legal; a
+  literal/expression result only at argument and `var`/`:=` positions.
 - Assertions carry a mandatory recovery kind — `v.(@T)` retain / `v.(*T)`
   borrow / `v.(T)` copy (a raw `*I` source can't yield `@T`). Comma-ok never
   aborts; the bare expression form aborts on a miss, and there is **no
@@ -141,8 +143,10 @@ func main() {                               // no params, no results; no init() 
   untyped-int→float coerces (`var x float64 = 3` errors; write `3.0`).
   `cast(T, v)` converts (and never launders constants: `cast(uint8, 256)` is
   a compile error); `bit_cast` reinterprets. `~` is complement, `^` XOR-only.
-  **Precedence is C's ladder** (`* / %` > `+ -` > `<< >>` > `&` > `^` > `|` >
-  comparisons — so `x << 1 + 2` is `x << 3`, unlike Go); parenthesize.
+  **Precedence matches neither C nor Go**: distinct C-style levels
+  (`* / %` > `+ -` > `<< >>` > `&` > `^` > `|`) but with ALL comparisons
+  binding loosest (like Go, unlike C) — so `x << 1 + 2` is `x << 3` (unlike
+  Go) and `a & b == c` is `(a & b) == c` (unlike C); parenthesize.
 - Defined-everything arithmetic: overflow wraps; `/ 0`, `MIN/-1`, negative
   shifts panic; over-wide shifts give 0/sign-fill; float→int **saturates**
   (NaN → 0); float compares are IEEE (`x != x` tests NaN). `unsafe_*`
@@ -151,8 +155,9 @@ func main() {                               // no params, no results; no init() 
   statement; `x++`/`x--` are postfix statements.
 - Comparability: `==` for scalars, pointers (incl. `p == nil`), and
   aggregates whose parts all compare. Slices, interface values, and function
-  values **never** compare — use `len(s) == 0`, `present(x)` (is it set?),
-  `same(a, b)` (same referent — the sentinel test).
+  values **never** compare — use `len(s) == 0`, `present(x)` (is it set? —
+  the only test for function values), and `same(a, b)` (same referent — the
+  sentinel test; pointers, slices, and interface values only).
 
 ## Errors, panics, builtins
 
@@ -177,8 +182,9 @@ func main() {                               // no params, no results; no init() 
 5. `x, err := …; x, err := …` — the second `:=` silently rebinds (no Go
    redeclare check).
 6. `for v in xs` — `v` is the element, not the index.
-7. `s == nil` / `err == nil` / `f == g` don't compile — `len` / `present` /
-   `same`.
+7. `s == nil` / `err == nil` / `f == g` don't compile — use `len(s)`,
+   `present(x)`, or `same(a, b)` (`present` is the only test for function
+   values; `same` covers pointers/slices/interface values).
 8. `x << 1 + 2` is `x << 3` — shift binds looser than `+` here.
 9. A `*[]char` return from a function that allocated it borrows a dead
    temporary — return `@[]char`.
