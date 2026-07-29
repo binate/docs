@@ -23,8 +23,11 @@ composite literal (§13.10). Postfix operators — selector `.name`, type assert
 ## 13.2 Operator precedence and associativity
 
 `expr.precedence` — Operators bind at eleven precedence levels, from tightest
-(11) to loosest (1). This is the Go model — the bitwise and shift operators bind
-**tighter** than comparison (so `a & b == c` is `(a & b) == c`), unlike C.
+(11) to loosest (1). Like Go — and unlike C — the bitwise and shift operators
+bind **tighter** than comparison (so `a & b == c` is `(a & b) == c`). The levels
+are otherwise **C's distinct ladder, not Go's collapsed one**: shift binds looser
+than additive (`x << 1 + 2` is `x << (1 + 2)`, where Go parses `(x << 1) + 2`),
+and `&`, `^`, `|` bind looser still.
 
 | Level | Operators |
 |-------|-----------|
@@ -124,8 +127,10 @@ compared against the other operand's type (so `p == nil` is valid for a pointer)
 
 `expr.compare.incomparable` — **Slices, interface values, and function values are
 never comparable** with `==`/`!=` — not even to `nil`. Test presence with
-`present(x)` (§15), or, for slices, with `len`. (These types *are* nil-assignable
-but not nil-comparable — a deliberate asymmetry with pointers.)
+`present(x)` (§15), or, for slices, with `len`. (Of the three, only **function
+values** are nil-*assignable* (§7.7 `type.nil.literal`) — nil-assignable but not
+nil-comparable, a deliberate asymmetry with pointers; slices and interface values
+take `nil` in neither role.)
 
 `expr.compare.aggregate` — A **struct** or **array** type supports `==` / `!=`
 **iff every field / element type is comparable** (applied recursively for nested
