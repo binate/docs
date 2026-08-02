@@ -295,7 +295,7 @@ carries:
 | size, align | `SizeOf`/`AlignOf` of the type (the target's values) |
 | name | the type's name, as a `*[]readonly char` into static storage |
 | kind | a coarse **KIND** discriminator (values pinned below) telling a reflective reader how to interpret a value's bytes; the exact width comes from `size` (or a field's size) |
-| fields | for a struct, its field table — one entry per field carrying the field's name, byte offset, KIND, size, and (reserved) the field type's own `TypeInfo`; empty for a non-struct |
+| fields | for a struct, its field table — one entry per field carrying the field's name, byte offset, KIND, and size; a reference to a further `TypeInfo` (the field type's own record for a struct field, or the **element** type's record for an array/slice field — null when there is none); and, for an array/slice field, the **element** KIND and element size (so a reflective reader can walk the elements). Empty for a non-struct |
 
 The **KIND** values are a cross-artifact contract — the compiler emits them and
 stdlib readers (`pkg/builtins/reflect`, `pkg/stdx/fmt`) match them — so, like the
