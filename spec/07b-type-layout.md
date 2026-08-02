@@ -284,7 +284,8 @@ type-information record below (§7.13.14), which is likewise shared across modes
 an interface value has one static **`TypeInfo`** record, referenced by the
 `*TypeInfo` pointer in every interface vtable's any-block (§7.13.8). It is the
 substrate for **type assertions and type switches** (§11.12 `iface.rtti`) and, as
-a later phase, for the reflection type-metadata surface (§20.3). A `TypeInfo`
+a later phase, for the reflection type-metadata surface (§20.3) — the KIND
+discriminator and struct field table below are its first installment. A `TypeInfo`
 carries:
 
 | Field | Meaning |
@@ -293,6 +294,16 @@ carries:
 | destructor | the type's destructor handle (the same one the vtable any-block holds) |
 | size, align | `SizeOf`/`AlignOf` of the type (the target's values) |
 | name | the type's name, as a `*[]readonly char` into static storage |
+| kind | a coarse **KIND** discriminator (values pinned below) telling a reflective reader how to interpret a value's bytes; the exact width comes from `size` (or a field's size) |
+| fields | for a struct, its field table — one entry per field carrying the field's name, byte offset, KIND, size, and (reserved) the field type's own `TypeInfo`; empty for a non-struct |
+
+The **KIND** values are a cross-artifact contract — the compiler emits them and
+stdlib readers (`pkg/builtins/reflect`, `pkg/stdx/fmt`) match them — so, like the
+`iropcode` enum, they are **pinned here and MUST NOT be renumbered**: `0` other,
+`1` int (signed), `2` uint (unsigned; incl. `char`/`uint8`), `3` float, `4` bool,
+`5` string (a `char`-slice), `6` struct, `7` array, `8` slice (non-`char`),
+`9` pointer, `10` interface, `11` function. (A bare `char`/`uint8` field is `uint`
+— a number, like Go `byte`; a `char`-slice is `string` — text.)
 
 There is **exactly one** `TypeInfo` per type **program-wide** (not per module) so
 that the **result** of an identity comparison **agrees across compiled and
