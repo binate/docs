@@ -1,7 +1,7 @@
 # B. Implementation Model and Implementation-defined Index
 > **Status:** mixed · **Maturity:** Split Stable  
 > **Rule-ID prefix:** `impl`  
-> **Primary sources (explorations/):** ir-backend-guidelines.md (the authoritative split); plan-multi-backend-layout.md; plan-backend-objformat-decoupling.md; C Annex J (index model)  
+> **Primary sources (explorations/):** ir-backend-guidelines.md (the authoritative split); done/plan-multi-backend-layout.md; plan-backend-objformat-decoupling.md; C Annex J (index model)  
 > Full chapter scope & status caveats: `explorations/plan-language-spec.md` §5.
 
 > _Stub — not yet authored._ Author with the per-construct rubric in [`conventions.md`](conventions.md) (Grammar → Constraints → Static semantics → Dynamic semantics → Exceptions → Notes/Examples). Every normative statement carries a stable rule-ID under the prefix above — the citation target for spec conformance tests.
