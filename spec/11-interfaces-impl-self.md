@@ -1,6 +1,6 @@
 # 11. Interfaces, impl, and Self
 
-> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice`, Draft — design-ratified, not yet implemented — and §11.4 `iface.construct.value-borrow`, Provisional — implemented, design may still change); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3), the name-less-box crash (§11.12), and the 32-bit-ARM platform gap (§11.11) remain)  
+> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice` and §11.4 `iface.construct.value-borrow`, both Provisional — implemented, design may still change); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3) and the 32-bit-ARM platform gap (§11.11) remain)  
 > **Rule-ID prefix:** `iface`
 
 Binate interfaces are **nominal**: a type satisfies an interface only through an
@@ -385,16 +385,14 @@ The `TypeInfo` backing a slice's structural identity reuses the ordinary record
 layout (§7.13.14 `type.layout.typeinfo`), its **name** field carrying the
 structural spelling and its **destructor** the slice's element-drop.
 
-> _Draft — ratified, not yet implemented._ The **design** of `iface.assert.slice`
+> _Provisional — implemented._ The **design** of `iface.assert.slice`
 > is **ratified** (`proposal-slice-type-identity`): both the **exact-match**
 > identity — element-`readonly` and managed-vs-raw are *distinct* (the sound choice;
 > collapsing them would silently drop/add `readonly` or confuse the 2-word/4-word
 > representations) — and the **grammar** are settled, and the `AssertTarget`
-> production (§11.12 grammar; canonical `binate.ebnf`) now carries the slice-type
-> alternative. The rule is **Draft** on the stability axis (§4.4) only because it is
-> **not yet implemented** — Axis-2 non-conformant, tracked by
-> `explorations/plan-slice-type-identity.md` and gated behind the name-less-box
-> crash fix (Annex C / `claude-todo.md`). The enabling use is fmt's `...*any`
+> production (§11.12 grammar; canonical `binate.ebnf`) carries the slice-type
+> alternative. The rule is **Provisional** on the stability axis (§4.4): implemented
+> and conformance-green (design may still change). The enabling use is fmt's `...*any`
 > fast-path (`builtin.print`, §15.7; `claude-notes.md:252`): a string is a raw
 > char-slice, so recovering a string operand needs a slice target. Because the four
 > string spellings are distinct identities, a formatter enumerates one `case` per
