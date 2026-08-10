@@ -168,8 +168,8 @@ func main() {                               // no params, no results; no init() 
   aborts. Nothing is catchable.
 - Builtins are **keywords**: `make(T)`→`@T` · `make_slice(T, n)`→`@[]T` ·
   `box(v)`→`@T` · `cast` · `bit_cast` · `len` · `sizeof`/`alignof` ·
-  `present` · `same` · `unsafe_index`. `print`/`println` are transitional
-  debug output.
+  `present` · `same` · `unsafe_index`. The predeclared `print`/`println` are
+  **deprecated** (removal planned) — use `fmt.Print`/`Println`/`Printf`.
 
 ## Top traps (all compile-or-run differently than a Go eye expects)
 

@@ -54,7 +54,7 @@ every term they need is defined.
 | 13 | [Expressions](13-expressions.md) | normative | Stable (composite-literal defects flagged); type-assertion expr §13.8 implemented (§11.12) | `expr` |
 | 14 | [Statements](14-statements.md) | mixed | language rules Stable; 1 MAJOR impl defect flagged (inc/dec on non-ident lvalue) | `stmt` |
 | 14.8 | [Control-flow statements](14b-control-flow.md) | mixed | language rules Stable; a few open semantic items; type-switch stmt §14.10 implemented (§11.12) | `stmt` |
-| 15 | [Built-in Operations](15-builtin-operations.md) | mixed | mostly Stable (opaque-gate + VM-panic gaps flagged; print/println provisional) | `builtin` |
+| 15 | [Built-in Operations](15-builtin-operations.md) | mixed | mostly Stable (opaque-gate + VM-panic gaps flagged; print/println **Deprecated** — removal planned) | `builtin` |
 | 16 | [Packages and Program Structure](16-packages-and-program-structure.md) | mixed | Stable core | `pkg` |
 | 16.7 | [Annotations, Build Constraints, FFI](16b-build-constraints.md) | mixed | arch/os MVP; most predicates deferred | `pkg` |
 | 17 | [Program Initialization and Execution](17-program-initialization-and-execution.md) | mixed | Stable rules; entry/termination host-dependent; panic gaps flagged | `prog` |

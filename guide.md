@@ -528,8 +528,9 @@ pointer/slice/interface/function value set?) · `same(a, b)`→`bool` (identity
 of pointers/slices/interface values — the `io.EOF`-sentinel test) ·
 `unsafe_index(c, i)` (unchecked `c[i]`). These are reserved words — `make` is
 not the map/channel factory it is in Go (one type argument, no size), and
-none can be shadowed. `print`/`println` exist as transitional debug output;
-`fmt`-style formatting is a library.
+none can be shadowed. The predeclared `print`/`println` are **deprecated**
+(slated for removal) — use the `fmt` library (`fmt.Print`/`Println`/`Printf`,
+a `...*any` variadic).
 
 ## 15. What isn't in the language (and where it went)
 

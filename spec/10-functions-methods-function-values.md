@@ -105,15 +105,16 @@ way, and the remainder form the variadic argument (`func.variadic.pack` /
 `func.variadic.spread`).
 
 > _Note._ The only calls that accept a loose argument count are the predeclared
-> **heterogeneous-variadic** forms `print`/`println` (§15.7), which are checked
-> specially (each argument typed on its own, no fixed signature) and are **not**
-> `...T` variadic functions. `panic` is a **fixed** single-parameter function
-> (§15.7). General `...T` variadics (below) are **homogeneous** — every variadic
-> argument has the one element type `T` — so they do not subsume `print`/`println`,
-> whose arguments have no homogeneous concrete element type. (A `...*any` variadic
-> *is* the intended long-term form for `print`/`println`, dispatching per argument
-> via a type switch / reflection once those land — §15.7 `builtin.print`; it is
-> simply not a homogeneous `...T` over a concrete type.)
+> **heterogeneous-variadic** forms `print`/`println` (§15.7 — **Deprecated**,
+> superseded by the `fmt` library), which are checked specially (each argument
+> typed on its own, no fixed signature) and are **not** `...T` variadic
+> functions. `panic` is a **fixed** single-parameter function (§15.7). General
+> `...T` variadics (below) are **homogeneous** — every variadic argument has the
+> one element type `T` — so they do not subsume `print`/`println`, whose
+> arguments have no homogeneous concrete element type. (Their successor needs no
+> special form: `fmt`'s `...*any` variadic takes mixed arguments via implicit
+> `*any` boxing at the call site — §11.4 `iface.construct.value-borrow` — and
+> dispatches per argument at run time; §15.7 `builtin.print`.)
 
 `func.variadic.decl` — A function or method may declare its **final** parameter
 as **variadic**, written `name "..." T` (`...` before the element type). At most

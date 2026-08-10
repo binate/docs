@@ -112,6 +112,9 @@ recorded in Annex C — not in the per-chapter badge.)
   normative-in-intent.
 - **Reserved** — syntax or a feature is reserved with semantics not yet
   defined.
+- **Deprecated** — specified and implemented, but **slated for removal**: new
+  code must not use it, a superseding facility exists, and a future revision
+  removes both the feature and its spec text.
 
 **Axis 2 — implementation-conformance:** whether the current toolchain
 actually conforms to a rule. A known miscompile does **not** make a rule

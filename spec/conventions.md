@@ -45,6 +45,8 @@ Status is **orthogonal** to normative/informative. There are two axes:
 - **Provisional** — specified and implemented but may still change.
 - **Draft** — specified but partially/not implemented; still normative-in-intent.
 - **Reserved** — syntax/feature reserved, semantics not yet defined.
+- **Deprecated** — implemented but slated for removal; superseded, do not use
+  in new code.
 
 ### Implementation-conformance (does the current toolchain conform?)
 

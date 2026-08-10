@@ -1,6 +1,6 @@
 # 15. Built-in Operations
 
-> **Status:** mixed · **Maturity:** mostly Stable (`print`/`println` formatting is provisional)  
+> **Status:** mixed · **Maturity:** mostly Stable (`print`/`println` are **Deprecated** — superseded by the `fmt` library, removal planned; §15.7)  
 > **Rule-ID prefix:** `builtin`
 
 A **built-in operation** is invoked with call syntax but is not an ordinary
@@ -10,8 +10,9 @@ function. There are two kinds:
   syntax, several of which take a **type** as an argument (which an ordinary call
   cannot supply). Being keywords, they are **reserved** and cannot be shadowed.
 - Three **predeclared functions** — `print`, `println`, `panic` (§15.7) — which
-  are ordinary universe-scope identifiers (variadic, checked specially), and
-  therefore *can* be shadowed.
+  are ordinary universe-scope identifiers (checked specially), and therefore
+  *can* be shadowed. `print` and `println` are **Deprecated** (§15.7); `panic`
+  is a permanent part of the language.
 
 Several built-ins are specified in full elsewhere and only summarized here:
 `cast`/`bit_cast` conversion semantics in Ch.8, `sizeof`/`alignof` layout in
@@ -200,36 +201,34 @@ signature — successive arguments may have **different** types); `panic` has a
 **fixed** single-parameter signature (`builtin.panic`). These are **not** ordinary
 `...T` variadic functions (§10.3), which are **homogeneous** (one element type):
 `print`/`println` accept mixed argument types that no `...T` signature can express,
-so the general variadic feature does not subsume them; they remain compiler-provided
-**for now**. (`any` exists — §7.10 `type.iface.any` — so a `...*any` form is
-possible, but formatting each `any` needs runtime type recovery, a type switch or
-reflection, which is not yet built; `...*any` is the intended library form — see
-`builtin.print`'s note.) A **spread** argument `expr...`
+so the general variadic feature does not subsume them. Their successor does not
+need to: the **`...*any` library form** — an ordinary homogeneous variadic whose
+element is the raw interface value `*any`, boxed implicitly at the call site
+(§11.4 `iface.construct.value-borrow`) and dispatched at run time (§11.12) — is
+**landed** as the `fmt` library, and **`print`/`println` are Deprecated** in its
+favour (`builtin.print`). A **spread** argument `expr...`
 (§10.3) is **rejected** on `print`/`println`/`panic`: the spread applies only to a
 `...T` variadic parameter, which these forms do not have.
 
-`builtin.print` — `print(args…)` writes its arguments to standard output;
-`println(args…)` does the same followed by a newline. Multiple arguments are
-separated by a single space. Each argument is formatted by its type (integers in
-decimal, `bool` as `true`/`false`, a char slice/array as its bytes, floats in a
-fixed-point form).
+`builtin.print` — **Deprecated (removal planned).** `print(args…)` writes its
+arguments to standard output; `println(args…)` does the same followed by a
+newline. Multiple arguments are separated by a single space. Each argument is
+formatted by its type (integers in decimal, `bool` as `true`/`false`, a char
+slice/array as its bytes, floats in a fixed-point form). The exact output format
+was never a stable normative guarantee, and is not one now.
 
-> _Provisional._ `print`/`println` are a **transitional** facility. Their per-type
-> formatting (and the float format in particular) is bootstrap-grade, deliberately
-> not `%g`-compatible, and is implemented over temporary scaffolding. The intended
-> long-term path is to retire the compiler builtins in favour of an ordinary
-> **`...*any` library function** (§10.3) that dispatches per argument at **run
-> time**, in layers: a fast **type switch** (§11.12) over the built-in scalars /
-> char-slices (written directly, no allocation), then an interface assertion
-> `arg.(*Formattable)` for user types that opt into custom formatting, then
-> **reflection** (§20.3) for a struct/default rendering. It is **not** a
-> `...Formattable` parameter — Binate forbids adding methods to imported types
-> (§10.4 `func.method.receiver-base`), so a `Formattable` *constraint* could not
-> print a foreign type that had not already impl'd it; only `...*any` + runtime
-> dispatch prints an arbitrary value (as in Go's `fmt`, where `Stringer` is an
-> opt-in runtime check). Gated on type assertions/switches (§11.12) and reflection
-> (§20.3). The exact output format is therefore **not** a stable normative
-> guarantee (§20, `claude-todo.md`).
+> _Deprecated._ `print`/`println` were a **transitional** facility that predates
+> type switches, implicit `*any` boxing, and reflection; their superseding form —
+> an ordinary **`...*any` library variadic** dispatching per argument at run time
+> (a type-switch fast path over the built-in scalars / char-slices, then opt-in
+> custom formatting, then reflection; §10.3, §11.12, §20.3) — has **landed** as
+> the **`fmt` library** (`Print`, `Println`, `Printf`, `Sprint…`, `Fprint…` over
+> `...*any` and `@io.Writer`), and the toolchain and examples have migrated to
+> it. New code **must not** use `print`/`println`; write `fmt.Print`/`fmt.Println`.
+> The two predeclared names are retained **temporarily** for transition and **will
+> be removed** — a future revision deletes them from the universe scope and
+> removes this rule, after which the identifiers are ordinary undeclared names.
+> (`panic` is unaffected: it is a permanent predeclared function.)
 
 `builtin.panic` — `panic(msg *[]readonly char)` takes a **single** argument — the
 diagnostic message, a read-only raw char slice (a string literal passes directly,
@@ -241,10 +240,8 @@ values (§14.14), and `panic` is reserved for "this must never happen" aborts. A
 `panic(…)` expression statement is a control-flow **terminator** for the
 missing-return analysis (§14.13).
 
-> _Note (in progress)._ The single-argument `*[]readonly char` signature is
-> **decided**; the implementation is being reworked toward it. The current
-> shipping toolchain still treats `panic` as variadic (the same machinery as
-> `print`/`println`).
+> _Note._ The single-argument signature is enforced — a call with any other
+> arity is rejected ("panic takes exactly one argument").
 
 ## 15.8 Other built-ins
 
