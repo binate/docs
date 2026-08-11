@@ -1,6 +1,6 @@
 # 15. Built-in Operations
 
-> **Status:** mixed · **Maturity:** mostly Stable (`print`/`println` are **Deprecated** — superseded by the `fmt` library, removal planned; §15.7)  
+> **Status:** mixed · **Maturity:** mostly Stable  
 > **Rule-ID prefix:** `builtin`
 
 A **built-in operation** is invoked with call syntax but is not an ordinary
@@ -9,10 +9,8 @@ function. There are two kinds:
 - The eleven **keyword-builtins** (§15.1) — reserved keywords with special
   syntax, several of which take a **type** as an argument (which an ordinary call
   cannot supply). Being keywords, they are **reserved** and cannot be shadowed.
-- Three **predeclared functions** — `print`, `println`, `panic` (§15.7) — which
-  are ordinary universe-scope identifiers (checked specially), and therefore
-  *can* be shadowed. `print` and `println` are **Deprecated** (§15.7); `panic`
-  is a permanent part of the language.
+- One **predeclared function** — `panic` (§15.7) — an ordinary universe-scope
+  identifier (checked specially), and therefore *can* be shadowed.
 
 Several built-ins are specified in full elsewhere and only summarized here:
 `cast`/`bit_cast` conversion semantics in Ch.8, `sizeof`/`alignof` layout in
@@ -190,45 +188,22 @@ out-of-range index is **undefined** (Ch.21), not a trap. (Unlike `len`,
 `unsafe_index` accepts a raw pointer; also unlike `len`, it does not peel a
 named-distinct collection type — only an alias.)
 
-## 15.7 Predeclared functions: `print`, `println`, `panic`
+## 15.7 Predeclared function: `panic`
 
-`builtin.predeclared` — `print`, `println`, and `panic` are **predeclared
-functions** in the universe scope, not keyword-builtins: they lex as ordinary
-identifiers and may be **shadowed** by an in-scope binding, and all three yield no
-value. `print` and `println` are **heterogeneous-variadic** and checked specially
-(each argument is type-checked on its own, but there is no fixed parameter
-signature — successive arguments may have **different** types); `panic` has a
-**fixed** single-parameter signature (`builtin.panic`). These are **not** ordinary
-`...T` variadic functions (§10.3), which are **homogeneous** (one element type):
-`print`/`println` accept mixed argument types that no `...T` signature can express,
-so the general variadic feature does not subsume them. Their successor does not
-need to: the **`...*any` library form** — an ordinary homogeneous variadic whose
-element is the raw interface value `*any`, boxed implicitly at the call site
-(§11.4 `iface.construct.value-borrow`) and dispatched at run time (§11.12) — is
-**landed** as the `fmt` library, and **`print`/`println` are Deprecated** in its
-favour (`builtin.print`). A **spread** argument `expr...`
-(§10.3) is **rejected** on `print`/`println`/`panic`: the spread applies only to a
-`...T` variadic parameter, which these forms do not have.
+`builtin.predeclared` — `panic` is the **one predeclared function** in the
+universe scope. It is not a keyword-builtin: it lexes as an ordinary identifier
+and may be **shadowed** by an in-scope binding. It has a **fixed**
+single-parameter signature (`builtin.panic`) and yields no value; a call with
+any other arity is rejected ("panic takes exactly one argument"), and a
+**spread** argument `expr...` (§10.3) is likewise rejected (a spread applies
+only to a `...T` variadic parameter, which `panic` does not have).
 
-`builtin.print` — **Deprecated (removal planned).** `print(args…)` writes its
-arguments to standard output; `println(args…)` does the same followed by a
-newline. Multiple arguments are separated by a single space. Each argument is
-formatted by its type (integers in decimal, `bool` as `true`/`false`, a char
-slice/array as its bytes, floats in a fixed-point form). The exact output format
-was never a stable normative guarantee, and is not one now.
-
-> _Deprecated._ `print`/`println` were a **transitional** facility that predates
-> type switches, implicit `*any` boxing, and reflection; their superseding form —
-> an ordinary **`...*any` library variadic** dispatching per argument at run time
-> (a type-switch fast path over the built-in scalars / char-slices, then opt-in
-> custom formatting, then reflection; §10.3, §11.12, §20.3) — has **landed** as
-> the **`fmt` library** (`Print`, `Println`, `Printf`, `Sprint…`, `Fprint…` over
-> `...*any` and `@io.Writer`), and the toolchain and examples have migrated to
-> it. New code **must not** use `print`/`println`; write `fmt.Print`/`fmt.Println`.
-> The two predeclared names are retained **temporarily** for transition and **will
-> be removed** — a future revision deletes them from the universe scope and
-> removes this rule, after which the identifiers are ordinary undeclared names.
-> (`panic` is unaffected: it is a permanent predeclared function.)
+> _Note._ There is **no predeclared `print`/`println`** — the identifiers are
+> ordinary undeclared names. Console and formatted output belong to the `fmt`
+> library: ordinary `...*any` variadics (`fmt.Print` / `fmt.Println` /
+> `fmt.Printf`, §10.3) whose mixed-type arguments arrive via the implicit `*any`
+> borrow (§11.4 `iface.construct.value-borrow`) and are dispatched per argument
+> at run time (§11.12, §20.3).
 
 `builtin.panic` — `panic(msg *[]readonly char)` takes a **single** argument — the
 diagnostic message, a read-only raw char slice (a string literal passes directly,
@@ -239,9 +214,6 @@ yields no value. Binate has **no recoverable `panic`/`recover`**: errors are
 values (§14.14), and `panic` is reserved for "this must never happen" aborts. A
 `panic(…)` expression statement is a control-flow **terminator** for the
 missing-return analysis (§14.13).
-
-> _Note._ The single-argument signature is enforced — a call with any other
-> arity is rejected ("panic takes exactly one argument").
 
 ## 15.8 Other built-ins
 

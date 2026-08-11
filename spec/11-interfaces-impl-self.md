@@ -137,8 +137,8 @@ value is **never** implicit; it requires explicit `box(t)` (`iface.construct.box
 since an implicit managed box would be a hidden heap allocation.
 
 > _Provisional — implemented; the design may still change
-> (`proposal-implicit-any-borrow`)._ The enabling "boxing" half of the `...*any`
-> `fmt` direction (`builtin.print`, §15.7);
+> (`proposal-implicit-any-borrow`)._ The enabling "boxing" half of the `fmt`
+> library's `...*any` form (§15.7 note, §10.3);
 > its dual is the slice/scalar **recovery** in a type switch (§11.12
 > `iface.assert.slice`). Because the implicit lvalue borrow carries **no visible
 > `&`**, an escaping raw interface value built from a local is a use-after-free that
@@ -393,7 +393,7 @@ structural spelling and its **destructor** the slice's element-drop.
 > production (§11.12 grammar; canonical `binate.ebnf`) carries the slice-type
 > alternative. The rule is **Provisional** on the stability axis (§4.4): implemented
 > and conformance-green (design may still change). The enabling use is fmt's `...*any`
-> fast-path (`builtin.print`, §15.7; `claude-notes.md:252`): a string is a raw
+> fast-path (§15.7 note; `claude-notes.md:252`): a string is a raw
 > char-slice, so recovering a string operand needs a slice target. Because the four
 > string spellings are distinct identities, a formatter enumerates one `case` per
 > spelling it accepts — a library concern, not a language one.

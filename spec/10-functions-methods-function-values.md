@@ -104,17 +104,12 @@ zero arguments (`func f()` called as `f(1, 2)` is "too many arguments"). For a
 way, and the remainder form the variadic argument (`func.variadic.pack` /
 `func.variadic.spread`).
 
-> _Note._ The only calls that accept a loose argument count are the predeclared
-> **heterogeneous-variadic** forms `print`/`println` (§15.7 — **Deprecated**,
-> superseded by the `fmt` library), which are checked specially (each argument
-> typed on its own, no fixed signature) and are **not** `...T` variadic
-> functions. `panic` is a **fixed** single-parameter function (§15.7). General
-> `...T` variadics (below) are **homogeneous** — every variadic argument has the
-> one element type `T` — so they do not subsume `print`/`println`, whose
-> arguments have no homogeneous concrete element type. (Their successor needs no
-> special form: `fmt`'s `...*any` variadic takes mixed arguments via implicit
-> `*any` boxing at the call site — §11.4 `iface.construct.value-borrow` — and
-> dispatches per argument at run time; §15.7 `builtin.print`.)
+> _Note._ There is no heterogeneous-variadic call form: every call — including
+> the predeclared `panic`, a **fixed** single-parameter function (§15.7) — binds
+> a fixed signature, and `...T` variadics (below) are **homogeneous** (one
+> element type). Mixed-type argument lists need no special form: `fmt`'s
+> `...*any` variadics take them via the implicit `*any` borrow at the call site
+> (§11.4 `iface.construct.value-borrow`), dispatching per argument at run time.
 
 `func.variadic.decl` — A function or method may declare its **final** parameter
 as **variadic**, written `name "..." T` (`...` before the element type). At most

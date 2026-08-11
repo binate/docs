@@ -35,7 +35,8 @@ func main() {                               // no params, no results; no init() 
     var s @[]char = "hi"                    // owned copy; @[]readonly char would view static data
     for i, c in s { _ = i; _ = c }          // range keyword is `in`; ONE var binds the VALUE
     var sh *Shape = &Point{3, 4}            // interface value (2 words); construction borrows
-    println(sh.Area())
+    var area float64 = sh.Area()            // dynamic dispatch through the vtable
+    _ = area                                // (printing lives in the fmt library)
 }
 ```
 
@@ -168,8 +169,9 @@ func main() {                               // no params, no results; no init() 
   aborts. Nothing is catchable.
 - Builtins are **keywords**: `make(T)`→`@T` · `make_slice(T, n)`→`@[]T` ·
   `box(v)`→`@T` · `cast` · `bit_cast` · `len` · `sizeof`/`alignof` ·
-  `present` · `same` · `unsafe_index`. The predeclared `print`/`println` are
-  **deprecated** (removal planned) — use `fmt.Print`/`Println`/`Printf`.
+  `present` · `same` · `unsafe_index`. There is **no predeclared
+  `print`/`println`** — output is the `fmt` library
+  (`fmt.Print`/`Println`/`Printf`); `panic` is the one predeclared function.
 
 ## Top traps (all compile-or-run differently than a Go eye expects)
 

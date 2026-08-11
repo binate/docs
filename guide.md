@@ -407,11 +407,11 @@ source (`*I` can't yield `@T`; you can't mint a refcount from a borrow):
 var v @any = box(makeSomething())   // @any: all three recovery kinds legal below
 n, ok := v.(*int)             // comma-ok; never aborts
 switch x := v.(type) {
-case *int:      println(*x)
+case *int:      useInt(*x)
 case @Circle:   use(x)
 case *[]readonly char: write(x)   // slice targets: structural identity
 case *Shape:    x.Area()          // interface target: satisfaction
-default:        println("?")
+default:        write("?")
 }
 ```
 
@@ -528,9 +528,9 @@ pointer/slice/interface/function value set?) · `same(a, b)`→`bool` (identity
 of pointers/slices/interface values — the `io.EOF`-sentinel test) ·
 `unsafe_index(c, i)` (unchecked `c[i]`). These are reserved words — `make` is
 not the map/channel factory it is in Go (one type argument, no size), and
-none can be shadowed. The predeclared `print`/`println` are **deprecated**
-(slated for removal) — use the `fmt` library (`fmt.Print`/`Println`/`Printf`,
-a `...*any` variadic).
+none can be shadowed. There is **no predeclared `print`/`println`** — console
+and formatted output is the `fmt` library (`fmt.Print`/`Println`/`Printf`,
+ordinary `...*any` variadics; `panic` is the one predeclared function).
 
 ## 15. What isn't in the language (and where it went)
 

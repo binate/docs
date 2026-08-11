@@ -43,7 +43,7 @@ identifier    = letter { letter | digit } ;
                uint8  uint16  uint32  uint64  bool  byte  char  any
                float32  float64
     Constant:  iota   (significant only inside a grouped const block)
-    Functions: print  println  panic                                     *)
+    Functions: panic                                                     *)
 
 (* --- Integer literals --- *)
 (* A "0"-prefixed run of digits (e.g. 0123) is not a decimal literal; the
@@ -469,8 +469,8 @@ Element       = [ Expression ":" ] Expression ;
 
 (* Built-ins are keywords with fixed call shapes, distinct from ordinary calls.
    `make(T)` zero-initializes a value; `make_slice(T, n)` allocates a
-   runtime-sized slice.  `panic`, `print`, and `println` are predeclared
-   FUNCTIONS, not built-ins — they are ordinary calls on an identifier. *)
+   runtime-sized slice.  `panic` is a predeclared FUNCTION, not a built-in —
+   it is an ordinary call on an identifier. *)
 BuiltinCall   = "make" "(" Type ")"
               | "make_slice" "(" Type "," Expression ")"
               | "box" "(" Expression ")"

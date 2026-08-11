@@ -129,9 +129,8 @@ currently diagnosed**.
 `decl.scope.levels` — There are these scope levels, innermost last:
 
 - **universe** — the predeclared scalar **type** names (Ch.5), the predeclared
-  interface `any` (Ch.7), and the predeclared functions `print`, `println`
-  (both Deprecated, §15.7), and `panic` — all of which may be shadowed by an
-  inner declaration. (The constant
+  interface `any` (Ch.7), and the predeclared function `panic` (§15.7) — all of
+  which may be shadowed by an inner declaration. (The constant
   keywords `true`/`false`/`nil` and the builtin-operation keywords such as
   `make`/`len` are reserved, not shadowable; and `iota` is recognized only inside
   a grouped const block, not a universe binding; §9.1.)
