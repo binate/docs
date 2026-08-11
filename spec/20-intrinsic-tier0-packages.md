@@ -8,8 +8,7 @@ they are bound to the language itself rather than layered on top of it, and this
 specification defines their normative `.bni` surfaces. They are distinguished
 from the **standard library** (tier 1), which is a separate, dependent *sibling*
 specification — still in early design and **not** defined here; the core spec
-only reserves a pointer to it (Ch.1). `pkg/bootstrap` is temporary scaffolding
-and is **not** part of the language.
+only reserves a pointer to it (Ch.1).
 
 `pkg0.tier0` — The tier-0 packages are exactly five, each carrying its **own**
 maturity status:

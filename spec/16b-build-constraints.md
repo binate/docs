@@ -151,8 +151,8 @@ a confusing "undefined" far from the cause.
 
 `pkg.extern` — An **extern** declaration is a `.bni` declaration with no body
 (§16.5): a body-less function or an initializer-less `var`. Its implementation is
-supplied by the package's `.bn`, or — for platform primitives (the `bootstrap`
-package's I/O and allocation entry points) — by the runtime/host. There is no
+supplied by the package's `.bn`, or — for a platform primitive — by the
+runtime/host. There is no
 `extern` keyword and no `#[extern]`/`#[no_mangle]` annotation; externness is
 conferred by the body-less `.bni` form.
 

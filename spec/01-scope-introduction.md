@@ -81,7 +81,6 @@ It is therefore specified as **several documents**:
   core spec only reserves a pointer to it.
 - **Out of scope, each its own concern:** the **package manager**, the
   **toolchain**, and the **interpreter embedding API** (Ch.19).
-- **Not part of the language:** `pkg/bootstrap` is temporary scaffolding.
 
 **Why the split.** Binate targets environments with no console, filesystem,
 process model, or threads. A core specification free of standard-library and I/O
