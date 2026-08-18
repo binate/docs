@@ -33,8 +33,8 @@ identifier    = letter { letter | digit } ;
               an ordinary identifier everywhere else                        *)
 
 (* --- Keyword built-ins (operations with special call syntax; see BuiltinCall) --- *)
-(*  make      make_slice  box       cast      bit_cast  len
-    sizeof    alignof     present   same      unsafe_index
+(*  make      make_slice  box       cast      bit_cast  unsafe_cast
+    len       sizeof      alignof   present   same      unsafe_index
     unsafe_div  unsafe_rem  unsafe_shl  unsafe_shr  _func_handle  __c_call
     __c_global *)
 
@@ -476,6 +476,7 @@ BuiltinCall   = "make" "(" Type ")"
               | "box" "(" Expression ")"
               | "cast" "(" Type "," Expression ")"
               | "bit_cast" "(" Type "," Expression ")"
+              | "unsafe_cast" "(" Type "," Expression ")"
               | "len" "(" Expression ")"
               | "sizeof" "(" Type ")"
               | "alignof" "(" Type ")"

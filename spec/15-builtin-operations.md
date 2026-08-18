@@ -6,7 +6,7 @@
 A **built-in operation** is invoked with call syntax but is not an ordinary
 function. There are two kinds:
 
-- The eleven **keyword-builtins** (§15.1) — reserved keywords with special
+- The twelve **keyword-builtins** (§15.1) — reserved keywords with special
   syntax, several of which take a **type** as an argument (which an ordinary call
   cannot supply). Being keywords, they are **reserved** and cannot be shadowed.
 - One **predeclared function** — `panic` (§15.7) — an ordinary universe-scope
@@ -27,6 +27,7 @@ BuiltinCall = "make" "(" Type ")"
             | "box" "(" Expression ")"
             | "cast" "(" Type "," Expression ")"
             | "bit_cast" "(" Type "," Expression ")"
+            | "unsafe_cast" "(" Type "," Expression ")"
             | "len" "(" Expression ")"
             | "unsafe_index" "(" Expression "," Expression ")"
             | "sizeof" "(" Type ")"
@@ -35,13 +36,13 @@ BuiltinCall = "make" "(" Type ")"
             | "same" "(" Expression "," Expression ")" ;
 ```
 
-`builtin.reserved` — Each of these eleven names is a **reserved keyword**: it
+`builtin.reserved` — Each of these twelve names is a **reserved keyword**: it
 always lexes as the built-in, so a program cannot declare a variable, function,
 or type with that name. (Contrast the predeclared functions of §15.7, which are
 ordinary identifiers and may be shadowed.) A built-in that takes a **type**
-argument (`make`, `make_slice`, `cast`, `bit_cast`, `sizeof`, `alignof`) parses
-that argument as a type, not an expression; this is the reason these cannot be
-ordinary functions.
+argument (`make`, `make_slice`, `cast`, `bit_cast`, `unsafe_cast`, `sizeof`,
+`alignof`) parses that argument as a type, not an expression; this is the reason
+these cannot be ordinary functions.
 
 `builtin.result-types` — The result type of each built-in:
 
@@ -52,6 +53,7 @@ ordinary functions.
 | `box(v)` | a value | `@T` (T = default type of `v`) |
 | `cast(T, e)` | a type + a value | `T` |
 | `bit_cast(T, e)` | a type + a value | `T` |
+| `unsafe_cast(T, e)` | a type + a value | `T` |
 | `len(e)` | a value | `int` (signed) |
 | `unsafe_index(c, i)` | a value + an integer | the element type of `c` |
 | `sizeof(T)` | a type | `uint` (unsigned) |
@@ -103,23 +105,36 @@ over a *concrete* underlying stays allowed. The diagnostics are "cannot make a
 value of an opaque type", "cannot make_slice with an opaque element type", and
 "cannot take sizeof/alignof of an opaque type".
 
-## 15.3 Conversion: `cast`, `bit_cast`
+## 15.3 Conversion: `cast`, `bit_cast`, `unsafe_cast`
 
 `builtin.cast` — `cast(T, e)` converts the value `e` to type `T` and yields `T`.
-The conversion semantics — integer wrap/truncate and sign/zero extension,
-float↔int (with the saturating float→int contract), and the `readonly` drop —
-are specified in Ch.8 (`conv.cast`). At the type-checking layer a `cast` of a
-*non-constant* operand is **unchecked** (the checker returns `T` without
-validating convertibility); a **constant** operand is fit-checked against `T` and
-is not laundered (§8.5 `conv.cast.const-not-laundered`).
+It performs only **safe** conversions — everything assignable plus the explicit
+safe conversions (numeric scalar, named↔underlying, constant typing, aggregate
+retype), specified in Ch.8 (`conv.cast`). A `cast` outside that set is a
+**compile-time error** naming the correct alternative (`unsafe_cast`, `bit_cast`,
+a type assertion, or explicit construction); a **constant** operand is fit-checked
+against `T` and is not laundered (§8.5 `conv.cast.safe`,
+`conv.cast.const-not-laundered`).
 
 `builtin.bit-cast` — `bit_cast(T, e)` reinterprets the bits of `e` as type `T`
-with **no** value conversion, yielding `T` — the "I know what I am doing" escape
-hatch (§8.6). It is the sanctioned tool for moving between a typed pointer and
-the opaque byte pointer `*uint8`, and between scalar bit patterns of the same
-width. Like `cast`, it is unchecked at the type layer; reinterpreting between
-different sizes, or in a way that violates a type's invariants, is undefined
-(Ch.21).
+with **no** value conversion, yielding `T` — the low-level "I know what I am
+doing" escape hatch (§8.6). It is permitted iff `sizeof(source) == sizeof(T)`
+(the **proximal**, top-level size — not element-wise), and takes **no** reference.
+It is the sanctioned tool for moving between a typed pointer and the opaque byte
+pointer `*uint8`, between scalar bit patterns of the same width, and between a
+slice/aggregate and its explicit aggregate form. A different-size `bit_cast` is a
+compile-time error; a same-size one whose source alignment does not meet the
+target's, or that violates a type's invariants, is undefined (Ch.21).
+
+`builtin.unsafe-cast` — `unsafe_cast(T, e)` is the **possibly-unsafe** superset of
+`cast` (`cast ⊆ unsafe_cast`), yielding `T` (§8.7 `conv.unsafe-cast`). It accepts
+everything `cast` does, plus the *unverifiable* conversions `cast` rejects: drop
+element-level `readonly`, raw pointer → managed pointer (`*T → @T`), unchecked
+interface **narrowing** (contrast the checked `x.(T)`), and invariant-breaking
+scalar directions. For the conversions it shares with `cast` it behaves exactly
+like `cast` (including any `RefInc`); its additional conversions are
+reference-count-neutral reinterpretations whose correctness the programmer
+guarantees (a false assertion is undefined, Ch.21).
 
 ## 15.4 Size and length: `len`, `sizeof`, `alignof`
 

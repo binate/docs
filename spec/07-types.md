@@ -145,10 +145,12 @@ identity: a named struct is identified by its package-qualified name (e.g.
 `pkg/foo.Box`), a named non-struct distinct type by the wrapper's own name. Two
 cross-package types with the same short name are distinct.
 
-> _Note (cast is unchecked at this layer)._ The "requires `cast`" rule is
+> _Note (cast is safe/gated at this layer)._ The "requires `cast`" rule is
 > enforced *negatively* — implicit assignment across a distinct-type boundary is
-> rejected. The `cast` built-in itself performs no source/target convertibility
-> check at the type-checking layer; `cast(T, x)` yields `T` (Ch.8, Ch.15).
+> rejected, and an explicit `cast` crosses it (a named↔underlying or single-named
+> composite crossing is one of `cast`'s **safe** conversions, Ch.8
+> `conv.cast.safe`). `cast(T, x)` yields `T`; a conversion outside the safe set is a
+> compile-time error that points to `unsafe_cast` / `bit_cast` (Ch.8, Ch.15).
 
 ## 7.4 Structs
 
@@ -233,7 +235,8 @@ backing; an empty (`lo == hi`) sub-slice is the no-backing empty (§7.7).
 
 `type.slice.readonly-element` — A slice may carry a `readonly` element type
 (`*[]readonly char`, `@[]readonly char`). Element-level `readonly` is a
-capability: adding it is allowed, dropping it requires a `cast` (§7.11). String
+capability: adding it is allowed, dropping it requires an `unsafe_cast` (§7.11,
+§8.7). String
 literals have natural type `[N]readonly char` and default type `@[]readonly char`
 (Ch.6); their permitted targets are `@[]readonly char`, `@[]char` (allocate +
 copy), `*[]readonly char`, and a matching-length char array `[N]readonly char`
@@ -403,7 +406,8 @@ outermost `readonly` are assignable both ways.
 pointer, slice, or array handle) is a **capability**. *Adding* element-level
 `readonly` is allowed (`*T` → `*readonly T`, `@[]T` → `@[]readonly T`).
 *Dropping* it is rejected (`*readonly T` → `*T`, `@[]readonly T` → `@[]T` require
-a `cast`). The managed→raw decay paths carry the same element-`readonly` check.
+an `unsafe_cast`; §8.7). The managed→raw decay paths carry the same
+element-`readonly` check.
 
 `type.readonly.object-dispatch` — Method dispatch keys off **object**-readonly,
 not handle-readonly. A read-only object (`*readonly Box`, `@(readonly Box)`, or a
@@ -419,10 +423,12 @@ in the body); it is not part of the function's type signature and is ignored for
 signature matching and function-value assignability. Element-level `readonly`
 inside a parameter type still matters.
 
-`type.readonly.cast-drops` — `cast(T, x)` yields `T` regardless of the source's
-`readonly`-ness — it is the sanctioned way to drop element-level `readonly`
-(which implicit assignment rejects), and may combine a `readonly` drop with a
-width or pointer-target change. There is no separate `const_cast`.
+`type.readonly.cast-drops` — `cast(T, x)` yields exactly `T`, so it adjusts
+**outermost** `readonly` freely (that adjustment is also implicit, §8.3). Dropping
+**element-level** `readonly` (behind a shared pointer/slice/array handle) is **not**
+a `cast`, however — it is the unverifiable `const_cast`-like operation (another live
+handle may rely on the `readonly` view) and requires **`unsafe_cast`** (§8.5, §8.7
+`conv.unsafe-cast`).
 
 `type.readonly.vs-const` — `readonly` (type modifier) and `const` (compile-time
 constant, Ch.9) are distinct. A `const` has no storage and no address (`&` of it

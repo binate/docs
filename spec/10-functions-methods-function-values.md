@@ -172,8 +172,8 @@ order is unspecified; §3.1).
 be supplied as a single **spread** `expr "..."` as the **final** argument, where
 `expr` is a **slice** (raw or managed) **assignable to `*[]T`** (an `@[]T`
 **decays** to `*[]T`, §7.6 `type.slice.decay`; element-`readonly` follows the
-capability lattice — adding `readonly` is allowed, **dropping** it requires a
-`cast`; §7.11 `type.readonly.lattice-element`). The operand must be a **slice**,
+capability lattice — adding `readonly` is allowed, **dropping** it requires an
+`unsafe_cast`; §7.11 `type.readonly.lattice-element`, §8.7). The operand must be a **slice**,
 not an array — sub-slice an array first (`arr[:]...`; a string literal has array
 type `[N]readonly char`, so spread it as `lit[:]...`). The spread **forwards the
 slice's `{data, len}` directly** — no copy, no allocation; a `len == 0` slice

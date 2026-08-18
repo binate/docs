@@ -146,7 +146,8 @@ detectable fault for a silent leak, which is worse (§18.7).
 |------|------|
 | Using a **raw borrow** (`*T`, `*[]T`) after the managed value it borrows from is released — a **use-after-free** | §18.7 `mem.raw-uaf` |
 | Dereferencing a **dangling** `*T`, or breaking refcount invariants through **raw aliasing** | §18.7 `mem.cycles`, `mem.determinism` |
-| `bit_cast(T, x)` out of contract — reinterpreting between different sizes, or in a way that violates a type's invariants | §8.6 `conv.bit-cast`; §15.3 `builtin.bit-cast` |
+| `bit_cast(T, x)` out of contract — a **same-size** reinterpret whose source **alignment** does not meet the target's, or that **violates a type invariant** (e.g. a slice `len` / element-size mismatch). A **different**-proximal-size `bit_cast` is a compile-time **error**, not UB. | §8.6 `conv.bit-cast`; §15.3 `builtin.bit-cast` |
+| `unsafe_cast(T, x)` with a **false assertion** — `*T → @T` where the pointee has no management header at `−2W`, or an **unchecked interface narrowing** (`@I → @T`) to the wrong dynamic type | §8.7 `conv.unsafe-cast`; §15.3 `builtin.unsafe-cast` |
 | `unsafe_div` / `unsafe_rem` on a **zero** or signed **`MIN / -1`** divisor (the guard-free `/` and `%`) | §13.4 `expr.arith.unsafe`; §15.8 `builtin.internal` |
 | `unsafe_index(c, i)` with an **out-of-range** index (the bounds-check-free indexed access) | §15.6 `builtin.unsafe-index`; §13.9 `expr.index.bounds` |
 | Behavioral **mode-dependence** of a defined operation **beyond** the one-indirection cost of crossing modes (any such dependence is otherwise a defect, §21.9) | §19.4 `exec.interop.funcval` |
