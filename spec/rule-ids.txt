@@ -60,7 +60,8 @@ const.float.untyped	positive	06-constants.md
 const.int.range	constraint-candidate	06-constants.md
 const.int.sign	positive	06-constants.md
 const.overflow	constraint-candidate	06-constants.md
-const.string.types	positive	06-constants.md
+const.string.compare	positive	06-constants.md
+const.string.types	constraint-candidate	06-constants.md
 const.untyped	positive	06-constants.md
 const.untyped.coercion	positive	06-constants.md
 conv.assignable	positive	08-conversions.md

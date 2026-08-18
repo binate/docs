@@ -140,6 +140,12 @@ the negation. A struct or array containing a non-comparable component (e.g. a
 function-typed field) is itself not comparable. The relational operators (`<`, `>`,
 `<=`, `>=`) are never defined on aggregates (`expr.compare.relational`).
 
+A **string literal** compared to a comparable char array adopts the array's type
+(§6.6 `const.string.compare`) and so compares element-wise under this rule; two
+string literals default to `@[]readonly char`, and a string literal against a slice
+adopts that slice — either way a slice, so *not* comparable
+(`expr.compare.incomparable`).
+
 `expr.compare.relational` — `<`, `>`, `<=`, `>=` require **numeric** operands
 (integer or floating-point, including named types over a numeric underlying) and
 yield a `bool`; they are not defined on pointers or aggregates. **No chaining**:

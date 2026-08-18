@@ -137,20 +137,36 @@ managed-slice view of the static data). Its assignable targets are:
 | `@[]readonly char` | managed-slice borrowing the static data (zero cost) — the default |
 | `*[]readonly char` | raw slice borrowing the static data |
 | `@[]char` | allocate and copy (a mutable owned copy) |
-| `[M]readonly char` / `[M]char` | array copy into a fixed buffer of length **M ≥ N**; the `N` bytes are copied and any tail (`M − N`) is **zero-padded** |
+| `[M]readonly char` / `[M]char` | array copy; **exact** length `M = N` in general — a **variable-declaration or struct-literal initializer** additionally accepts a *shorter* literal (`M > N`), copying the `N` bytes and **zero-padding** the tail (`M − N`) |
 
-For the array targets, the literal's `N` bytes must *fit* — `M ≥ N`. An exact
-fit (`M = N`) copies all bytes; a larger buffer (`M > N`) zero-pads the
-remaining elements (a fixed-size string buffer initialized from a shorter
-literal). An **over-long** literal (`N > M`) does not fit and is a compile-time
-error. This is a *literal-only* convenience: it applies when the source is
-syntactically a string literal, not to an arbitrary `[N]readonly char` value
-(whose array-copy rules require an exact length match — Ch.7).
+For an array target the literal's `N` bytes must *fit*. At a **variable-declaration
+or struct-literal initializer** a shorter literal is allowed (`M ≥ N`): an exact fit
+(`M = N`) copies all bytes and a larger buffer (`M > N`) zero-pads the tail (`M − N`)
+— a fixed-size string buffer initialized from a shorter literal. In **any other**
+position (a `return`, call argument, plain assignment, or comparison) the length
+must be **exact** (`M = N`). An **over-long** literal (`N > M`) never fits and is a
+compile-time error. The `M > N` zero-pad is an *initializer-only, literal-only*
+convenience: it applies only when the source is syntactically a string literal, never
+to an arbitrary `[N]readonly char` value (whose array copy always requires an exact
+length match — Ch.7).
 
 Assigning a string literal to `*[]char` is **not** permitted (a raw slice
 cannot own a mutable copy, and a mutable borrow of read-only static data is
 unsound). There is no `string` type; these rules generalize the slice/array
 literal rules (Ch.7, Ch.13).
+
+`const.string.compare` — In an `==` / `!=` comparison a string literal takes the
+**other operand's** type, exactly as any untyped constant does (§6.1). Against a
+comparable **char array** `[N]char` (including a `readonly`-element array or a named
+type over one) it therefore compares **element-wise** at **exact** length `N` (§13.6
+`expr.compare.aggregate`) — `arr == "abc"` tests whether `arr` holds those bytes, in
+either operand order and as a `switch` case; a length mismatch is a type error, not a
+comparison. Against **another string literal** neither side has a concrete peer to
+adopt, so each takes its default `@[]readonly char` — a slice, which is **not
+comparable** with `==` / `!=` (§13.6 `expr.compare.incomparable`); `"a" == "b"` is
+rejected. Against a **slice** operand the literal adopts that slice type, likewise
+not comparable. (There is no `string` type; comparing arbitrary string *contents*
+compares the char values.)
 
 `const.char.type` — A character literal has type **`char`**, which **is**
 `uint8` (Ch.7) — not a distinct named type. It is a *typed* constant, so it is
