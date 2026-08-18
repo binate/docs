@@ -109,9 +109,8 @@ so it must be **constructed** explicitly, not cast (`*[]T → @[]T` is under-det
 
 > _Draft (redesign in progress)._ The safe-set **gate** (`conv.cast.safe`), the
 > aggregate retype (`conv.cast.aggregate-retype`), and the companion `unsafe_cast`
-> built-in (§8.7) are specified ahead of the implementation, which lands in staged
-> phases (`explorations/plan-cast-bitcast-unsafecast.md`). Until then `cast` is
-> realized in the older ungated form, so a `cast` outside the safe set below is
+> built-in (§8.7) are specified ahead of the implementation. Until it lands, `cast`
+> is realized in the older ungated form, so a `cast` outside the safe set below is
 > currently a latent defect (a silent miscompile), not yet the compile-time error
 > specified here.
 
@@ -151,10 +150,10 @@ conversions, the named↔underlying scalar crossing, constant typing
   `float64`); §8.2 requires a `cast` here.
 
 `cast` does **not** drop element-level `readonly` — that moves to `unsafe_cast`
-(§8.7). A `cast` yields exactly `T`, and outermost `readonly` on the whole value is
-adjusted freely (it is implicit, part 1); but a `T` that removes `readonly` from
-behind a shared pointer/slice/array handle — `*readonly U → *U`, `@[]readonly U →
-@[]U` — is **not** in the safe set (§8.3).
+(§8.7). (Outermost `readonly` on the whole value needs no `cast`: it is adjusted
+implicitly in both directions — part 1 above, §8.3.) A `T` that removes `readonly`
+from behind a shared pointer/slice/array handle — `*readonly U → *U`, `@[]readonly U
+→ @[]U` — is **not** in the safe set (§8.3).
 
 `conv.cast.safe` — A `cast` whose (source, target) pair is outside the accepted set
 above is a **compile-time error** (the checker validates the pair; this replaces the
@@ -232,8 +231,7 @@ element direction (§8.7), or convert element-by-element.
 > values are not a valid `bool` bit pattern) and needs `unsafe_cast`. Making
 > `bool → {every integer and float type}` a first-class *value widening* (beyond the
 > same-size `bool → int8`/`uint8` the leaf rule already gives) is a tracked
-> follow-up (`explorations/plan-cast-bitcast-unsafecast.md`), orthogonal to this
-> section.
+> follow-up, orthogonal to this section.
 
 `conv.cast.float-int-saturation` — **Float → integer at the out-of-range /
 non-finite edge saturates** to a single value defined identically across every
@@ -280,8 +278,7 @@ counts a span twice the backing) — is **undefined** (Ch.21).
 ## 8.7 `unsafe_cast` — possibly-unsafe conversion
 
 > _Draft (redesign in progress)._ `unsafe_cast` is specified ahead of its
-> implementation (`explorations/plan-cast-bitcast-unsafecast.md`); it does not yet
-> exist as a built-in in the current tree.
+> implementation; it does not yet exist as a built-in in the current tree.
 
 `conv.unsafe-cast` — `unsafe_cast(T, x)` is the **possibly-unsafe** companion of
 `cast` (Ch.15); its result type is `T`. It accepts a **superset** of `cast`

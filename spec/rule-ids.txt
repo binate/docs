@@ -512,7 +512,7 @@ type.ptr.managed-to-raw	positive	07-types.md
 type.ptr.nullability	positive	07-types.md
 type.ptr.opaque-byte	positive	07-types.md
 type.ptr.semantics	positive	07-types.md
-type.readonly.cast-drops	positive	07-types.md
+type.readonly.drop	positive	07-types.md
 type.readonly.lattice-element	constraint-candidate	07-types.md
 type.readonly.lattice-outer	positive	07-types.md
 type.readonly.object-dispatch	positive	07-types.md

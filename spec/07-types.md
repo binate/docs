@@ -423,12 +423,14 @@ in the body); it is not part of the function's type signature and is ignored for
 signature matching and function-value assignability. Element-level `readonly`
 inside a parameter type still matters.
 
-`type.readonly.cast-drops` — `cast(T, x)` yields exactly `T`, so it adjusts
-**outermost** `readonly` freely (that adjustment is also implicit, §8.3). Dropping
-**element-level** `readonly` (behind a shared pointer/slice/array handle) is **not**
-a `cast`, however — it is the unverifiable `const_cast`-like operation (another live
-handle may rely on the `readonly` view) and requires **`unsafe_cast`** (§8.5, §8.7
-`conv.unsafe-cast`).
+`type.readonly.drop` — **Outermost** `readonly` on a whole value needs no
+conversion built-in: it is adjusted **implicitly** in both directions (`T` ↔
+`readonly T`, §8.3). Dropping **element-level** `readonly` (behind a shared
+pointer/slice/array handle — `*readonly U` → `*U`, `@[]readonly U` → `@[]U`) is a
+different matter: it is the unverifiable `const_cast`-like operation (another live
+handle may rely on the `readonly` view), so it is **not** a plain `cast` — it
+requires **`unsafe_cast`** (§8.7 `conv.unsafe-cast`). There is no separate
+`const_cast`.
 
 `type.readonly.vs-const` — `readonly` (type modifier) and `const` (compile-time
 constant, Ch.9) are distinct. A `const` has no storage and no address (`&` of it
