@@ -145,6 +145,10 @@ conversions, the named↔underlying scalar crossing, constant typing
   a magnitude above the target type's range (including `+Inf`) yields its `MAX`,
   below its range (including `-Inf`) yields its `MIN` (`0` for unsigned), and `NaN`
   yields `0` (`conv.cast.float-int-saturation` below; catalogued in §21.7).
+- **`bool` → numeric:** a `bool` converts to any integer or floating-point type,
+  yielding `0` or `1` — a defined, total widening. The **reverse** (`numeric →
+  bool`) is **not** a `cast`: a value outside `{0, 1}` is not a valid `bool`, so
+  that direction is unverifiable and requires `unsafe_cast` (§8.7).
 - **Named ↔ underlying:** a named type converts to and from its underlying, and
   between two named types with the same underlying (`Celsius` ↔ `float64`, or two
   structs sharing one layout); §8.2 requires a `cast` here. This holds for **any**
@@ -227,13 +231,14 @@ a `cast`: use `bit_cast` for a pure reinterpret (§8.6), `unsafe_cast` for the u
 element direction (§8.7), or convert element-by-element.
 
 > _Note (leaf rule)._ Condition (2) is the general **leaf-conversion** test: a
-> scalar/element conversion qualifies for `cast` iff it is total and bit-preserving.
-> It is deliberately **asymmetric** for `bool` — `bool → int8` is a cast (`0`/`1`
-> are valid `int8`, and `cast == bit_cast`), while `int8 → bool` is not (most `int8`
-> values are not a valid `bool` bit pattern) and needs `unsafe_cast`. Making
-> `bool → {every integer and float type}` a first-class *value widening* (beyond the
-> same-size `bool → int8`/`uint8` the leaf rule already gives) is a tracked
-> follow-up, orthogonal to this section.
+> scalar/element conversion qualifies for a container `cast` iff it is total and
+> **bit-preserving**. It is deliberately **asymmetric** for `bool` — `bool → int8`
+> is bit-preserving (`0`/`1` are valid `int8`, `cast == bit_cast`), while `int8 →
+> bool` is not (most `int8` values are not a valid `bool` bit pattern) and needs
+> `unsafe_cast`. Note this element/leaf bit-preservation is stricter than the scalar
+> `bool → numeric` conversion above: `bool → float32` is a valid **scalar** `cast`
+> (a defined widening) but not a **bit-preserving element** retype, so `@[]bool →
+> @[]float32` is not a container `cast`.
 
 `conv.cast.float-int-saturation` — **Float → integer at the out-of-range /
 non-finite edge saturates** to a single value defined identically across every
