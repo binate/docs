@@ -145,9 +145,11 @@ conversions, the named↔underlying scalar crossing, constant typing
   a magnitude above the target type's range (including `+Inf`) yields its `MAX`,
   below its range (including `-Inf`) yields its `MIN` (`0` for unsigned), and `NaN`
   yields `0` (`conv.cast.float-int-saturation` below; catalogued in §21.7).
-- **Named ↔ underlying (scalar):** a named scalar converts to and from its
-  underlying, and between two named types with the same underlying (`Celsius` ↔
-  `float64`); §8.2 requires a `cast` here.
+- **Named ↔ underlying:** a named type converts to and from its underlying, and
+  between two named types with the same underlying (`Celsius` ↔ `float64`, or two
+  structs sharing one layout); §8.2 requires a `cast` here. This holds for **any**
+  type, not just scalars — it is a same-layout retype (no reinterpret, no
+  reference-count change), so it is always safe.
 
 `cast` does **not** drop element-level `readonly` — that moves to `unsafe_cast`
 (§8.7). (Outermost `readonly` on the whole value needs no `cast`: it is adjusted
