@@ -219,7 +219,7 @@ must observe.
 > rather than as named offset helpers in the shared layout layer (unlike the
 > slice and header offsets). Compiled and interpreted modes agree by convention;
 > hardening the orders into shared helpers is a tracked follow-up
-> (`type.layout.funcval-order-hardening`, `claude-todo.md`). The orders stated
+> (`type.layout.funcval-order-hardening`; Annex C). The orders stated
 > here are the normative contract regardless.
 
 > _Note._ A function-value vtable carries **no** `*TypeInfo`: function values are
@@ -261,7 +261,7 @@ and `TargetInfo` (§7.13.1 `type.layout.target-info`) carries **no** endianness
 field. A complete, target-parameterized layout description (needed to describe a
 big-endian or cross-endian target) requires adding an endianness field to
 `TargetInfo`; doing so — and adding big-endian support — is a tracked
-implementation follow-up (`claude-todo.md`), not yet done.
+implementation follow-up (Annex C), not yet done.
 
 ## 7.13.13 The cross-mode agreement requirement
 
@@ -325,8 +325,8 @@ its contents and the cross-mode agreement of every assertion result. Interface
 > shared opaque** `TypeInfo` — sound because no assertion target can name such a
 > type (§11.12 `iface.assert`), so its identity is never compared against a written
 > target. _(The current toolchain does **not** yet conform: boxing a slice into
-> `any` emits a malformed box and a match over it crashes — a tracked MAJOR, Annex
-> C / `claude-todo.md`.)_
+> `any` emits a malformed box and a match over it crashes — a tracked MAJOR; Annex
+> C.)_
 >
 > _Draft — ratified, not yet implemented (`proposal-slice-type-identity`)._ The
 > slice-target extension (§11.12 `iface.assert.slice`) upgrades **slices** from the

@@ -209,8 +209,7 @@ For example, POSIX `environ` has C type `char **` (Binate `**char`), so
 > `pkg.cexport.eligible`, `pkg.cexport.signature`, `pkg.link-placement`) are **specified but
 > not yet implemented**. They are the *outbound* counterpart to `__c_call`/`__c_global`: those
 > call *into* C, `#[c_export]` makes a Binate function callable *from* C (and lets the program's
-> entry/startup glue be written in Binate — see §17). Design: `explorations/design-ffi-export.md`.
-> Naming (`c_export`, `section`, `link_at`) is provisional.
+> entry/startup glue be written in Binate — see §17). Naming (`c_export`, `section`, `link_at`) is provisional.
 
 `pkg.cexport` — A `#[c_export("name")]` annotation on a **top-level function** declaration emits an
 **additional, unmangled** C symbol `name` aliasing that function; the function's mangled Binate

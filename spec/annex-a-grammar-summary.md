@@ -456,7 +456,7 @@ FuncLiteral   = "func" Signature Block ;
    or an index (D6).
    (Implementation gap: the parser does not yet build the generic-instantiated
    head — it consumes `[…]` as instantiation/index and never enters the
-   composite-literal path; `claude-todo.md`, §13.10.) *)
+   composite-literal path; §13.10; Annex C.) *)
 CompositeLiteral = TypeName "{" [ ElementList [ "," ] ] "}"
               | ArrayLiteral
               | ManagedSliceLiteral ;

@@ -26,7 +26,7 @@ dependent sibling spec.
 Two orthogonal axes (see [`conventions.md`](conventions.md)):
 **language-design stability** (Stable / Provisional / Draft / Reserved) and
 **implementation-conformance** (does the current toolchain conform? — sourced
-from `claude-todo.md` and, going forward, spec-test results). Status is
+from the project defect ledger and, going forward, spec-test results; Annex C). Status is
 orthogonal to normative/informative.
 
 ## Reading order (the dependency DAG)

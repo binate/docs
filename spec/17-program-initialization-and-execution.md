@@ -143,8 +143,7 @@ package, Ch.20).
 > `prog.init.idempotent` are **specified but not yet implemented** — the FFI-export
 > feature (§16.9). They generalize `prog.entry.sequence`: the entry becomes pluggable
 > package code so the program's startup glue can be written in Binate and a *set* of
-> Binate packages can be exposed as a C library. Design: `explorations/design-ffi-export.md`.
-> Symbol names (`bn_init`, `bn_entry`) are provisional but the linkage contract is decided.
+> Binate packages can be exposed as a C library. Symbol names (`bn_init`, `bn_entry`) are provisional but the linkage contract is decided.
 
 `prog.entry.glue` — The compiler emits two hardcoded, well-known glue symbols,
 **referenceable by literal name** (a linkage-ABI contract, the `bn_` family):

@@ -288,8 +288,8 @@ object; the method operates on the copy, so it cannot affect the caller's value.
 > (mutating a discarded copy is pointless). The checker does **not** currently
 > enforce this — it does not reject `r.field = …` in a value-receiver body; the
 > "always read-only" guarantee is only the *semantic* consequence of the copy
-> being discarded, not a diagnosed rule (`func.method.value-recv-readonly`,
-> `claude-todo.md`).
+> being discarded, not a diagnosed rule (`func.method.value-recv-readonly`;
+> Annex C).
 
 ## 10.7 Static and dynamic dispatch
 

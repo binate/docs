@@ -215,7 +215,7 @@ reached only for a small fixed set of **built-in** packages (bound through
 hardcoded externs); a user or standard-library package compiled to bytecode has
 **no** native `__Package` symbol, so its `__Package()` is currently unavailable
 under the interpreter. This is a **tracked, deferred** interpreter-backend defect
-(Annex C, `claude-todo.md`): the conformance tests that pin `__Package().Name` ==
+(Annex C): the conformance tests that pin `__Package().Name` ==
 import path pass on the **compiled** modes and are **xfailed** on the VM modes.
 The proper fix emits each package's `__Package()` and its descriptor as **bytecode**
 (the VM equivalent of the compiled descriptor) rather than as hardcoded externs.
@@ -275,8 +275,7 @@ name. Both read the returned `@[]char` and branch on `len(result) > 0`.
 ## 20.5 `pkg/builtins/platform_init` — platform startup / entry glue
 
 > _Status (Draft / pending)._ `pkg0.platform-init` is **specified but not yet implemented** —
-> part of the FFI-export feature (§16.9, §17.3.2). Design: `explorations/design-ffi-export.md`.
-> The package name is provisional.
+> part of the FFI-export feature (§16.9, §17.3.2). The package name is provisional.
 
 `pkg0.platform-init` — `pkg/builtins/platform_init` is the **fifth** tier-0 package: the home for
 **platform startup / entry glue**, distinct from `pkg/builtins/rt` (runtime *services* —

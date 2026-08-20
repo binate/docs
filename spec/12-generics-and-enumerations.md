@@ -83,8 +83,7 @@ single mechanism, so no impl-overlap can arise.
 > (`gen.impl.generic-recv`) are **specified ahead of implementation** (design
 > settled — the **Draft** tier, `conventions.md`). Until they land, a generic type
 > can carry no methods and thus satisfy no interface, so a generic interface (e.g.
-> `Iterator[T]`) is declarable but **not yet implementable**; the high-level plan
-> is `explorations/plan-generic-type-methods.md` (tracked in `claude-todo.md`).
+> `Iterator[T]`) is declarable but **not yet implementable** (Annex C).
 
 > _Note._ A generic-*method* declaration (a method with its own `[…]`) is
 > **diagnosed at the declaration** — rejected with "methods cannot have type
@@ -137,8 +136,8 @@ naming the missing satisfaction. (A `[T any]` parameter always satisfies; §12.1
 > at **generic-function** instantiation. Generic **struct** and **interface**
 > instantiations do not check the type-parameter constraint, so an unsatisfying
 > type argument (e.g. `Box[NoOrder]` for `type Box[T Orderable]`, where `NoOrder`
-> has no `impl`) is wrongly accepted (`gen.satisfy.struct-iface-unchecked`,
-> `claude-todo.md`). **`gen.impl.generic-recv` (§12.1) makes this gap
+> has no `impl`) is wrongly accepted (`gen.satisfy.struct-iface-unchecked`;
+> Annex C). **`gen.impl.generic-recv` (§12.1) makes this gap
 > load-bearing:** a parameterized impl's per-instantiation satisfaction relies on
 > the instantiation-time constraint check being performed.
 

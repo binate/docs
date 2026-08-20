@@ -52,7 +52,7 @@ Status is **orthogonal** to normative/informative. There are two axes:
 
 Separate from language stability. A known miscompile does **not** make a
 language rule unstable — it makes the _implementation_ non-conformant. This
-axis is sourced from `claude-todo.md` (CRITICAL + MAJOR) and, going forward,
+axis is sourced from the project defect ledger (CRITICAL + MAJOR entries) and, going forward,
 from **spec conformance test** results (pass / xfail per mode). It lives in
 **Annex C** (the status table); the implementation model and
 implementation-defined-behavior index are **Annex B**.
@@ -110,4 +110,4 @@ per-section productions present the same grammar in context.
 
 The implementation-conformance axis is made real by **spec conformance
 tests** — conformance-style `.bn` programs tagged with the rule-ID(s) they
-exercise. See `explorations/plan-language-spec.md` §10 for the mechanism.
+exercise.

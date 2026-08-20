@@ -15,7 +15,7 @@ indirect calls, and dual-mode dispatch (§10.12). The **core** feature is
 **Stable** — implemented across all backends and execution modes and exercised by
 the conformance suite; a few specific interactions remain **Provisional** and one
 construct is **Draft** (unimplemented), both flagged inline, and backend
-implementation-conformance defects are tracked separately (`claude-todo.md`).
+implementation-conformance defects are tracked separately (Annex C).
 
 ## 10.8 Function-value types
 
@@ -79,7 +79,7 @@ closure borrowed by the destination; §10.10).
 
 > _Known gap._ Constructing a **named** function-value type from a function
 > *literal* (`var f Fn = func(…){…}`) is rejected in all modes; only the function
-> *reference* form (`var f Fn = add`) works (§7.3, `claude-todo.md`).
+> *reference* form (`var f Fn = add`) works (§7.3; Annex C).
 
 ## 10.10 Closures
 
@@ -173,5 +173,4 @@ other (Ch.19); a function value carries its own interpreter handle inline.
 > closure / method-value floating-point-return or register-overflow shapes, and an
 > **open** cross-package **small-multi-return** shim-ABI conflict (a native-emitted
 > vs LLVM-emitted `vtable.call` shim disagreeing on the return convention). These
-> are test-pinned in `claude-todo.md`; Annex C will index them once that ledger is
-> authored.
+> are test-pinned defects, recorded in Annex C.

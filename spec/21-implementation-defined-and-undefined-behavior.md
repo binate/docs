@@ -105,7 +105,7 @@ and document a single byte order per target, and both modes **shall agree** on i
 byte order as **little-endian** on every target, and `TargetInfo` carries no
 endianness field yet; adding a `TargetInfo` endianness field (the path to
 big-endian/cross-endian targets) and big-endian support is a tracked
-implementation follow-up (`claude-todo.md`), not done.
+implementation follow-up (Annex C), not done.
 
 `behavior.impl-defined.optional-scalars` _(Draft — reconciliation gap)_ — The
 design treats the **64-bit and floating-point** scalar types (`int64`, `uint64`,
@@ -115,7 +115,7 @@ type chapter (§7.2) currently lists them among the predeclared scalars
 **unconditionally**, with no availability caveat — so this latitude has **no
 normative home** yet. The gap is to be closed by either adding a target-availability
 caveat to §7.2 (recommended) or dropping the optionality from the design; **not
-yet resolved** (`claude-todo.md`).
+yet resolved** (Annex C).
 
 ## 21.5 Unspecified behavior
 
@@ -205,8 +205,7 @@ compile time instead of producing a runtime panic (§17.5, §13.4).
 `behavior.defects` — A known **miscompile** makes the **implementation**
 non-conformant; it does **not** make the **language rule** unstable. The spec
 states each rule normatively in its home chapter; the catalogue of current
-non-conformances — with `claude-todo.md` cross-references and per-mode xfail
-status — lives in **Annex C**. These **shall not** be read as sanctioned
+non-conformances — with per-mode xfail status — lives in **Annex C**. These **shall not** be read as sanctioned
 unspecified/undefined latitude. The principal current items (each
 defined-in-intent, defective-in-realization) include:
 

@@ -1,13 +1,11 @@
 (* ============================================================ *)
 (* Binate Formal Grammar — canonical EBNF                       *)
 (* ============================================================ *)
-(* This file is the canonical Binate grammar: Annex A and the per-section
-   inlined productions in the chapters are to be generated from it
-   (specification Decision D4).  Until that generation step runs, the inlined
-   per-chapter productions remain the authoritative normative text
-   (conventions.md).  It was reconciled from the prior working grammar
-   (explorations/grammar.ebnf) against the parser (pkg/binate/{lexer,token,
-   parser}) and the normative inlined chapter productions; where those sources
+(* This file is the canonical Binate grammar.  Annex A is generated from it
+   (scripts/gen-annex-a.py), and the per-section inlined productions in the
+   chapters present the same grammar in context (conventions.md).  Provenance:
+   reconciled from the prior working grammar against the implementation's
+   parser and the normative inlined chapter productions; where those sources
    disagreed, the parser and the chapters governed.
 
    Notation (ISO/IEC 14977-flavored; see conventions.md):
@@ -479,7 +477,7 @@ FuncLiteral   = "func" Signature Block ;
    or an index (D6).
    (Implementation gap: the parser does not yet build the generic-instantiated
    head — it consumes `[…]` as instantiation/index and never enters the
-   composite-literal path; `claude-todo.md`, §13.10.) *)
+   composite-literal path; §13.10; Annex C.) *)
 CompositeLiteral = TypeName "{" [ ElementList [ "," ] ] "}"
               | ArrayLiteral
               | ManagedSliceLiteral ;

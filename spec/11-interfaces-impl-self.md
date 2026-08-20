@@ -81,8 +81,8 @@ method call (§10.5).
 > wrapper around) a named type"). This is a deliberate hold, not merely a missing
 > peel: peeling the alias so the impl type-checks currently produces a **runtime
 > SIGSEGV** at dispatch (the vtable/closure lowering does not peel the alias), so
-> rejecting is the safe behavior until that is fixed (`iface.impl.alias-receiver`,
-> `claude-todo.md`). A parallel hold applies to **method values** on an alias
+> rejecting is the safe behavior until that is fixed (`iface.impl.alias-receiver`;
+> Annex C). A parallel hold applies to **method values** on an alias
 > receiver (Ch.10); the two are the same underlying alias-peeling gap, not an
 > `impl`-only case.
 
@@ -296,8 +296,7 @@ on a target with no memory protection the dereference may not fault at all). Use
 > mode by an **unrelated** multi-package double-interpretation crash — not an
 > interface-dispatch defect (`conformance/665_transitive_iface_reexport.xfail.builder-comp-int-int`).
 > The language rules above are Stable; these are platform/mode-conformance gaps
-> (tracked in `claude-todo.md`; to be recorded in Annex C once that ledger is
-> authored).
+> (recorded in Annex C).
 
 ## 11.12 Type assertions and type switches
 
@@ -393,7 +392,7 @@ structural spelling and its **destructor** the slice's element-drop.
 > production (§11.12 grammar; canonical `binate.ebnf`) carries the slice-type
 > alternative. The rule is **Provisional** on the stability axis (§4.4): implemented
 > and conformance-green (design may still change). The enabling use is fmt's `...*any`
-> fast-path (§15.7 note; `claude-notes.md:252`): a string is a raw
+> fast-path (§15.7 note): a string is a raw
 > char-slice, so recovering a string operand needs a slice target. Because the four
 > string spellings are distinct identities, a formatter enumerates one `case` per
 > spelling it accepts — a library concern, not a language one.
@@ -474,5 +473,5 @@ to expose (§20.3, a later phase).
 > note); and boxing a **name-less** dynamic type (such as a slice) into `any`
 > currently emits a malformed box, so a match over it crashes instead of falling to
 > `default` — a tracked MAJOR non-conformance (§7.13.14 name-less-types note; Annex
-> C / `claude-todo.md`) whose fix is independent of, and forward-compatible with,
+> C) whose fix is independent of, and forward-compatible with,
 > the slice extension.

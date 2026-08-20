@@ -248,4 +248,4 @@ program entry are Ch.17.)
 > _Implementation note._ The `__Package()` accessor is currently emitted only as a
 > native function, so the bytecode VM cannot reach it for user/standard-library
 > packages (it works for the built-in packages); the reflection descriptor it
-> returns is otherwise mode-agnostic (`claude-todo.md`).
+> returns is otherwise mode-agnostic (Annex C).

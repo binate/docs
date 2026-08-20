@@ -119,10 +119,10 @@ an enclosing scope (including a predeclared universe name); within the inner
 block the inner name is the one in scope. Shadowing is permitted and is **not
 currently diagnosed**.
 
-> _Open (notes vs. implementation)._ The design intent is that shadowing is
-> permitted but the compiler emits a **suppressible warning by default**
-> (`claude-notes.md`, scoping). The current toolchain does not yet diagnose
-> shadowing; this rule describes the implemented behavior.
+> _Open._ The design intent is that shadowing, while permitted, be flagged by an
+> advisory diagnostic — necessarily a **lint** concern, since the compiler emits
+> errors only, never warnings (§1). No shadowing lint exists yet; this rule
+> describes the implemented behavior.
 
 ## 9.6 Scope levels and package-scope declarations
 

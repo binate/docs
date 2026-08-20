@@ -49,9 +49,6 @@ apply left to right. **Comparisons do not chain**: `a < b < c` is rejected
 (§13.6). Assignment operators (`=`, `+=`, …) and `++`/`--` are **statements**,
 not expressions (§14).
 
-> _Note._ Where this precedence and the prose in `claude-notes.md` differ, this
-> table (matching the canonical `binate.ebnf`) governs.
-
 ## 13.3 Arithmetic operators
 
 `expr.arith.defined` — `+`, `-`, `*`, `/`, `%` operate on two operands of the
@@ -115,7 +112,7 @@ the caller asserts `n` is in `[0, width)`, and an out-of-range `n` is undefined
 (Ch.21).
 
 > _Open (residual)._ The native (aarch64/x64/arm32) sub-word `~` and negate paths
-> are a tracked residual (`claude-todo.md`).
+> are a tracked residual (Annex C).
 
 ## 13.6 Comparison and comparability
 
@@ -293,16 +290,16 @@ head and indexing is the expression-context rule of §13.11.
 > - **Indexed array literals** `[N]T{ i: v }` (e.g. `[5]int{1: 10, 3: 30}`) are
 >   **silently miscompiled** — the index keys are ignored and the values are
 >   stored positionally (`{10, 30, 0, 0, 0}` instead of `{0, 10, 0, 30, 0}`).
->   (`expr.composite.array.indexed`, MAJOR, `claude-todo.md`.)
+>   (`expr.composite.array.indexed`, MAJOR; Annex C.)
 > - **Inferred-length** `[...]T{…}` is **not implemented** (rejected as a
 >   non-constant array length), though the design includes it
->   (`expr.composite.array.inferred-len`, `claude-todo.md`).
+>   (`expr.composite.array.inferred-len`; Annex C).
 > - **Positional struct elements are not assignability-checked** — a positional
 >   struct-literal value is type-checked for well-formedness but **not** verified
 >   to be assignable to its field's type, so `expr.composite.struct`'s "each value
 >   must be assignable to its field" is unenforced for positional elements (it
 >   **is** enforced for keyed elements). (`expr.composite.struct.positional-unchecked`,
->   MINOR, `claude-todo.md`.) Over-count — more positional values than the struct
+>   MINOR; Annex C.) Over-count — more positional values than the struct
 >   has fields — **is** rejected.
 
 ## 13.11 Grammar disambiguation

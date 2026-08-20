@@ -38,13 +38,6 @@ name whose declaration supplies **no explicit type** (such a name carries an
 untyped type and narrows at each use, like a literal). A `const` declared *with*
 an explicit type has that definite type and does not coerce (Ch.9).
 
-> _Open (design note vs. implementation)._ `claude-notes.md` records a decision
-> that untyped coercion does *not* extend to named constants (only literals);
-> the current implementation, however, lets an untyped `const` coerce at each
-> use (as Go does). This section describes the **implemented** behavior; whether
-> the no-coercion decision should instead be enforced is an open item (tracked
-> in `claude-todo.md`).
-
 ## 6.2 Default types
 
 `const.default` — When an untyped constant is used where a type is required but
