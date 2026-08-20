@@ -171,7 +171,7 @@ hardware-divergence gap.
   **`NaN` → 0**; an in-range value truncates toward zero. This is normalized once
   in shared IR-gen so every backend and the VM inherit it, refining Go (which
   leaves the result implementation-specific but panic-free). **Realized and
-  conformant** in the current tree (`conformance/732_float_int_saturation`).
+  conformant** in the current tree.
 - **Defined arithmetic** (§13.3–§13.6): integer `+`/`-`/`*` **two's-complement
   wraparound**; integer `/` truncates toward zero and `%` takes the sign of the
   dividend; **defined** over-shift for a non-negative count (`0` for logical,

@@ -89,9 +89,7 @@ auto-derivation.
 package so the carve-out impls attach to the primitive types, and so
 `(42).String()` resolves with no import. Naming the **interface type** itself
 (e.g. a `*Stringer` parameter or an `impl T : Comparable` clause) still **requires**
-the explicit `import "pkg/builtins/lang"`. (Conformance: `654`–`656` exercise the
-no-import method calls; `658` pins that naming the interface type without the
-import is an error.)
+the explicit `import "pkg/builtins/lang"`.
 
 `pkg0.lang.self-safety` — `Comparable.Compare(other Self)` mentions `Self` in a
 **non-receiver** (parameter) position, so — per the object-safety rule of §11 —

@@ -291,10 +291,10 @@ on a target with no memory protection the dereference may not fault at all). Use
 > and the native aarch64/x64 backends). Two residuals remain. (1) The 32-bit
 > **ARM** backend has not yet been verified to conform for multi-return / sub-word
 > interface dispatch (a separate 32-bit ABI issue, not runnable on the dev host;
-> `conformance/matrix/abi/iface-multi-return/*/*.xfail.builder-comp_arm32_*`). (2)
+> Annex C). (2)
 > The transitive-re-export test is additionally blocked on the `builder-comp-int-int`
 > mode by an **unrelated** multi-package double-interpretation crash — not an
-> interface-dispatch defect (`conformance/665_transitive_iface_reexport.xfail.builder-comp-int-int`).
+> interface-dispatch defect (Annex C).
 > The language rules above are Stable; these are platform/mode-conformance gaps
 > (recorded in Annex C).
 
@@ -468,10 +468,8 @@ to expose (§20.3, a later phase).
 > execution mode — the `iface.assert*` / `iface.typeswitch` / `iface.rtti` rules
 > and `type.layout.typeinfo`, including the cross-mode agreement of every
 > assertion result (a value produced by a compiled package and asserted in the
-> bytecode VM resolves to the same result). **Two exceptions:** `iface.assert.slice`
-> is Draft — its design is ratified but it is **not yet implemented** (see its
-> note); and boxing a **name-less** dynamic type (such as a slice) into `any`
-> currently emits a malformed box, so a match over it crashes instead of falling to
-> `default` — a tracked MAJOR non-conformance (§7.13.14 name-less-types note; Annex
-> C) whose fix is independent of, and forward-compatible with,
-> the slice extension.
+> bytecode VM resolves to the same result). This includes the **slice** targets of
+> `iface.assert.slice` (Provisional; see its note) and **name-less** boxes
+> (§7.13.14): a name-less dynamic type boxes as a well-formed interface value, so
+> a match over it is a clean miss — or, for a slice, a structural hit — never a
+> crash.

@@ -250,8 +250,7 @@ implementation-specific but panic-free) by pinning a defined value, closing what
 would otherwise be a hardware-divergence gap (arm64 `FCVTZS` saturates, x86-64
 `CVTTSD2SI` yields `INT64_MIN`, a raw LLVM `fptosi` is poison). The normalization
 is emitted **once** in shared IR-gen, so every backend and the VM inherit it
-without per-backend logic; it is realized and conformant in the current tree
-(`conformance/732_float_int_saturation`). The behavior-catalogue entry is §21.7
+without per-backend logic; it is realized and conformant in the current tree. The behavior-catalogue entry is §21.7
 (`behavior.well-defined`).
 
 ## 8.6 `bit_cast` — bit reinterpretation
