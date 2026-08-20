@@ -95,7 +95,7 @@ func main() {                               // no params, no results; no init() 
   alias; no dot-import; import graph acyclic.
 - No `init()`. Package-level `var`s initialize in dependency order — but only
   **direct** reads order them (reads inside called functions don't). `main` is
-  `func main()`, args come from the `os` library. `#!` shebang + `bni -main-file` run
+  `func main()`, args come from the `os` library. `#!` shebang + `bni` run
   a file as a script. `#[build(is(os, "linux"))]` gates files/decls per target.
 
 ## Interfaces & generics

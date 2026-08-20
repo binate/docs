@@ -120,21 +120,22 @@ package, Ch.20).
 
 > _Note (script mode — reference tooling; Draft, `proposal-shebang`)._ Where the
 > host provides a command line, the reference **source-executing interpreter**
-> (`bni` in this toolchain) runs a **single source file as a script** with `bni
-> -main-file <file> [args…]`: the `-main-file` flag names the program's **sole
-> source**, and every argument **after** it becomes the program's **argv** — the
-> script path as element `0`, the user arguments following — delivered through the
-> host/runtime argument mechanism (`prog.argv`). `bni` takes **no positional source
-> files**: every input is named by a flag (`-main-file` for a single-file main,
-> `-main-dir` for a directory main), and bare positionals are the interpreted
-> program's argv. Combined with the `#!` shebang skip (§5.2 `lex.shebang`), this
-> makes a `chmod +x` Binate file directly executable; the intended shebang is
-> `#!/usr/bin/env -S bni -main-file` (the `-S` splits the words, and because
-> `-main-file` is the **last** flag the kernel-appended script path becomes its
-> value, so the kernel runs `bni -main-file <script> <user-args…>`). This is
-> **host-dependent tooling** (the command line is not part of the core language,
-> Ch.2); another host or interpreter may provide a different mechanism. Not yet
-> implemented.
+> (`bni` in this toolchain) runs a program as `bni [flags] <main> [args…]`, where
+> `<main>` — the program's source — is the **first positional** (a single file, or
+> a directory taken as the `main` package), and every argument **after** it becomes
+> the program's **argv** — the script path as element `0`, the user arguments
+> following — delivered through the host/runtime argument mechanism (`prog.argv`).
+> Because parsing stops at that first positional, argv tokens that look like flags
+> reach the program unchanged. (An explicit `-main-file <file>` / `-main-dir <dir>`
+> names the main instead, making *every* positional argv.) Combined with the `#!`
+> shebang skip (§5.2 `lex.shebang`), this makes a `chmod +x` Binate file directly
+> executable; the intended shebang is `#!/usr/bin/env -S bni [flags] --` (the `-S`
+> splits the words; the kernel appends the script path after the flags, and the
+> trailing `--` — the standard end-of-flags marker — guarantees the script path is
+> taken as the positional `<main>` even if it is named like a flag, so the kernel
+> runs `bni [flags] -- <script> <user-args…>`). This is **host-dependent tooling**
+> (the command line is not part of the core language, Ch.2); another host or
+> interpreter may provide a different mechanism. Not yet implemented.
 
 ### 17.3.2 Entry glue and pluggable platform startup
 
