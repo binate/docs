@@ -103,7 +103,7 @@ runs after it; reads hidden behind a named-function call don't count and may
 observe zero values; initializer cycles are compile errors). **There is no
 `init()` function** — do setup explicitly from `main`.
 
-Files may start with `#!` on the first line (shebang; `bni -x script.bn args…`
+Files may start with `#!` on the first line (shebang; `bni -main-file script.bn args…`
 runs a single file as a script), and `#[...]` annotations gate declarations,
 files, and imports by target: `#[build(is(os, "linux") && is(arch, "aarch64"))]`.
 `#` is the annotation sigil, **not** a comment; comments are `//` and `/* */`
@@ -572,8 +572,8 @@ placed by annotations, not a C runtime.
 
 **Toolchain**, briefly: `bnc` compiles (LLVM and native backends,
 cross-compilation, 32-bit targets including bare-metal ARM), `bni` interprets
-the same sources on a bytecode VM (also `--test`, a REPL, and `-x` script
-mode), `bnfmt` formats, `bnlint` lints — the compiler itself emits errors
+the same sources on a bytecode VM (also `--test`, a REPL, and `-main-file`
+single-file script mode), `bnfmt` formats, `bnlint` lints — the compiler itself emits errors
 only, never warnings; all advisory diagnostics (unused imports, suspicious
 escapes, shadowing) live in the linter.
 
