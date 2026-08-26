@@ -413,8 +413,10 @@ element-`readonly` check.
 not handle-readonly. A read-only object (`*readonly Box`, `@(readonly Box)`, or a
 `readonly Box` value) may call only methods whose receiver pointee is itself
 read-only; a read-only *handle* to a mutable object (`readonly *Box`,
-`readonly @Box`) may call any method. Value receivers are always read-only. There
-are no const-method annotations — the receiver type is the sole statement of the
+`readonly @Box`) may call any method. A value receiver copies the object: the
+plain `(r T)` copy is mutable and counts as a mutating receiver here, while
+`(r readonly T)` is the read-only value receiver (§10.4). There are no
+const-method annotations — the receiver type is the sole statement of the
 mutable-vs-read-only need (Ch.10).
 
 `type.readonly.param-signature` — The outermost `readonly` on a function

@@ -216,14 +216,18 @@ mutable or read-only object (there are no separate const-method annotations):
 
 | Receiver | Object | Handle |
 |----------|--------|--------|
-| `(r T)` | value (a copy) — read-only (§10.6) | — |
+| `(r T)` | value (a **mutable** copy, isolated from the caller; §10.6) | — |
 | `(r *T)` | mutable | raw |
 | `(r *readonly T)` | read-only | raw |
 | `(r @T)` | mutable | managed |
 | `(r @readonly T)` | read-only | managed |
 
-A value receiver may also be written `(r readonly T)`; it is accepted but
-redundant with `(r T)` (a value copy is read-only regardless).
+A value receiver may also be written `(r readonly T)`: the copy is then
+**read-only** inside the method (a write through `r` is rejected as a write to a
+read-only location, §7.11), and — because dispatch keys off *object*
+read-only-ness (`func.method.object-const`) — it is the value-receiver form that
+is callable on a **read-only object**. A plain `(r T)` is a mutable copy and,
+like `*T`/`@T`, counts as a mutating receiver for that purpose.
 
 `func.method.receiver-base` _(Constraint)_ — A method's receiver base must be a
 **named type declared in the same package** as the method. Aliases, predeclared
@@ -262,7 +266,9 @@ of the source) is always callable. A second rejected indirection is reaching a
 handle read-only-ness (§7.11). A read-only handle to a mutable object
 (`readonly @Box`) may call any method; a read-only **object** (`@readonly Box`,
 `*readonly Box`, or a `readonly Box` value) may call only read-only-receiver
-methods. Adding object-`readonly` is allowed; dropping it is rejected.
+methods — those declared `*readonly T`, `@readonly T`, or `readonly T`; a plain
+value receiver `(r T)` is a mutable copy and does not qualify (§10.4). Adding
+object-`readonly` is allowed; dropping it is rejected.
 
 `func.method.impl-receiver` — An `impl T : Iface` (and its `*T`/`@T`/`readonly`
 variants) states that the receiver shape satisfies the interface; the impl's
@@ -283,13 +289,10 @@ pointer level (there is no `->`; §7.8).
 
 `func.method.value-recv` — A value receiver `(r T)` receives a **copy** of the
 object; the method operates on the copy, so it cannot affect the caller's value.
-
-> _Open / known gap._ The design intent is that a value receiver is **read-only**
-> (mutating a discarded copy is pointless). The checker does **not** currently
-> enforce this — it does not reject `r.field = …` in a value-receiver body; the
-> "always read-only" guarantee is only the *semantic* consequence of the copy
-> being discarded, not a diagnosed rule (`func.method.value-recv-readonly`;
-> Annex C).
+The copy is **mutable**: the body may assign to `r` and to its fields, and such
+writes are visible only within the method. Read-only enforcement is **opt-in**:
+declare the receiver `(r readonly T)`, under which any write through `r` is a
+compile error (§10.4, §7.11).
 
 ## 10.7 Static and dynamic dispatch
 
