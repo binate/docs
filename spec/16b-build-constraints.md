@@ -1,6 +1,6 @@
 # 16.7–16.9 Annotations, build constraints, and the FFI boundary
 
-> **Status:** mixed · **Maturity:** the annotation/build-constraint surface covers `arch`/`os` membership plus a compiler-`version` matcher (further predicates deferred); `__c_call` is compiled-mode only; the outbound `#[c_export]` / linker-placement surface (§16.9) is **Draft/pending**  
+> **Status:** mixed · **Maturity:** the annotation/build-constraint surface covers `arch`/`os` membership plus a compiler-`version` matcher (further predicates deferred); `__c_call` is compiled-mode only; `#[c_export]` is implemented; `__c_entry` is Draft (ratified, not yet implemented); linker-placement is **Draft/pending**  
 > **Rule-ID prefix:** `pkg`
 
 This continues [Ch.16 Packages and Program Structure](16-packages-and-program-structure.md)
@@ -30,8 +30,8 @@ its first segment determines who must understand it:
 - An **unqualified** name (no dot) is language-standard and **must be recognized**
   by the compiler — an unknown unqualified name is a **compile error** (this
   catches typos). The unqualified annotation implemented today is `build`
-  (§16.8); the FFI-export annotations `c_export` and the linker-placement
-  `section` / `link_at` (§16.9) are unqualified/compiler-recognized too, but are
+  (§16.8) and the FFI-export annotation `c_export` (§16.9); the linker-placement
+  `section` / `link_at` (§16.9) are unqualified/compiler-recognized too, but remain
   **Draft / pending** (specified, not yet implemented). _Caveat (current impl):_ this typo check fires only where build
   constraints are evaluated — i.e. when a build configuration is resolved
   (§16.8). With no build configuration (the REPL, the bytecode tool, unit tests),
@@ -203,24 +203,42 @@ For example, POSIX `environ` has C type `char **` (Binate `**char`), so
 > that `setenv`/`putenv` may reallocate — can dangle. Copy out before mutating the
 > environment; this is the ordinary raw-borrow discipline (§18.7 `mem.raw-uaf`).
 
-### Exporting Binate functions to C (`#[c_export]`)
+### Exporting Binate functions to C (`#[c_export]`, `__c_entry`)
 
-> _Status (Draft / pending)._ The rules in this subsection (`pkg.cexport`,
-> `pkg.cexport.eligible`, `pkg.cexport.signature`, `pkg.link-placement`) are **specified but
-> not yet implemented**. They are the *outbound* counterpart to `__c_call`/`__c_global`: those
-> call *into* C, `#[c_export]` makes a Binate function callable *from* C (and lets the program's
-> entry/startup glue be written in Binate — see §17). Naming (`c_export`, `section`, `link_at`) is provisional.
+> _Status._ `pkg.cexport`, `pkg.cexport.eligible`, and `pkg.cexport.signature` are
+> **implemented** (together with `bnc --library` and the `bn_init`/`bn_entry` glue of
+> §17.3.2). `pkg.centry` and its sub-rules are **Draft — ratified, not yet implemented**
+> (`proposal-c-entry-builtin`). `pkg.link-placement` remains **Draft / pending**, and its
+> naming (`section`, `link_at`) is provisional. This subsection is the *outbound*
+> counterpart to `__c_call`/`__c_global`: those call *into* C; these make Binate
+> functions callable *from* C (and let the program's entry/startup glue be written in
+> Binate — see §17).
+
+`pkg.cexport.semantics` — A Binate function `f` made visible to C — under a
+`#[c_export]` **name**, or through a pointer obtained with **`__c_entry`** (below) — is
+callable from C with the C signature that `f`'s Binate signature maps to
+(`pkg.cexport.signature`), and such a call **behaves as a call to `f`**. The C caller
+assumes the **caller-side obligations of the language's call contract** — argument and
+result ownership per §18.5 `mem.param` (e.g. an `@Iface` argument's caller-delivered
+reference) — and the call must occur on the program's **single Binate thread of
+execution** (§14.14; reference counting is non-atomic, §18): invocation from another
+thread, or from an asynchronous signal context interrupting Binate code, is
+**undefined** (Ch.21). **How** the implementation makes `f` callable from C is
+deliberately **not specified**.
 
 `pkg.cexport` — A `#[c_export("name")]` annotation on a **top-level function** declaration emits an
-**additional, unmangled** C symbol `name` aliasing that function; the function's mangled Binate
+**additional, unmangled** C symbol `name` through which C code calls that function
+(`pkg.cexport.semantics`); the function's mangled Binate
 symbol is **unchanged** (Binate callers are unaffected, and multiple `#[c_export]` entries/arguments
 produce multiple C names). The C symbol is emitted **verbatim, with no `bn_` mangling** — the same
 verbatim-symbol path as `__c_call`/`__c_global`. `c_export` is an **unqualified, compiler-recognized**
 annotation (§16.7 `pkg.annotation.namespace`), joining `build`.
 
-`pkg.cexport.eligible` _(Constraint)_ — Only a **package-public** function — one declared in the
-package's `.bni` (§16.4) — may be `#[c_export]`'d: a two-level gate (package-visible, then C-named).
-`#[c_export]` on a package-private declaration, or on a non-function declaration, is a compile error.
+`pkg.cexport.eligible` _(Constraint)_ — Only a **top-level function** may be `#[c_export]`'d;
+the annotation on any other declaration (or on a method) is a compile error. Package visibility
+is **not** required: a package-private function may be exported — a package wrapping a C library
+legitimately hands that library a **callback** that is a private implementation detail, not part
+of its Binate `.bni` surface.
 
 `pkg.cexport.signature` — An exported function's signature must be **C-ABI-replicable**: because
 Binate already uses the platform C ABI (§7.13), every parameter and result type maps to a C type the
@@ -236,13 +254,44 @@ per the ≤16-byte cutoff (§7.13.11 `type.layout.byval-cutoff`); a multi-return
 anonymous result struct or `sret`. Unlike `__c_call`/`__c_global` above (restricted to a scalar or
 pointer), the *export* direction rejects **nothing** at the ABI level.
 
-> _Note (managed-value discipline, not an ABI gate)._ A managed value (`@T`/`@[]T`/`@Iface`) handed
-> to C is a **borrow** for the call — the same ownership rule a Binate callee has (§18). A C caller
+> _Note (managed-value discipline, not an ABI gate)._ A managed value handed to C follows the
+> ordinary parameter-ownership contract (§18.5 `mem.param`): a `@T`/`@[]T`/`@func` argument is a
+> **borrow** for the call (the callee acquires on entry), while an `@Iface` argument requires the
+> **caller to deliver one reference**, which the callee releases — a C caller must supply it. A C caller
 > that *retains* it beyond the call must balance the reference count via the runtime `RefInc`/`RefDec`
 > entry points (whether/how those become C-visible is open; §20.2 `pkg/rt` review). Treating a managed
 > value as an opaque struct/pointer is fine at the ABI level; the refcount contract is the caller's
 > responsibility, not an export restriction. (A function-value **parameter** is likewise *passable*
 > but awkward to *call* from C — it needs the trampoline: "hard to use," not "can't export.")
+
+`pkg.centry` — `__c_entry(f)` yields a pointer through which **C code calls the declared
+function `f`** (`pkg.cexport.semantics`), typed as the opaque raw pointer **`*uint8`**
+(§7.8 `type.ptr.opaque-byte`) and suitable for passing to C (typically as a `__c_call`
+argument) wherever C expects a function pointer of the corresponding C signature. The
+result designates **code, not managed data**: it borrows no managed value (§18.7
+`mem.raw-uaf` is inapplicable), is never freed, and remains valid for the life of the
+program. `__c_entry` is **compiled-mode only**, like `__c_call`/`__c_global` (the
+bytecode VM performs no FFI).
+
+`pkg.centry.eligible` _(Constraint)_ — The operand must be a **reference to a declared,
+non-generic, top-level function** — a local identifier or a package-qualified selector;
+public or, within the declaring package, package-private (`pkg.cexport.eligible`). A
+method, a function *value*, a function literal, or a generic function is rejected — a C
+function pointer carries no context slot, so a capturing value cannot become one (pass
+context through the C API's `void* user_data` parameter, as C code does). `f`'s
+signature must satisfy `pkg.cexport.signature`.
+
+`pkg.centry.identity` — Every evaluation of `__c_entry(f)` for the same `f` in a
+program yields the **same pointer value**, so C-side registration and deregistration by
+pointer work. Whether it equals the address of a `#[c_export]` symbol for `f` is
+**unspecified** — the guarantee is behavioral (`pkg.cexport.semantics`), not
+positional.
+
+> _Draft — ratified, not yet implemented (`proposal-c-entry-builtin`, 2026-09-02)._
+> Ratified decisions: the name `__c_entry`; generic instantiations rejected (may be
+> relaxed later if a use case appears); the signature rule shared with `#[c_export]`;
+> the `*uint8` result (a dedicated C-function-pointer type could be layered on later
+> without a breaking change).
 
 `pkg.link-placement` — A **linker-placement** annotation on a top-level function directs the
 backend/linker to place the emitted symbol in a named output section (`#[section(".init")]`) or, where

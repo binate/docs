@@ -139,11 +139,14 @@ package, Ch.20).
 
 ### 17.3.2 Entry glue and pluggable platform startup
 
-> _Status (Draft / pending)._ `prog.entry.glue`, `prog.entry.pluggable`, and
-> `prog.init.idempotent` are **specified but not yet implemented** — the FFI-export
-> feature (§16.9). They generalize `prog.entry.sequence`: the entry becomes pluggable
-> package code so the program's startup glue can be written in Binate and a *set* of
-> Binate packages can be exposed as a C library. Symbol names (`bn_init`, `bn_entry`) are provisional but the linkage contract is decided.
+> _Status._ `prog.entry.glue` and `prog.init.idempotent` are **implemented**
+> (`bn_init`/`bn_entry`, `bnc --library`, and the Binate startup entry), as are the
+> hosted-program and C-library legs of `prog.entry.pluggable`; its placed freestanding
+> `_start` leg remains **pending** on the linker-placement annotation (§16.9
+> `pkg.link-placement`). They generalize `prog.entry.sequence`: the entry is pluggable
+> package code, so the program's startup glue is written in Binate and a *set* of
+> Binate packages can be exposed as a C library. The symbol names (`bn_init`,
+> `bn_entry`) are the decided linkage contract.
 
 `prog.entry.glue` — The compiler emits two hardcoded, well-known glue symbols,
 **referenceable by literal name** (a linkage-ABI contract, the `bn_` family):
