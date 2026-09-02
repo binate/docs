@@ -73,8 +73,10 @@ func main() {                               // no params, no results; no init() 
 ## Memory
 
 - Copy of a managed value = acquire; scope exit = release; destructors run
-  **deterministically** at the last release — this replaces `defer` (there is
-  none). Refcounts are never elided across function boundaries (dual-mode
+  **deterministically** at the last release — compiler-generated, releasing
+  managed references **only** (no user-defined destructors). Memory cleanup
+  thus needs no `defer` (there is none); a non-memory resource (file, lock) is
+  released by explicit calls on every exit path. Refcounts are never elided across function boundaries (dual-mode
   contract); reducing traffic is an ownership choice (borrow with `*T`), not
   an optimizer's job.
 - Temporaries die at **end of statement**: `foo(@[]int{1,2,3})` is fine;

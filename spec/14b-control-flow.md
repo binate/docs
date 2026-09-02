@@ -205,7 +205,11 @@ cases. A function with **no** results is never subject to this analysis.
 absent** (rationale in Annex D / the Go-difference notes):
 
 - **No `goto`** and **no labels** (hence no labeled `break`/`continue`).
-- **No `defer`** — scope-exit destructors handle cleanup (§18), RAII-style.
+- **No `defer`** — the deterministic scope-exit release of managed values
+  covers the memory-cleanup role (§18); destructors are compiler-generated and
+  release managed references only (there are no user-defined destructors), so
+  a non-memory resource (a file, a lock) is released by an explicit call on
+  every exit path.
 - **No `fallthrough`** — switch cases never fall through (§14.10).
 - **No `if`/`switch` init clause** (§14.8) — only `for` has init/post slots. (The
   **type switch** `switch v := x.(type)` is the one form that binds in its header;
