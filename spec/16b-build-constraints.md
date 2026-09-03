@@ -268,9 +268,9 @@ pointer), the *export* direction rejects **nothing** at the ABI level.
 function `f`** (`pkg.cexport.semantics`), typed as the opaque raw pointer **`*uint8`**
 (§7.8 `type.ptr.opaque-byte`) and suitable for passing to C (typically as a `__c_call`
 argument) wherever C expects a function pointer of the corresponding C signature. The
-result designates **code, not managed data**: it borrows no managed value (§18.7
-`mem.raw-uaf` is inapplicable), is never freed, and remains valid for the life of the
-program. `__c_entry` is **compiled-mode only**, like `__c_call`/`__c_global` (the
+result designates **code, not managed data**: it borrows no managed value
+(§18.7 `mem.raw-uaf` is inapplicable), is never freed, and remains valid for
+the life of the program. `__c_entry` is **compiled-mode only**, like `__c_call`/`__c_global` (the
 bytecode VM performs no FFI).
 
 `pkg.centry.eligible` _(Constraint)_ — The operand must be a **reference to a declared,
