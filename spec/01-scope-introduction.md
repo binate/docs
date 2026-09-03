@@ -22,7 +22,7 @@ over one shared heap (Ch.19). Its other pillars are:
   vtable-based dispatch — satisfaction is declared, never structural (Ch.11).
 - **Monomorphized generics** constrained by interfaces (Ch.12).
 - **Errors as values** — Go-style multiple returns; there are no exceptions and
-  no `panic`/`recover` (§14.14).
+  no `panic`/`recover` (§14.15).
 - **Transparent, source-determined allocation** — where a value lives is
   determined by how it is written, never by hidden heap-allocation or escape
   analysis.
@@ -53,15 +53,15 @@ language requires.
 ## 1.3 Deliberate absences
 
 The following are omitted **by design**, not as gaps; each is a decision recorded
-in the body (§14.14 catalogues the statement-level absences) and motivated in
+in the body (§14.15 catalogues the statement-level absences) and motivated in
 Annex D:
 
 - no **garbage collector**, and no **ownership/borrowing** system (Ch.18);
-- no **exceptions** and no **`panic`/`recover`** — errors are values (§14.14);
+- no **exceptions** and no **`panic`/`recover`** — errors are values (§14.15);
 - no built-in **maps**, no built-in **`string`** type (text is `@[]char` /
   `*[]char`), and no **`append`** or other built-in growable-collection
   operation — these are library concerns;
-- no **`goto`**, no package **`init`** functions, and no **`defer`**;
+- no **`goto`** and no package **`init`** functions;
 - no **implicit numeric or named conversions** (Ch.8);
 - and — in the **core** — no **`printf`**/formatting facility and no standard
   library at all.

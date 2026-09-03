@@ -75,8 +75,9 @@ func main() {                               // no params, no results; no init() 
 - Copy of a managed value = acquire; scope exit = release; destructors run
   **deterministically** at the last release — compiler-generated, releasing
   managed references **only** (no user-defined destructors). Memory cleanup
-  thus needs no `defer` (there is none); a non-memory resource (file, lock) is
-  released by explicit calls on every exit path. Refcounts are never elided across function boundaries (dual-mode
+  thus needs no cleanup code; a non-memory resource (file, lock) is released
+  by `defer` (Go-style function-scoped; banned in loops — compile error; never
+  runs on a panic) or explicit calls. Refcounts are never elided across function boundaries (dual-mode
   contract); reducing traffic is an ownership choice (borrow with `*T`), not
   an optimizer's job.
 - Temporaries die at **end of statement**: `foo(@[]int{1,2,3})` is fine;
@@ -133,7 +134,8 @@ func main() {                               // no params, no results; no init() 
   `for v in xs {}` — range uses **`in`**, over slices/arrays only, and a
   single variable is the **value**, not the index (`for i, v in xs` for both).
 - No `goto`, no labels (no labeled break/continue), no `fallthrough` (cases
-  never fall through), no `if`/`switch` init clause, no `defer`, no `recover`.
+  never fall through), no `if`/`switch` init clause, no `recover` (`defer`
+  exists — Go-style, banned in loops, never runs on a panic).
 - Functions: no named results; every param typed individually (no `a, b int`);
   multiple returns and `x, y := f()` as in Go. A result-returning function
   needs a *syntactically* terminating tail — add the final `return` even when

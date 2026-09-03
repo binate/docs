@@ -221,7 +221,7 @@ callable from C with the C signature that `f`'s Binate signature maps to
 assumes the **caller-side obligations of the language's call contract** — argument and
 result ownership per §18.5 `mem.param` (e.g. an `@Iface` argument's caller-delivered
 reference) — and the call must occur on the program's **single Binate thread of
-execution** (§14.14; reference counting is non-atomic, §18): invocation from another
+execution** (§14.15; reference counting is non-atomic, §18): invocation from another
 thread, or from an asynchronous signal context interrupting Binate code, is
 **undefined** (Ch.21). **How** the implementation makes `f` callable from C is
 deliberately **not specified**.

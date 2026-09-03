@@ -22,10 +22,10 @@ binary_digit  = "0" | "1" ;
 identifier    = letter { letter | digit } ;
 
 (* --- Reserved keywords --- *)
-(*  break    case     const     continue  default   else      false
-    for      func     if        impl      import    in        interface
-    nil      package  readonly   return    Self      struct    switch
-    true     type     var                                                *)
+(*  break    case     const     continue  default   defer     else
+    false    for      func      if        impl      import    in
+    interface nil     package   readonly  return    Self      struct
+    switch   true     type      var                                      *)
 
 (* --- Contextual keywords (NOT reserved — ordinary identifiers except in
        the one position noted) --- *)
@@ -313,6 +313,7 @@ Statement     = BlockDecl
               | ReturnStmt
               | BreakStmt
               | ContinueStmt
+              | DeferStmt
               | Block
               | IfStmt
               | ForStmt
@@ -340,6 +341,7 @@ compound_assign_op = "+=" | "-=" | "*=" | "/=" | "%="
 IncDecStmt    = Expression ( "++" | "--" ) ;
 
 ReturnStmt    = "return" [ ExpressionList ] ;
+DeferStmt     = "defer" Expression ;   (* operand must be a call — §14.13; Draft *)
 BreakStmt     = "break" ;
 ContinueStmt  = "continue" ;
 

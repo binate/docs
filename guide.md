@@ -34,7 +34,7 @@ single-threaded.
 | `map[K]V`, `append`, `cap` | none — library concerns (`make_slice` + stdlib containers) |
 | exported = Capitalized | exported = declared in the package's `.bni` interface file |
 | structural interfaces | **nominal**: explicit `impl T : Iface`; interface values are `*I` / `@I` |
-| `defer` | none — memory cleanup is automatic (refcounting); other resources: explicit calls |
+| `defer` | exists, Go-style function-scoped — but **banned in loops** (compile error) and never runs on a panic |
 | `for i := range xs` | `for v in xs` — a single variable is the **value**, not the index |
 | `panic`/`recover` | `panic(msg)` aborts, unconditionally; errors are values; no `recover` |
 | goroutines, channels, `select` | none; single-threaded |
@@ -245,8 +245,8 @@ The rules the compiler enforces (the "axioms"):
 - when a count reaches zero, the destructor runs, releasing managed fields
   recursively. Destructors are **compiler-generated and release managed
   references only** — there are no user-defined destructors — so memory cleanup
-  never needs a `defer` (there is none), while a non-memory resource (a file, a
-  lock) is released by an **explicit call on every exit path**;
+  never needs cleanup code, while a non-memory resource (a file, a lock) is
+  released by **`defer`** (Go-style; §11) or an explicit call;
 - temporaries live to the **end of the statement**: `foo(@[]int{1,2,3})` is
   safe even though `foo` takes `*[]int`, but `var s *[]int = @[]int{1,2,3}`
   leaves `s` dangling on the next line — the managed temporary died at the
@@ -469,10 +469,12 @@ var v Vec[@[]char]
   if-else-chain form. No duplicate-case or exhaustiveness checking.
 - **No `goto`, no labels** — no labeled break/continue; restructure nested
   loops (helper function, flag, or early return).
-- **No `defer`** — the memory half of what Go uses `defer` for is automatic
-  (deterministic scope-exit release); the resource half (close/unlock) is
-  explicit calls on every exit path — destructors are compiler-generated and
-  memory-only, with no user hook.
+- **`defer f(x)`** — Go's semantics: function-scoped, callee/args evaluated at
+  the defer statement, LIFO at function exit, conditional defers work. Two
+  differences, both loud or simplifying: a defer **may not appear inside a
+  loop** (compile error — wrap the loop body in a function literal), and
+  deferred calls **never run on a panic** (aborts don't unwind; no
+  `recover`).
 
 ## 12. Expressions and arithmetic: defined, strict
 
@@ -543,7 +545,7 @@ ordinary `...*any` variadics; `panic` is the one predeclared function).
 |---|---|
 | goroutines, channels, `select`, `sync` | nothing — single-threaded semantics; the compiler won't assume single-threading for optimization, and OS threads with your own locking are possible but outside the language |
 | GC | refcounting + destructors; raw pointers for cycles and hot paths |
-| `defer`, `recover`, exceptions | automatic memory release + explicit resource release; error values; unrecoverable `panic` |
+| `recover`, exceptions | error values; unrecoverable `panic` (deferred calls do not run on it) |
 | `string`, `map`, `append`, `cap`, `copy` | char slices; library containers (via `Hashable`/generics); `make_slice` + explicit loops or library helpers |
 | struct embedding, `init()`, named results, labels, `goto` | explicit fields, explicit setup from `main`, explicit returns, restructured loops |
 | operator overloading, sum types, first-class enums | interfaces/generics; `type` + `const`/`iota` |

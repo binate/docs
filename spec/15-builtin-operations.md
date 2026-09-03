@@ -226,9 +226,9 @@ borrowing its static storage, so no allocation happens on the abort path) — an
 **aborts the program unrecoverably** with that message, a non-recoverable abort in
 the same family as the defined runtime traps (Ch.21). It is **not** variadic and
 yields no value. Binate has **no recoverable `panic`/`recover`**: errors are
-values (§14.14), and `panic` is reserved for "this must never happen" aborts. A
+values (§14.15), and `panic` is reserved for "this must never happen" aborts. A
 `panic(…)` expression statement is a control-flow **terminator** for the
-missing-return analysis (§14.13).
+missing-return analysis (§14.14).
 
 ## 15.8 Other built-ins
 

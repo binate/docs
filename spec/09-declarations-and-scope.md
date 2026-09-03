@@ -152,7 +152,9 @@ only; a function-local `type` declaration is a parse error (§7.3).
 for the **temporaries** produced while evaluating it. A temporary managed value
 created during a statement lives until the end of that statement, at which point
 it is released (its destructor runs; Ch.18). This statement boundary is the unit
-of temporary lifetime.
+of temporary lifetime. The one exception is a defer statement's evaluated
+operand values, which take the enclosing **function's** lifetime (§14.13
+`stmt.defer`; §18.4).
 
 > _Note._ The full reference-counting semantics of temporaries — including that
 > a raw borrow of a temporary's backing must not outlive the statement (a

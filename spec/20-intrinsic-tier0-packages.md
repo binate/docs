@@ -253,7 +253,7 @@ this section specifies the **package surface** the convention uses.
 
 `pkg0.testing.run` — Pass/fail is signaled **by the returned string**, never by a
 panic: there is **no** panic/recover machinery to unwind (consistent with
-errors-as-values, §14.14), which is what lets the convention work **identically**
+errors-as-values, §14.15), which is what lets the convention work **identically**
 in both modes. The compiled runner (`cmd/bnc --test`) generates a synthetic
 `main` that imports the test packages, calls each discovered test, prints Go-style
 `=== RUN` / `--- PASS` / `--- FAIL` lines and an `ok`/`FAIL` summary, and is then

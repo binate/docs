@@ -188,7 +188,7 @@ the core spec does not pin their exact values.
 
 ## 17.5 Defined non-recoverable runtime panics
 
-`prog.panic` — Binate has **no exceptions and no `panic`/`recover`** (§14.14):
+`prog.panic` — Binate has **no exceptions and no `panic`/`recover`** (§14.15):
 recoverable conditions are returned as error *values* (Ch.8/Ch.11). A small,
 **closed set** of conditions are **defined, non-recoverable runtime panics** —
 they are not undefined behavior, and they cannot be caught; the program
@@ -223,7 +223,7 @@ non-constant operands.
 
 `prog.panic.no-recover` — There is no `recover`; a panic is the program's last
 action. A `panic(msg)` expression statement is also a control-flow terminator for
-the missing-return analysis (§14.13).
+the missing-return analysis (§14.14).
 
 > _Open (dual-mode gap in dispatch)._ One member of the set is realized
 > inconsistently across the execution modes — flagged so the dual-mode contract

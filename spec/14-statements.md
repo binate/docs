@@ -8,8 +8,8 @@ covers the statement taxonomy and blocks (§14.1), the empty statement (§14.2),
 expression statements (§14.3), assignment (§14.4), increment/decrement (§14.5),
 short variable declarations (§14.6), and local declarations (§14.7). The
 control-flow statements — `if`, `for`, `switch`, `return`, `break`, `continue`,
-and the terminating-statement analysis — are in
-[§14.8–§14.14](14b-control-flow.md).
+`defer`, and the terminating-statement analysis — are in
+[§14.8–§14.15](14b-control-flow.md).
 
 Statements appear **only inside function bodies**. A source file is purely
 declarative (`pkg.decl`, Ch.16); there are no top-level statements. (The REPL's
@@ -29,7 +29,8 @@ rarely contains an explicit `;`.
 
 ```
 Statement     = BlockDecl | SimpleStmt | ReturnStmt | BreakStmt
-              | ContinueStmt | Block | IfStmt | ForStmt | SwitchStmt ;
+              | ContinueStmt | DeferStmt | Block | IfStmt | ForStmt
+              | SwitchStmt ;              (* DeferStmt — §14.13; Draft *)
 BlockDecl     = VarDecl | ConstDecl ;                      (* §14.7 *)
 SimpleStmt    = EmptyStmt | ExpressionStmt | Assignment
               | ShortVarDecl | IncDecStmt ;
@@ -38,8 +39,8 @@ SimpleStmt    = EmptyStmt | ExpressionStmt | Assignment
 `stmt.simple` — A **simple statement** is one of the five `SimpleStmt` forms. The
 simple statements are exactly the forms permitted in a `for` clause's init and
 post slots (§14.9); the other statement forms (blocks, `if`/`for`/`switch`,
-`return`, `break`, `continue`, and `var`/`const` declarations) are **not** simple
-statements and cannot appear there.
+`return`, `break`, `continue`, `defer` (§14.13), and `var`/`const` declarations)
+are **not** simple statements and cannot appear there.
 
 `stmt.block` — A **block** is a brace-delimited statement sequence:
 

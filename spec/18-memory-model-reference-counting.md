@@ -142,7 +142,12 @@ bind) has no prior occupant and so **skips the release** half.
 bound to a named location (a `make`/`box`/`make_slice` result or a managed call
 result used as a temporary) is an unnamed local of that statement's implicit
 scope; it is **released at the end of the statement** (§9.7). A discarded managed
-call result is therefore released, not leaked.
+call result is therefore released, not leaked. **Exception:** a defer
+statement's evaluated callee, receiver, and argument values are **not**
+statement temporaries — they behave as anonymous function-scope locals,
+released with the function's exit releases after all pending deferred calls
+have run (§14.13 `stmt.defer`); the defer statement's *other* temporaries still
+release at the end of the statement.
 
 `mem.scope-exit` — A managed local is released when its **block** scope exits
 (§9.5). On a normal exit, each managed local declared in the block is released; on
@@ -152,9 +157,10 @@ unwinds, §18.5). A managed local created and dropped inside a loop body is thus
 balanced each iteration.
 
 > _Note._ The order in which a scope's managed locals are released is not
-> observable: a destructor's only effect is to release further references (§18.2),
-> so release order does not affect the result. The implementation releases them in
-> declaration order.
+> observable: deferred calls (§14.13) are sequenced **before** the function-exit
+> releases, and a destructor's only effect is to release further references
+> (§18.2) — so no user code runs between the releases, and their order does not
+> affect the result. The implementation releases them in declaration order.
 
 ## 18.5 Ownership transfer
 
@@ -245,5 +251,5 @@ The remedy for an unwanted extra reference is a programmer **ownership** decisio
 elision is excluded precisely because it would break dual-mode interop (§19).
 
 > _Open._ Reference-count operations are **non-atomic**, and the language is
-> single-threaded (§14.14); whether counts become atomic if shared-memory
+> single-threaded (§14.15); whether counts become atomic if shared-memory
 > concurrency is added is an open question.

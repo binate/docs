@@ -1,6 +1,6 @@
 # 5. Lexical Elements
 
-> **Status:** normative · **Maturity:** mostly Stable (the `#!` shebang rule, §5.2 `lex.shebang`, is Draft — ratified, not yet implemented)  
+> **Status:** normative · **Maturity:** mostly Stable (Draft — ratified, not yet implemented: the `#!` shebang rule, §5.2 `lex.shebang`, and the `defer` keyword, §14.13)  
 > **Rule-ID prefix:** `lex`
 
 This chapter defines how the source text of a Binate file is partitioned into
@@ -123,16 +123,16 @@ may still be used.
 
 ## 5.4 Keywords
 
-`lex.keywords.reserved` — The following 24 identifiers are **reserved
+`lex.keywords.reserved` — The following 25 identifiers are **reserved
 keywords** and shall not be used as ordinary identifiers. Matching is exact and
 case-sensitive.
 
 ```
 break     case      const     continue  default
-else      false     for       func      if
-impl      import    in        interface nil
-package   readonly  return    Self      struct
-switch    true      type      var
+defer     else      false     for       func
+if        impl      import    in        interface
+nil       package   readonly  return    Self
+struct    switch    true      type      var
 ```
 
 `Self` is the only capitalized keyword (Ch.11). `true`, `false`, and `nil` are

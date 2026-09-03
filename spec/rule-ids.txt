@@ -395,6 +395,12 @@ stmt.block	positive	14-statements.md
 stmt.break	constraint-candidate	14b-control-flow.md
 stmt.decl	positive	14-statements.md
 stmt.decl.redeclare	constraint	14-statements.md
+stmt.defer	constraint-candidate	14b-control-flow.md
+stmt.defer.call	constraint	14b-control-flow.md
+stmt.defer.exit	positive	14b-control-flow.md
+stmt.defer.no-abort	positive	14b-control-flow.md
+stmt.defer.no-loop	constraint	14b-control-flow.md
+stmt.defer.return	positive	14b-control-flow.md
 stmt.empty	positive	14-statements.md
 stmt.expr	positive	14-statements.md
 stmt.for	positive	14b-control-flow.md

@@ -1,12 +1,12 @@
-# 14.8–14.14 Control-flow statements
+# 14.8–14.15 Control-flow statements
 
-> **Status:** mixed · **Maturity:** language rules Stable (a few open semantic items flagged)  
+> **Status:** mixed · **Maturity:** language rules Stable (a few open semantic items flagged; defer §14.13 is Draft — ratified, not yet implemented)  
 > **Rule-ID prefix:** `stmt`
 
 This continues [Ch.14 Statements](14-statements.md) with the control-flow forms:
 `if` (§14.8), `for` (§14.9), `switch` (§14.10), `return` (§14.11), `break` and
-`continue` (§14.12), the terminating-statement analysis (§14.13), and the
-deliberate absences (§14.14).
+`continue` (§14.12), defer statements (§14.13), the terminating-statement
+analysis (§14.14), and the deliberate absences (§14.15).
 
 A condition or tag in `if`, `for`, or `switch` is parsed with **composite
 literals suppressed**, so a bare composite literal there is a syntax error; wrap
@@ -105,7 +105,7 @@ in). Consequently no `break` is needed to end a case.
 `stmt.switch.default` — A `default` clause (no `case` keyword) runs when no case
 matches. Switch **exhaustiveness is not checked**, there is **no duplicate-case
 check**, and `default` is not required (except as it bears on the
-terminating-statement analysis, §14.13).
+terminating-statement analysis, §14.14).
 
 `stmt.switch.tagless-bool` _(Constraint)_ — The case expressions of a **tagless**
 switch must be **boolean** — each case expression is itself the condition (the
@@ -158,7 +158,7 @@ be **assignable** to the corresponding declared result type (Ch.8).
 reference** to the caller (the return path retains each managed result; the
 function's locals are released as it unwinds — the ownership-transfer rule of
 §18). A value-returning function must reach a `return` (or other terminating
-statement) on every path (§14.13).
+statement) on every path (§14.14).
 
 ## 14.12 Break and continue
 
@@ -175,9 +175,98 @@ enclosing **loop**; it is **not** valid in a `switch` that is not inside a loop.
 `break` or `continue` with no enclosing loop (or, for `break`, no loop or switch)
 is a compile error. There are **no labels**: break and continue take no operand
 and always target the innermost construct — there is no labeled break/continue and
-no way to break out of an outer loop directly (§14.14).
+no way to break out of an outer loop directly (§14.15).
 
-## 14.13 Terminating statements
+## 14.13 Defer statements
+
+> _Draft — ratified, not yet implemented (`proposal-defer`, 2026-09-02)._ The
+> design is settled — function-scoped, with the loop restriction — and the
+> `defer` keyword is reserved (§5.4); no implementation exists yet.
+
+`stmt.defer` — A **defer statement** schedules a call to run when the
+**enclosing function** exits (`stmt.defer.exit`):
+
+```
+DeferStmt = "defer" Expression ;
+```
+
+The call's **callee** — the function reference, the function value, or a
+method's receiver — **and every argument are evaluated when the defer statement
+executes**; the **call executes at function exit**. The evaluated values are
+retained with the **function's lifetime**: they behave as anonymous
+function-scope locals, released with the function's exit releases (§18.4)
+**after all pending deferred calls have run** — *not* as statement temporaries
+(§18.4 `mem.temporary`, §9.7). The deferred call **borrows** them as the
+caller's references under the ordinary call contract (§18.5 `mem.param` — the
+caller-side reference is unaffected by the call). Where an operand undergoes a
+**managed→raw** conversion at the defer site (§8.4), the **pre-conversion
+managed value** is what is retained, and the borrow is delivered at call time —
+preserving the argument-borrow liveness guarantee. A raw operand value *not*
+backed by a retained managed value is an ordinary borrow whose referent's
+liveness at call time is the programmer's responsibility (§18.7 `mem.raw-uaf`).
+The call's results, if any, are **discarded**; a discarded **managed** result is
+released **immediately after the call returns**, before the next pending
+deferred call runs. Because a defer statement cannot appear in a loop
+(`stmt.defer.no-loop`) and the language has no `goto` (§14.15), each lexical
+defer statement executes **at most once** per function activation, and the defer
+statements that execute do so in **lexical order**. A defer statement inside a
+**function literal** defers to that literal's own activation. A defer statement
+is **not** a simple statement (§14.1) and requires an enclosing function; in the
+REPL's immediate mode, a `defer` entered with no enclosing function is rejected.
+
+`stmt.defer.call` _(Constraint)_ — The operand shall be a **call**: a function
+call, a method call, or a function-value call (including a call of the
+predeclared `panic`). A non-call expression, or a builtin-operation keyword form
+(`make(…)`, `cast(…)`, …, §15.1 — special call shapes, not calls), is rejected.
+
+`stmt.defer.no-loop` _(Constraint)_ — A defer statement shall not appear
+**lexically inside a `for` statement** with no intervening function literal
+between the defer statement and the `for` (a defer inside such a literal belongs
+to the literal and is unrestricted). Rejected with a message of the form "defer
+may not appear in a loop; wrap the loop body in a function or call the cleanup
+explicitly".
+
+> _Rationale._ The restriction keeps each lexical defer to at most one pending
+> call — a fixed, statically-known set — so `defer` costs no hidden allocation
+> (Go's function-scoped defer needs a runtime record list, unbounded in loops);
+> it also removes Go's silent loop-accumulation wart. It is deliberately loud:
+> the one Go idiom that does not transfer fails to compile rather than silently
+> misbehaving.
+
+`stmt.defer.exit` — Scheduled deferred calls run when the function exits
+**normally**: at a `return`, or on falling off the end of the body. A `break`,
+`continue`, or inner-block exit does **not** run deferred calls (they are
+function-scoped), and does not affect the inner blocks' ordinary scope-exit
+releases (§18.4 `mem.scope-exit`), which happen when those blocks exit. At the
+function exit the pending deferred calls run in **reverse order of their
+scheduling (LIFO)** — equivalently, reverse lexical order of the defer
+statements that executed (`stmt.defer`) — and **then** the function's remaining
+live managed locals are released. A deferred call therefore runs while the
+function's still-open scopes' locals are live; no user code runs **between**
+the releases themselves (§18.4, §21.5).
+
+`stmt.defer.return` — On a `return`, the return operands are evaluated and each
+**managed** result **acquires its owning reference first** (§18.5 `mem.return`);
+the pending deferred calls then run (`stmt.defer.exit`); the function's locals
+are then released and the retained results transfer to the caller. Deferred
+code observes the post-evaluation state but **cannot change a returned managed
+value** (results are unnamed and already retained).
+
+> _Note._ A returned **raw** value that borrows state a pending deferred call
+> releases or mutates dangles exactly as if that cleanup call were written
+> textually before the `return` (§18.7 `mem.raw-uaf`); returning managed values
+> is the safe pattern.
+
+`stmt.defer.no-abort` — Deferred calls run on **normal function exits only**. A
+defined non-recoverable panic (§17.5), a trap, or a runtime **exit** primitive
+terminates the program **without running deferred calls** — and one occurring
+**inside a deferred call** terminates the program immediately: the remaining
+pending deferred calls, and the pending releases of the exit in progress, do
+**not** run. (Deliberate divergence from Go, which runs the remaining deferred
+functions while panicking and offers `recover`; a Binate panic is the program's
+last action — §17.5, §14.15.)
+
+## 14.14 Terminating statements
 
 `stmt.terminating` — A function with **one or more results** must **terminate on
 every path**: its body must end in a *terminating statement*, else "missing
@@ -199,22 +288,18 @@ without `default`, or a `for cond { … }` whose condition is constant-true. Wri
 an explicit terminating tail (a final `return`, or an `else`/`default`) in those
 cases. A function with **no** results is never subject to this analysis.
 
-## 14.14 Statement-level deliberate absences
+## 14.15 Statement-level deliberate absences
 
 `stmt.absences` — The following control-flow constructs are **deliberately
 absent** (rationale in Annex D / the Go-difference notes):
 
 - **No `goto`** and **no labels** (hence no labeled `break`/`continue`).
-- **No `defer`** — the deterministic scope-exit release of managed values
-  covers the memory-cleanup role (§18); destructors are compiler-generated and
-  release managed references only (there are no user-defined destructors), so
-  a non-memory resource (a file, a lock) is released by an explicit call on
-  every exit path.
 - **No `fallthrough`** — switch cases never fall through (§14.10).
 - **No `if`/`switch` init clause** (§14.8) — only `for` has init/post slots. (The
   **type switch** `switch v := x.(type)` is the one form that binds in its header;
   §14.10, §11.12.)
 - **No `panic`/`recover` as recoverable control flow** — `panic(…)` exists only
   as an unrecoverable abort (Ch.15); there is no `recover`. Errors are values
-  (Go-style multiple returns), not exceptions.
+  (Go-style multiple returns), not exceptions. Deferred calls (§14.13) do
+  **not** run on a panic (`stmt.defer.no-abort`).
 - **No goroutines, channels, or `select`** — execution is single-threaded.

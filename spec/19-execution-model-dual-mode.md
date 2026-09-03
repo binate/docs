@@ -19,7 +19,7 @@ authoritative** (§4.6).
 `exec.machine` — A program's behavior is defined over an **abstract machine**:
 a single **shared heap** of managed allocations carrying reference-count metadata
 (§18), a store of local and global variables, and a **call primitive** that both
-execution modes implement identically. The machine is **single-threaded** (§14.14).
+execution modes implement identically. The machine is **single-threaded** (§14.15).
 A program's meaning is defined over this machine **independently of execution
 mode** — the two modes are two realizations of the same machine, not two
 languages.
@@ -81,7 +81,7 @@ This is the keystone that makes the two modes share one heap.
 > VM-interned allocation when interpreted — an accepted mode-specific realization,
 > not a layout divergence (`type.layout.slice-managed.backing`, §7.13).
 
-`exec.contract.errors` — Errors are **values**, not exceptions (§14.14): there is
+`exec.contract.errors` — Errors are **values**, not exceptions (§14.15): there is
 **no stack unwinding** to bridge across the mode boundary, so a call that crosses
 modes is an ordinary call returning ordinary values.
 
