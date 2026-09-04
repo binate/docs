@@ -161,18 +161,22 @@ of the internal foreign-function primitives, §15.8): `__c_call("symbol", RetTyp
 args…)` calls the C symbol named by the string literal — emitted **verbatim**,
 with **no name mangling** (the only such path; every other symbol is mangled from
 its package path) — with the C signature given as explicit Binate types (a `...`
-marker separates fixed from variadic arguments). Each argument, and the **return
-type**, must be a C-ABI-passable **scalar or pointer** (pass a pointer for
-slices, structs, and managed values) — **except** that a **void-returning** C
-function is written with the **string literal `"void"`** in the return-type
-position (where a Binate type would otherwise go). **Struct returns are not
-supported** — pass a pointer to an out-parameter instead. `__c_call` is
-**compiled-mode only**; the bytecode VM does not perform FFI.
-
-> _Note (pending feature)._ The `"void"` return form is a **decided** feature
-> still **in progress** (2026-06-19): until it lands, the current toolchain
-> rejects a void return, and a void C function is called by declaring a
-> throwaway scalar return and discarding it.
+marker separates fixed from variadic arguments). Each **argument** may be **any
+type with a defined C-ABI layout**: a scalar, a pointer, a struct **by value**, a
+raw slice `*[]T` (its `{T*, ptrdiff_t}` header), a managed-slice `@[]T`, a managed
+pointer `@T`, or an interface / function value — passed per the platform C ABI
+(§7.13). The only type that **cannot** be passed is one with no layout: an
+**opaque-by-value** type (§7.8; a pointer to an opaque type is fine). A **managed
+argument** carries the **same parameter-ownership contract as a Binate call**
+(§18.5 `mem.param`) — a borrow for `@T` / `@[]T` / `@func`, an owning delivery for
+an interface value, a copy-with-`RefInc` for a by-value struct with managed fields
+— with the C side performing any required `RefInc` / `RefDec` **by hand** (via the
+runtime's reference-count entry points). The **return type** must be a
+C-ABI-passable **scalar or pointer**, or the **string literal `"void"`** (written
+in the return-type position) for a void-returning C function; an **aggregate
+return** (struct, slice, managed value, …) is not yet supported — return it
+through a pointer out-parameter instead. `__c_call` is **compiled-mode only**; the
+bytecode VM does not perform FFI.
 
 `pkg.cglobal` — Reading or writing a **C global variable** is done through the
 built-in `__c_global` (another internal foreign-function primitive, §15.8):
@@ -180,9 +184,10 @@ built-in `__c_global` (another internal foreign-function primitive, §15.8):
 string literal — emitted **verbatim, with no name mangling** (like `__c_call`) —
 as a **raw pointer `*T`**, where `T` is the variable's C type. Read the global with
 `*p` and write it with `*p = …`. `T` must be a C-ABI-passable **scalar or pointer**
-(the same constraint as `__c_call`'s arguments); the result is **always raw** (`*T`,
-never `@T`) — the storage belongs to the C side and carries no reference-count
-header. `__c_global` is **compiled-mode only** (the bytecode VM performs no FFI).
+(a C global is read/written as a scalar or pointer; aggregate C-global types are
+not yet supported — narrower than `__c_call`'s arguments, which admit any
+defined-layout type); the result is **always raw** (`*T`, never `@T`) — the storage
+belongs to the C side and carries no reference-count header. `__c_global` is **compiled-mode only** (the bytecode VM performs no FFI).
 For example, POSIX `environ` has C type `char **` (Binate `**char`), so
 `__c_global("environ", **char)` is a `***char` and `*` of it is the current
 `**char`.
