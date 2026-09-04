@@ -5,7 +5,8 @@ reference-counted managed/raw pointers, explicit interfaces + `impl`,
 monomorphized generics, errors-as-values, and a dual compiled+interpreted
 execution model). This spec covers the core language **and the tier-0
 intrinsic packages** (Ch.20); the standard library (tier 1) is a separate,
-dependent sibling spec.
+dependent sibling spec, and the toolchain's per-target binary contract is the
+sibling [ABI specification](../abi/00-index.md).
 
 - **Structure, conventions, and authoring plan:** `explorations/plan-language-spec.md`.
 - **Shared apparatus:** [`conventions.md`](conventions.md) (requirement
