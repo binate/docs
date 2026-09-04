@@ -169,8 +169,11 @@ other (Ch.19); a function value carries its own interpreter handle inline.
 > _Implementation-conformance gaps._ The function-value feature has known,
 > tracked backend-specific defects that **do not change the language rules** —
 > they are implementation-conformance issues, not design holes (`conf.defect`).
-> Examples: VM-mediated indirect-call argument-word limits, certain native-backend
-> closure / method-value floating-point-return or register-overflow shapes, and an
-> **open** cross-package **small-multi-return** shim-ABI conflict (a native-emitted
-> vs LLVM-emitted `vtable.call` shim disagreeing on the return convention). These
-> are test-pinned defects, recorded in Annex C.
+> Examples: VM-mediated indirect-call argument-word limits and certain
+> native-backend closure / method-value floating-point-return or
+> register-overflow shapes. (An earlier cross-package **small-multi-return**
+> shim-ABI conflict — a native-emitted vs LLVM-emitted `vtable.call` shim
+> disagreeing on the return convention — was resolved by unifying every
+> producer on the retbuf-for-any-multi-return shim convention, now specified
+> in the ABI spec's dispatch chapter.) Remaining defects are test-pinned,
+> tracked for Annex C.
