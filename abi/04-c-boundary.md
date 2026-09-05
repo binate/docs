@@ -4,7 +4,7 @@
 > **Rule-ID prefix:** `abi` (area `cabi`)
 
 The language spec defines *which* C interop points exist and what types may
-cross them (§16.8–16.9: `pkg.ccall`, `pkg.cglobal`, `pkg.cexport.*`,
+cross them (§16.9: `pkg.ccall`, `pkg.cglobal`, `pkg.cexport.*`,
 `pkg.centry.*`); all of them are compiled-mode-only (`exec.divergence`). This
 chapter defines the **binary form** of those crossings.
 
@@ -15,7 +15,8 @@ unmodified platform C convention** (§1.5) applies. Where the internal
 convention deviates from it (§2.1), the boundary adapts: outbound `__c_call`
 sites reclassify per the platform rules (§4.3), and inbound C-visible entries
 normalize before control reaches internal code (§4.4–4.6). C code never
-observes the internal deviations.
+observes the internal deviations — subject to the recorded gaps and the one
+deliberate deviation (§4.4 _Status_, §4.7).
 
 ## 4.2 The C type mapping
 
@@ -31,7 +32,18 @@ observes the internal deviations.
 | interface value | `struct { void* data; void* vtable; }` |
 | function value | `struct { void* vtable; void* data; }` — the **reverse** field order |
 | struct / array by value | per the platform C ABI, with the ≤16-byte by-value cutoff (§7.13.11) |
-| multiple results | the packed anonymous result struct, or its sret form (§2.6) |
+| multiple results | **not C-ABI-replicable** — see below |
+
+A **multi-result** function has no C form: its in-register return convention
+(§2.7) is not the platform's composite-return rule, and even its sret leg
+triggers under the internal register-count rule rather than C's size rule,
+so the two coincide only incidentally. Exporting, or taking `__c_entry` of,
+a multi-result function is therefore **not supported** at the C boundary.
+
+> _Status._ Because export signatures are not yet validated (§4.4 _Status_),
+> such an export is currently accepted and mis-ABIs. The language spec's
+> `pkg.cexport.signature` still lists a packed-struct/sret C form for
+> multiple results — a flagged correction awaiting the owner.
 
 ## 4.3 Outbound: `__c_call`
 
@@ -43,7 +55,7 @@ on x86-64 it is laid out by value on the outgoing stack (SysV MEMORY,
 consuming no GP register); on arm32 it is passed by value split across
 R0–R3 and the stack (AAPCS); on aarch64 the internal pointer form already
 **is** the platform convention and nothing changes. A variadic `__c_call` is
-a true C-variadic call (§2.8).
+a true C-variadic call (§2.8, including its no-default-promotions rule).
 
 The declared result must be a scalar, a pointer, or `void`
 (language spec `pkg.ccall`).
@@ -84,6 +96,12 @@ entry itself. Narrow **stack** arguments need no thunk on any backend: every
 native function re-canonicalizes them unconditionally at its mangled entry
 (§2.3).
 
+> _Status._ The same-pointer identity currently holds **within one
+> producer's program**: for the same narrow-parameter `f`, the LLVM lowering
+> yields the mangled definition address while the native lowering yields the
+> `__centry.` thunk address, so a mixed-producer program would violate
+> `pkg.centry.identity` — raised for harmonization.
+
 ## 4.6 Sub-word values at the C boundary
 
 `abi.cabi.subword` — At every C-visible entry and return, sub-word
@@ -93,12 +111,17 @@ narrow-stack-argument canonicalization establish it; outbound (a C caller
 reading a Binate function's result), the return is produced in canonical
 extended form, and the LLVM backend additionally marks narrow scalar returns
 of exported functions with the platform's extension attributes so an
-optimizing C caller may rely on the extension.
+optimizing C caller may rely on the extension. Symmetrically, a narrow
+scalar **argument** of a `__c_call` shall cross in the platform's expected
+caller-extended form.
 
-> _Status._ Suspected gap (raised, unverified end-to-end): a function reached
-> **only** through `__c_entry` (not also `#[c_export]`) does not receive the
-> LLVM return-extension attributes, the same defect class as the fixed
-> exported-function bug.
+> _Status._ Two suspected gaps of the same defect class as the fixed
+> exported-return bug (both raised, unverified end-to-end): a function
+> reached **only** through `__c_entry` (not also `#[c_export]`) does not
+> receive the LLVM return-extension attributes; and the LLVM backend emits
+> no extension attributes on `__c_call` **arguments**, so an LLVM-compiled
+> caller has no extension guarantee on platforms whose C ABI lets the callee
+> assume caller-extension.
 
 ## 4.7 Known deliberate deviation: arm32 hard-float HFAs
 
@@ -110,3 +133,12 @@ Binate↔Binate calls are self-consistent, but a C boundary crossing such a
 type on arm32-linux mis-matches a conforming C peer. This is a deliberate,
 recorded deferral (C-interop fidelity only); until it is lifted, do not pass
 HFA types across the arm32-linux C boundary by value.
+
+## 4.8 `__c_global`
+
+`abi.cabi.cglobal` — `__c_global("sym", T)` is an **address materialization,
+not a call**: the verbatim symbol becomes an undefined **data** external
+(object-format prefix applied, §5.6), with `T` restricted to a scalar or
+pointer (language spec `pkg.cglobal`), and one symbol cannot be both a
+`__c_call` function and a `__c_global` object in a program. The relocation
+form of the address load is per §6.4's C-globals rule.

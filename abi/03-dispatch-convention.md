@@ -31,13 +31,17 @@ signatures:
 
 where `data` is the function value's data word passed through verbatim, and
 the slots encode the user arguments (§3.3). The aggregate shape is used for
-**any** multi-return (regardless of size), for any named struct/array result
-(including register-coercible ones), and for any single aggregate-kind result
-wider than one word. The **caller allocates** `retbuf`, sized as the result
-type's natural size rounded up to a whole number of **8-byte words on every
-target** (ILP32 included); the callee writes the natural-typed result through
-it and returns nothing in registers. Multi-return results always use the
-retbuf — there is no field-per-register form on this seam.
+**any** multi-return (regardless of size), for any ABI-named struct or array
+result (§2.2, register-coercible ones included), and for any single
+aggregate-kind result wider than one word — except that a **zero-size**
+result uses the scalar/void shape (no retbuf; §2.2's skip rule extends to
+shape selection). The **caller allocates** `retbuf` with at least the result
+type's natural size and at least its `AlignOf` alignment; the callee writes
+**exactly the natural size** through it and returns nothing in registers.
+Space beyond the natural size, if any, belongs to the caller and is not
+writable (VM-side callers over-allocate to a whole number of 8-byte words;
+other callers allocate the natural size). Multi-return results always use
+the retbuf — there is no field-per-register form on this seam.
 
 An interface-method call inserts the receiver as one extra leading slot after
 `data`: `result(data, receiver, slots…)` / `void(retbuf, data, receiver,
@@ -60,16 +64,36 @@ the stack, per Ch.2's GP rules. Per argument type:
 - on ILP32, a **64-bit scalar argument** splits into two consecutive 32-bit
   slots (low word, then high word); a bare 64-bit scalar **result** is
   returned as a register pair via the dedicated 64-bit scalar shape (§3.5).
-- narrow scalars ride one slot in canonical extended form (§2.3).
+- a narrow scalar rides one slot with **only its low bits guaranteed**: the
+  canonical-form discipline of §2.3 does not extend to this seam (a producer
+  may pass a bare narrow value), and a consumer shall not rely on a narrow
+  slot's high bits.
+
+> _Status._ Two recorded gaps against this section, both raised. (1) Narrow
+> values: the native backends' shims and seam callers currently neither
+> re-extend narrow slot words nor re-canonicalize narrow seam-call results
+> (only direct calls get the §2.3 caller-side cleanup) while native callees
+> rely on canonical register form — a latent cross-producer hazard pending
+> verification. (2) The native arm32 backend applies AAPCS32 even-pair
+> padding to 64-bit and 8-aligned dispatch slots and (hard-float) places
+> float scalars in VFP registers on this seam, diverging from the positional
+> all-integer encoding the LLVM backend and the VM implement; the placements
+> coincide only at even register parity — pending an owner decision on which
+> encoding is the contract.
 
 ## 3.4 The static triple: shim, vtable, handle
 
 `abi.dispatch.triple` — For every compiled function that can be reached
-indirectly, each referencing translation unit emits a **weak**, link-coalesced
-triple: the per-function marshalling **shim** (the `vtable.call` target, which
-re-marshals slots to the underlying function's Ch.2 convention and calls or
-tail-calls it), a static two-word **vtable** `{dtor, call}`, and a static
-two-word **handle** `{&vtable, data = null}`. The handle's symbol,
+indirectly, its **defining** translation unit emits a **weak**,
+link-coalescible triple: the per-function marshalling **shim** (the
+`vtable.call` target, which re-marshals slots to the underlying function's
+Ch.2 convention and calls or tail-calls it), a static two-word **vtable**
+`{dtor, call}`, and a static two-word **handle** `{&vtable, data = null}`. A
+*referencing* translation unit may additionally emit its own weak copy where
+it can synthesize the signature (the LLVM backend does; the native backends
+instead resolve cross-unit references against the defining unit's emission —
+per-referencing-unit emission of every symbol kind is not safe under Mach-O
+strict-symbol semantics). The handle's symbol,
 `__handle.<mangled>` (§5.5), is the **cross-producer contract name** — every
 backend emits the identical symbol so references coalesce to one definition.
 The shim and vtable symbols are backend-internal and deliberately not
@@ -112,6 +136,14 @@ limit of the interpreter (§19.5), not a language rule.
 > impl's native handle vtable, and `TrampolineAggregate` performs the same
 > substitution on the result copy, so compiled code never sees a VM index.
 
+> _Status._ Compiled→interpreted **multi-return** indirect calls are
+> currently unrealized (raised): the VM's trampoline selection recognizes
+> only single aggregate results, so a multi-return interpreted function
+> value receives `TrampolineScalar` — mismatching the retbuf shape §3.2
+> requires — and `TrampolineAggregate` itself rejects multi-result metadata.
+> Relatedly, the VM selects the aggregate trampoline for a zero-size struct
+> result where compiled producers use the scalar shape.
+
 ## 3.6 Closure environments
 
 `abi.dispatch.closures` — A capturing function literal is lifted to a
@@ -120,8 +152,10 @@ environment is a per-literal struct with one field per capture, and the
 function value's data word points at it (stack storage for `*func`, a managed
 allocation for `@func`). The per-closure shim loads each capture from `data`
 and calls the lifted function with `(captures…, user args…)`. For a managed
-closure the vtable's dtor slot holds the environment struct's destructor
-handle, so releasing the function value releases the captures in either mode.
+closure whose environment contains anything needing destruction (managed
+captures), the vtable's dtor slot holds the environment struct's destructor
+handle — null otherwise — so releasing the function value releases the
+captures in either mode.
 
 > _Status._ A **native** capturing closure's environment struct is untagged
 > (no data-kind word), so such a function value is not currently dispatchable
@@ -135,7 +169,8 @@ handle, so releasing the function value releases the captures in either mode.
 `abi.dispatch.subword` — Shims do not widen sub-word results; the platform
 guarantee (correct low bits) is all this seam promises for a narrow scalar
 result. The VM re-narrows after every potentially-cross-mode call; compiled
-callers apply §2.3's caller-side re-canonicalization.
+seam callers currently do **not** re-canonicalize (the §2.3 caller-side
+cleanup applies to direct calls only — see the §3.3 _Status_ note).
 
 > _Status._ Moving the widening into every producer's shim (and dropping the
 > VM-side narrow) is a recorded, deferred cleanup; until it lands the VM-side

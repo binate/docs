@@ -11,10 +11,13 @@
 `abi.rt.linkage` — Every compiled module implicitly depends on
 `pkg/builtins/rt`; its entry points are **ordinary mangled `bn_F` symbols
 with the ordinary calling convention** (Ch.2) — there is no special runtime
-calling convention, no C runtime dependency (the runtime is Binate plus
-per-target assembly), and no magic linkage. A generated object may therefore
+calling convention and no magic linkage. A generated object may therefore
 reference runtime entry points exactly as it references any package's
-functions.
+functions. The runtime contains **no C code** (it is Binate plus per-target
+assembly); note, though, that the **hosted** runtime's raw layer reaches the
+platform through `__c_call`, so hosted object sets carry undefined externals
+such as `malloc`, `calloc`, `free`, `write`, and `abort` — only the
+bare-metal backend is C-free.
 
 > _Note (informative)._ The entry points generated code currently references
 > include allocation (`Alloc`, `Box`, `MakeManagedSlice`), reference counting
@@ -52,7 +55,9 @@ object defines or may reference them as symbols.
 ## 7.4 Per-target assembly members
 
 `abi.rt.asm` — Parts of the runtime surface are provided as assembly under
-their exact mangled symbols (e.g. an aarch64 `MemZero`, the arm32 baremetal
-AEABI helper set, §2.10) and linked into every affected build; to callers
-they are indistinguishable from Binate definitions. This is an
-implementation arrangement, not additional ABI surface.
+their exact mangled symbols (e.g. an aarch64 `MemZero`) and linked into
+every affected build; to callers they are indistinguishable from Binate
+definitions. Separately, the arm32 bare-metal runtime provides the **AEABI
+helper set** under its standard unmangled `__aeabi_*` names with the AEABI
+register conventions (§2.10). Both are implementation arrangements, not
+additional ABI surface.

@@ -16,19 +16,21 @@ and return registers — with exactly the following deliberate, Binate-internal
 deviations, each chosen to match what the LLVM backend emits (§1.2):
 
 1. a by-value aggregate **larger than 16 bytes** is passed as a single
-   pointer to a caller-made copy on **every** target (§2.5), where SysV AMD64
-   and AAPCS32 would pass it by value in memory/registers;
+   pointer to **caller-owned memory holding the value**, the callee copying
+   it at entry (§2.5), on **every** target — where SysV AMD64 and AAPCS32
+   would pass it by value in memory/registers;
 2. **multiple results** are returned field-per-register under a
    register-count rule that exceeds the platform C ABI (§2.7) — C has no
    multi-return, so this layer is Binate-defined;
 3. sub-word scalars travel in **canonical extended form** with a two-sided
    defensive discipline (§2.3), stronger than the platform ABIs require;
-4. the single-aggregate **sret threshold** is size **> 16 bytes** on 64-bit
-   targets and **> 4 bytes** (one word) on ILP32 (§2.6) — on arm32 this makes
-   every slice, interface-value, and function-value result an sret return.
+4. on arm32-linux the base convention's (AAPCS-VFP) **HFA** argument/return
+   rules are deliberately **not** applied — float-containing aggregates ride
+   the soft-style path (§2.5, §4.7).
 
-C code never observes these deviations: the C boundary re-adapts to the true
-platform ABI (Ch.4).
+C code is insulated from deviations (1)–(3) by the C-boundary re-adaptation
+(Ch.4, subject to its recorded gaps); deviation (4) is C-observable and
+recorded as such (§4.7).
 
 ## 2.2 Type classes
 
@@ -51,6 +53,14 @@ a **scalar** or an **aggregate**:
 Named types, `readonly`, and transparent wrappers are peeled to the
 representation type first (§7.13.10).
 
+For the register-coercion, SSE, and HFA rules below and the dispatch-shape
+classification (§3.2), a struct counts as **named at the ABI layer** if it
+bears any name there — **including** the compiler-synthesized names given to
+source-level anonymous struct types; the only nameless aggregate is the
+multi-return result tuple. Arrays participate in those rules regardless of
+naming. (This is distinct from the named-type *wrapper peeling* in the
+preceding sentence.)
+
 ## 2.3 Sub-word canonical form
 
 `abi.cc.subword` — A sub-word integer scalar (any integer type, `bool`, or
@@ -70,18 +80,21 @@ types, `bool`, and `char`. The discipline is two-sided:
   mangled entry: internal callers guarantee canonical form there. Every
   **C-visible entry** (a `#[c_export]` name, a `__c_entry` pointer)
   re-establishes register canonical form before control reaches the mangled
-  entry (§4.5).
+  entry (§4.4–§4.5).
 - **Returns**: a callee returns a narrow scalar result in canonical
   full-width form in the return register. A **caller** nevertheless assumes
   only the platform guarantee (correct low bits) and re-canonicalizes a
   narrow scalar result after the call, because a foreign (C) callee may leave
   the high bits dirty.
 
-> _Note._ The asymmetry is sound by build topology: the only producer whose
-> callees rely on register-argument canonical form is the native backends, and
-> their direct callers are either code in the same natively-compiled module or
-> C entering through a normalizing entry (§4.5). The LLVM backend's callees
-> read only the low bits of a narrow parameter and so rely on nothing.
+> _Note._ The asymmetry is sound for direct calls: the only producer whose
+> callees rely on register-argument canonical form is the native backends,
+> and their direct callers are either code produced by the same backend or C
+> entering through a normalizing entry (§4.4–§4.5). The LLVM backend's
+> callees read only the low bits of a narrow parameter and so rely on
+> nothing. This discipline governs **direct calls only** — on the dispatch
+> seam (Ch.3) narrow slot and result words carry no canonical-form guarantee
+> (§3.3, §3.7).
 
 `abi.cc.subword.float32` — A `float32` occupying a 64-bit float register
 (XMM*n*, D*n*) is defined only in its low 32 bits; the high 32 bits of the
@@ -133,13 +146,13 @@ platform's boundary behavior:
   remaining GP registers it goes **entirely** to memory (the SysV MEMORY
   class, laid out on the outgoing stack), and the register cursor is left for
   later arguments. A register/stack straddle never occurs.
-- **x86-64 SSE classification**: a ≤16-byte named struct/array that
-  classifies with at least one SysV **SSE eightbyte** is split by eightbyte
+- **x86-64 SSE classification**: a ≤16-byte ABI-named struct or array
+  (§2.2) that classifies with at least one SysV **SSE eightbyte** is split by eightbyte
   class — SSE eightbytes to the next XMM registers, INTEGER eightbytes to the
   next GP registers, the two files advancing independently, all-or-nothing
   across both files.
-- **aarch64 HFA**: a named struct/array folding to 1–4 same-width float
-  members is passed in consecutive D registers, all-or-nothing (on overflow
+- **aarch64 HFA**: an ABI-named struct or array (§2.2) folding to 1–4
+  same-width float members is passed in consecutive D registers, all-or-nothing (on overflow
   the whole aggregate goes to the stack and the float file closes). An HFA is
   exempt from the >16-byte rule below. (arm32 hard-float deliberately does
   **not** apply the HFA rule — §4.7.)
@@ -147,12 +160,18 @@ platform's boundary behavior:
 `abi.cc.agg.large` — A by-value aggregate **larger than 16 bytes** (notably
 the 32-byte managed-slice on 64-bit targets, and any large struct) is passed
 as a **single pointer** to the argument value, in the next free GP register or
-one stack word. The pointee is owned by the caller for the duration of the
+one stack word; the pointer shall be aligned to at least the argument type's
+`AlignOf`. The pointee is owned by the caller for the duration of the
 call; by-value semantics are preserved by the **callee copying** the pointee
 into its own frame at entry. This is the internal deviation §2.1(1): it
 matches the LLVM backend's plain-pointer lowering (AAPCS64's C convention is
-already this form; SysV AMD64 and AAPCS32 C conventions are not, and the C
-boundary re-adapts — §4.4).
+already this form; SysV AMD64 and AAPCS32 C conventions are not, and the
+outbound C boundary re-adapts — §4.3; inbound entries do not yet, §4.4
+_Status_). Where this pointer form **is** the platform C convention
+(aarch64), one thing still changes at a C boundary: the pointee shall be a
+**private per-call temporary**, because a platform-C callee performs no
+entry copy and may mutate the pointee in place — internal calls tolerate
+shared storage only because the internal callee copies at entry.
 
 ## 2.6 Single-result returns
 
@@ -174,7 +193,8 @@ of size and is never sret.
 **16 bytes** (64-bit targets) or **4 bytes** (ILP32) is returned through a
 caller-allocated buffer (**sret**): the caller passes the buffer address in
 the target's sret register before the call, and the callee writes the result
-through it. Scalars are never sret (an ILP32 `int64` returns in R0:R1). The
+through it. The buffer shall be aligned to at least the result type's
+`AlignOf`. Scalars are never sret (an ILP32 `int64` returns in R0:R1). The
 sret register:
 
 | Target | sret register | Effect on arguments | Buffer pointer returned? |
@@ -238,6 +258,16 @@ C-variadic call, with the platform rules:
 - **arm32 hard-float**: variadic floats use the base (soft) standard — GP
   registers/stack, never the VFP bank.
 
+No C **default argument promotions** are performed on a variadic tail: each
+argument crosses at its own declared type, so a variadic argument must
+already have its promoted C type (`float64`, not `float32`; int-width
+integers) or the C callee's `va_arg` mis-reads it.
+
+> _Status._ The native aarch64 backend currently violates the darwin rule
+> for a **variadic HFA aggregate**: the variadic classification saturates
+> only the GP cursor, so such an argument still rides D registers where the
+> platform requires the stack — a recorded mis-ABI, raised for a fix.
+
 ## 2.9 arm32 hard-float (AAPCS-VFP) specifics
 
 `abi.cc.vfp` — On arm32-linux, float scalar arguments use the VFP bank under
@@ -248,6 +278,12 @@ float argument that spills to the stack closes the bank for all later float
 arguments. A single float result returns in S0/D0; float multi-return fields
 use D0–D3 via the same allocator. Float-containing aggregates deliberately do
 **not** use the VFP bank (§4.7).
+
+> _Status._ The back-fill allocator is implemented on the callee side and in
+> the concrete-register lookup; the caller-side spill classification
+> currently approximates it with a monotonic 8-register budget, so caller
+> and callee diverge for a call with more than 8 float-scalar arguments — a
+> recorded gap, raised for a fix.
 
 ## 2.10 arm32 AEABI helper calls
 

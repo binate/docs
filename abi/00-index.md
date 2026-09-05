@@ -16,10 +16,10 @@ The two specs divide the subject deliberately:
   (§10 `func.variadic.identity`), and the `bn_entry`/`bn_init` glue-symbol
   contract (§17 `prog.entry.glue`). This spec **cites** those rules and never
   restates them.
-- The language spec's §7.13 latitude taxonomy classifies calling-convention
-  register choices, binary formats, and symbol decoration as
-  **backend-private** / **implementation-defined** — deliberately refusing to
-  own them. That refused space is exactly **this spec's subject**: it pins the
+- The language spec deliberately refuses to own this layer: §7.13's latitude
+  taxonomy classifies calling-convention register choices and binary formats
+  as **backend-private**, and §21.4 classifies symbol decoration as
+  **implementation-defined** with a documented scheme. That refused space is exactly **this spec's subject**: it pins the
   implementation's concrete choices so that backends, the VM, C callers, and
   external tools can interoperate against a written contract instead of
   against one another's source code.

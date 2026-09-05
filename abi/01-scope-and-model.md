@@ -26,9 +26,12 @@ interchangeable**: an object emitted by the LLVM backend, an object emitted by
 a native backend, and the bytecode VM's dispatch layer shall agree on every
 convention in this spec, such that any of them can call into any other in one
 process without either side knowing which produced the other. This is not
-theoretical: the default native build compiles only the main module natively
-and every dependency package through the LLVM backend, so **every
-cross-package call is potentially a cross-producer call**.
+theoretical: the compiled↔interpreted dispatch seam (Ch.3) is a live
+cross-producer boundary in every dual-mode process, and whole-program builds
+by different backends must remain mutually link-compatible — sharing one
+runtime, one startup contract, and one set of coalescing weak artifacts — so
+that any mix of objects agreeing on this spec links into one correct
+program.
 
 > _Note._ This requirement is why several conventions below are pinned to what
 > LLVM emits (e.g. the multi-return register rule, §2.7): the native backends

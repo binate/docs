@@ -18,7 +18,9 @@ one of:
 2. a **decorated** symbol — a fixed prefix ending in `.` applied to a mangled
    core (§5.5);
 3. one of the two **reserved glue literals** `bn_entry` / `bn_init`
-   (language spec `prog.entry.glue`), never produced by the mangler;
+   (language spec `prog.entry.glue`) — produced only as sentinels for the
+   reserved source names `main.__entry` / `<facade>.__bninit`, never by the
+   mangling grammar;
 4. a **C-facing verbatim name** — `#[c_export]` export names, and the symbols
    named by `__c_call`/`__c_global` (references only). This is the **only**
    unmangled path (language spec `pkg.ccall`);
@@ -29,7 +31,12 @@ one of:
 
 `abi.sym.grammar` — Mangled symbols use an injective length-prefix scheme over
 the output alphabet `[A-Za-z0-9_]`; counts are decimal with no leading zero;
-demangling is an exact inverse.
+demangling is an exact inverse. The alphabet guarantee presupposes that
+identifiers and package-path segments themselves use only those characters —
+identifiers do by the language grammar; package paths are currently
+**unvalidated** (an out-of-set byte, or a `.`, would leak into symbols and
+break the decorated-name discriminator, §5.5) — a recorded enforcement
+gap.
 
 ```
 Symbol   = "bn_" Kind Body
@@ -87,8 +94,12 @@ instantiation, with the verbatim `ArgList` following the marker.
 
 ## 5.5 Decorated symbol families
 
-`abi.sym.decorated` — Decorations prefix a mangled core (these symbols contain
-a `.`); all are weak, link-coalesced definitions (§6.1):
+`abi.sym.decorated` — Decorations prefix a mangled core (these symbols
+contain a `.`). The coalescing families — `__ivt.`, `__ivtshim.`,
+`__typeinfo.`, `__ifaceid.`, `__satentry.`, `__handle.`, `__centry.` — are
+weak, link-coalesced definitions (§6.1); the blob families (`*_name.`,
+`*fields.`, `*fieldnames.`, `*_typesym.`, `*_ifacesym.`) are
+translation-unit-local:
 
 | Symbol | Contents |
 |--------|----------|
