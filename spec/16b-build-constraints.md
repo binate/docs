@@ -195,10 +195,9 @@ For example, POSIX `environ` has C type `char **` (Binate `**char`), so
 > _Note (implementation status)._ `__c_global` — the variable counterpart to
 > `__c_call`, filling the gap the C-**function** escape hatch left for C
 > **globals** — is **implemented in compiled mode** (2026-07-06): the default
-> (LLVM) compiler backend lowers it, so it works on every hosted compiled target
-> that links libc. The direct `--backend native` backends do **not** yet lower it
-> (they reject `__c_global` at code-generation rather than mis-compile it);
-> native support is forthcoming. As specified above it remains **compiled-mode
+> (LLVM) compiler backend lowers it, and the native backends lower it as well
+> (GOT-indirect address loads on the PIE targets; an absolute relocation pair on
+> the native arm32 non-PIE links). As specified above it remains **compiled-mode
 > only** — the bytecode VM never executes it. (It is unrelated to
 > `decl.var.extern` (§9.2), the Binate `.bni`/`.bn` interface/implementation
 > split, which is not a C symbol.)
@@ -212,8 +211,9 @@ For example, POSIX `environ` has C type `char **` (Binate `**char`), so
 
 > _Status._ `pkg.cexport`, `pkg.cexport.eligible`, and `pkg.cexport.signature` are
 > **implemented** (together with `bnc --library` and the `bn_init`/`bn_entry` glue of
-> §17.3.2). `pkg.centry` and its sub-rules are **Draft — ratified, not yet implemented**
-> (`proposal-c-entry-builtin`). `pkg.link-placement` remains **Draft / pending**, and its
+> §17.3.2). `pkg.centry` and its sub-rules are **implemented** in compiled modes
+> (the VM performs no FFI, per the rules themselves).
+> `pkg.link-placement` remains **Draft / pending**, and its
 > naming (`section`, `link_at`) is provisional. This subsection is the *outbound*
 > counterpart to `__c_call`/`__c_global`: those call *into* C; these make Binate
 > functions callable *from* C (and let the program's entry/startup glue be written in
@@ -292,11 +292,11 @@ pointer work. Whether it equals the address of a `#[c_export]` symbol for `f` is
 **unspecified** — the guarantee is behavioral (`pkg.cexport.semantics`), not
 positional.
 
-> _Draft — ratified, not yet implemented (`proposal-c-entry-builtin`, 2026-09-02)._
-> Ratified decisions: the name `__c_entry`; generic instantiations rejected (may be
-> relaxed later if a use case appears); the signature rule shared with `#[c_export]`;
-> the `*uint8` result (a dedicated C-function-pointer type could be layered on later
-> without a breaking change).
+> _Note (status)._ Ratified 2026-09-02 and since **implemented** (compiled
+> modes). Ratified decisions: the name `__c_entry`; generic instantiations rejected
+> (may be relaxed later if a use case appears); the signature rule shared with
+> `#[c_export]`; the `*uint8` result (a dedicated C-function-pointer type could be
+> layered on later without a breaking change).
 
 `pkg.link-placement` — A **linker-placement** annotation on a top-level function directs the
 backend/linker to place the emitted symbol in a named output section (`#[section(".init")]`) or, where
