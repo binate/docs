@@ -1,6 +1,6 @@
 # 5. Lexical Elements
 
-> **Status:** normative · **Maturity:** mostly Stable (Draft — ratified, not yet implemented: the `#!` shebang rule, §5.2 `lex.shebang`, and the `defer` keyword, §14.13)  
+> **Status:** normative · **Maturity:** mostly Stable (Draft — ratified, not yet implemented: the `#!` shebang rule, §5.2 `lex.shebang`)  
 > **Rule-ID prefix:** `lex`
 
 This chapter defines how the source text of a Binate file is partitioned into

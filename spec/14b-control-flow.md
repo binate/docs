@@ -1,6 +1,6 @@
 # 14.8–14.15 Control-flow statements
 
-> **Status:** mixed · **Maturity:** language rules Stable (a few open semantic items flagged; defer §14.13 is Draft — ratified, not yet implemented)  
+> **Status:** mixed · **Maturity:** language rules Stable (a few open semantic items flagged)  
 > **Rule-ID prefix:** `stmt`
 
 This continues [Ch.14 Statements](14-statements.md) with the control-flow forms:
@@ -178,10 +178,6 @@ and always target the innermost construct — there is no labeled break/continue
 no way to break out of an outer loop directly (§14.15).
 
 ## 14.13 Defer statements
-
-> _Draft — ratified, not yet implemented (`proposal-defer`, 2026-09-02)._ The
-> design is settled — function-scoped, with the loop restriction — and the
-> `defer` keyword is reserved (§5.4); no implementation exists yet.
 
 `stmt.defer` — A **defer statement** schedules a call to run when the
 **enclosing function** exits (`stmt.defer.exit`):
