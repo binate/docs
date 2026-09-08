@@ -139,12 +139,10 @@ package, Ch.20).
 
 ### 17.3.2 Entry glue and pluggable platform startup
 
-> _Status._ `prog.entry.glue` and `prog.init.idempotent` are **implemented with
-> one known divergence**: the current toolchain emits `bn_init` only in
-> `--library` artifacts, and a program's `bn_entry` reaches initialization
-> through an internal dispatcher rather than a `bn_init` call. The fix — emit
-> `bn_init` in every artifact, with `bn_entry` literally calling it — is decided
-> and tracked. The `--library` leg and the Binate startup entry are in place, as are the
+> _Status._ `prog.entry.glue` and `prog.init.idempotent` are **implemented**:
+> the toolchain emits `bn_init` in every artifact, and a program's `bn_entry` is
+> literally `bn_init(); main.main()`. The `--library` leg and the Binate startup
+> entry are in place, as are the
 > hosted-program and C-library legs of `prog.entry.pluggable`; its placed freestanding
 > `_start` leg remains **pending** on the linker-placement annotation (§16.9
 > `pkg.link-placement`). They generalize `prog.entry.sequence`: the entry is pluggable

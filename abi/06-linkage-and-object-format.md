@@ -141,8 +141,5 @@ order. A **program** artifact additionally defines `bn_entry` =
 `bn_init()` then `main.main()` (language spec §17); a library has no `main`
 and hence no `bn_entry`.
 
-> _Status._ Decided contract, tracked for implementation: the current
-> realization emits `bn_init` only in `--library` artifacts, and a
-> program's `bn_entry` reaches initialization through an internal
-> dispatcher rather than a `bn_init` call — so today a program-shaped link
-> defines only `bn_entry`.
+> _Status._ Implemented: `bn_init` is emitted in every artifact and a program's
+> `bn_entry` is literally `bn_init(); main.main()`.
