@@ -32,18 +32,24 @@ deliberate deviation (§4.4 _Status_, §4.7).
 | interface value | `struct { void* data; void* vtable; }` |
 | function value | `struct { void* vtable; void* data; }` — the **reverse** field order |
 | struct / array by value | per the platform C ABI, with the ≤16-byte by-value cutoff (§7.13.11) |
-| multiple results | **not C-ABI-replicable** — see below |
+| multiple results | the platform C ABI for a struct with the result fields — see below |
 
-A **multi-result** function has no C form: its in-register return convention
-(§2.7) is not the platform's composite-return rule, and even its sret leg
-triggers under the internal register-count rule rather than C's size rule,
-so the two coincide only incidentally. Exporting, or taking `__c_entry` of,
-a multi-result function is therefore **not supported** at the C boundary.
+A **multi-result** function's C form is the platform struct return of its
+packed result tuple. The **internal** convention (§2.7) is not that — its
+register form and its sret trigger (register-count, not size) both differ —
+so the C-visible entry **adapts**: where the C ABI srets a
+register-returned tuple, the entry stores the register result through the
+caller's sret buffer; where both sides return in registers but placements
+differ, the entry presents the platform's coerced form; where the internal
+convention srets a tuple that C returns in registers, the entry hands the
+definition a local buffer and re-loads it packed. Tuples on which the two
+conventions already agree are entered directly (§4.4). The mangled
+definition and internal callers are unaffected.
 
-> _Status._ Because export signatures are not yet validated (§4.4 _Status_),
-> such an export is currently accepted and mis-ABIs. The language spec's
-> `pkg.cexport.signature` still lists a packed-struct/sret C form for
-> multiple results — a flagged correction awaiting the owner.
+> _Status._ `__c_entry` of a multi-result function does not yet route
+> through this adaptation — the callback pointer presents the internal
+> convention to its C caller. Raised; the decided fix extends the
+> `__centry.` thunk (§4.5) with the same return adaptation.
 
 ## 4.3 Outbound: `__c_call`
 
@@ -68,19 +74,27 @@ The declared result must be a scalar, a pointer, or `void`
 
 `abi.cabi.export` — A `#[c_export("name")]` function is a **strong global**
 under each export name, regardless of the function's own visibility. The
-export name is an entry to the same code as the mangled symbol: the LLVM
-backend emits the name as an alias of the mangled definition (the definition
-itself is the C entry); the native backends emit the name as a label followed
-by a **normalization prefix** — sign/zero-extension of each narrow GP register
-parameter (§2.3) — that falls through or jumps to the mangled entry, so
-internal callers entering at the mangled symbol skip the prefix.
+export name is an entry to the same code as the mangled symbol. Where the
+function's C form (§4.2) coincides with its internal convention, the name is
+a plain alias (LLVM) or label (native) of the mangled definition; where they
+differ, the name leads through a per-function **adapting entry** — a C-ABI
+thunk on the LLVM backend, an adapter trampoline on the native backends —
+that re-marshals the divergent pieces and forwards to the mangled
+definition: narrow GP register parameters are re-extended (§2.3), a
+>16-byte by-value parameter arriving per the platform convention (by value
+in memory/registers on x86-64/arm32) is re-materialized as the internal
+pointer-to-copy form (§2.5; the aarch64 conventions coincide), and a
+multi-result return is adapted per §4.2. Internal callers enter at the
+mangled symbol and pay none of this.
 
-> _Status._ Export signatures are not yet validated against the C mapping
-> (§4.2); in particular a >16-byte by-value parameter on an exported function
-> currently presents the **internal** pointer convention (§2.5) to a C caller
-> on x86-64/arm32 — a known mis-ABI, raised for prioritization (a C caller
-> following the platform convention will not match it). aarch64 is unaffected
-> (the conventions coincide).
+> _Note._ Export signatures are not yet *validated* against the C mapping —
+> a tracked follow-up — but the shapes above are adapted, not mis-ABI'd.
+> One declaration-parity nuance: a plain-**alias** export's narrow scalar
+> parameters are declared without extension attributes on the LLVM backend
+> (an alias cannot carry them, and attributing the shared internal
+> definition would miscompile internal callers). This is functionally
+> correct — the callee re-extends — but not clang-parity for tools that
+> read parameter attributes; thunk-form entries do declare them.
 
 ## 4.5 Inbound: `__c_entry`
 
@@ -106,22 +120,17 @@ native function re-canonicalizes them unconditionally at its mangled entry
 
 `abi.cabi.subword` — At every C-visible entry and return, sub-word
 integer/`bool` values are **callee-extended to the canonical full word**
-(§2.3): inbound, the normalization prefixes/thunks and the unconditional
+(§2.3): inbound, the adapting entries (§4.4–§4.5) and the unconditional
 narrow-stack-argument canonicalization establish it; outbound (a C caller
 reading a Binate function's result), the return is produced in canonical
-extended form, and the LLVM backend additionally marks narrow scalar returns
-of exported functions with the platform's extension attributes so an
-optimizing C caller may rely on the extension. Symmetrically, a narrow
-scalar **argument** of a `__c_call` shall cross in the platform's expected
-caller-extended form.
-
-> _Status._ Two suspected gaps of the same defect class as the fixed
-> exported-return bug (both raised, unverified end-to-end): a function
-> reached **only** through `__c_entry` (not also `#[c_export]`) does not
-> receive the LLVM return-extension attributes; and the LLVM backend emits
-> no extension attributes on `__c_call` **arguments**, so an LLVM-compiled
-> caller has no extension guarantee on platforms whose C ABI lets the callee
-> assume caller-extension.
+extended form, and the LLVM backend marks narrow scalar returns of
+C-visible functions — exported or `__c_entry`-reached — with the platform's
+extension attributes so an optimizing C caller may rely on the extension.
+Symmetrically, a narrow scalar **fixed-position argument** of a `__c_call`
+crosses in the platform's expected caller-extended form (the LLVM backend
+declares and emits the extension attributes; the native backends pass
+canonical full words). Variadic-tail arguments are instead governed by the
+no-promotions rule (§2.8): the programmer passes pre-promoted values.
 
 ## 4.7 Known deliberate deviation: arm32 hard-float HFAs
 

@@ -60,7 +60,10 @@ ELF objects always carry an empty `.note.GNU-stack` (non-executable stack);
 arm32 objects written by the self-hosted object writer carry
 `.ARM.attributes` only when hard-float (declaring v7/VFPv3/VFP-register
 argument passing); clang-produced (LLVM-backend) arm32 objects carry the
-section under both float ABIs.
+section under both float ABIs. Defined non-local symbols in executable
+sections are typed `STT_FUNC` (linkers key ARM/Thumb interworking veneers
+off the symbol type), and arm32 objects carry the ARM mapping symbols
+(`$a`/`$d`; local, excluded from resolution).
 
 ## 6.4 Relocations
 
@@ -98,9 +101,15 @@ references. Package-level `var` storage is a strong, zeroed blob of
 `__init`). A TypeInfo record's address is the program-wide identity token for
 its type (one weak, coalesced record per concrete type); interface
 satisfaction is a distributed registry of weak `__satentry.` records reached
-from each package's satisfaction-graph node and built at program startup
-(§6.7, including its _Status_ note on library builds) — it is deliberately
-**not** part of the TypeInfo record.
+from each package's satisfaction-graph node and built at startup (§6.7) —
+it is deliberately **not** part of the TypeInfo record.
+
+> _Note._ The registry is decentralized: satisfaction entries travel with
+> their package's objects, so an archive member reachable **only** through
+> the satisfaction graph (never pulled in by any ordinary symbol) resolves
+> to the weak empty fallback and its entries are dropped. A program that
+> must assert against a package's impls should reference at least one
+> ordinary symbol of that package.
 
 ## 6.6 The frame-pointer chain
 
@@ -129,11 +138,11 @@ A **program** artifact defines `bn_entry` and no `bn_init`; a **library**
 artifact defines `bn_init` and no `bn_entry`. `bn_entry` builds the
 interface-satisfaction registry, runs package initialization in dependency
 order (through an internal dispatcher), then calls `main.main`
-(language spec §17).
+(language spec §17); `bn_init` likewise builds the registry first (from the
+facade's satisfaction-graph node, just after its run-once guard), then runs
+the package initializers.
 
-> _Status._ Two recorded divergences, both raised for the owner: the cited
+> _Status._ One recorded divergence, raised for the owner: the cited
 > `prog.entry.glue` reads as if both glue symbols exist in every artifact
-> and as if `bn_entry` reaches initialization through `bn_init`, neither of
-> which the realization does; and a **library** build currently never
-> builds the interface-satisfaction registry (`bn_init` runs package
-> initializers only), so interface assertions inside a library miss.
+> and as if `bn_entry` reaches initialization through a `bn_init` call,
+> neither of which the realization does.

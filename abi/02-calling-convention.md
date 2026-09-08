@@ -240,8 +240,9 @@ field order so the lower-indexed field ends on ST0).
 
 > _Note._ This convention exists because C has no multi-return; it was derived
 > empirically from LLVM/clang's first-class-aggregate return lowering and is
-> now normative here (§1.2 Note). It is not reachable from C — a multi-return
-> function is not C-ABI-replicable except via its sret form (§4.2).
+> now normative here (§1.2 Note). The **internal** form is not reachable from
+> C; a C-visible entry adapts a multi-result export to the platform
+> struct-return convention (§4.2).
 
 ## 2.8 Variadic calls
 
@@ -263,11 +264,6 @@ argument crosses at its own declared type, so a variadic argument must
 already have its promoted C type (`float64`, not `float32`; int-width
 integers) or the C callee's `va_arg` mis-reads it.
 
-> _Status._ The native aarch64 backend currently violates the darwin rule
-> for a **variadic HFA aggregate**: the variadic classification saturates
-> only the GP cursor, so such an argument still rides D registers where the
-> platform requires the stack — a recorded mis-ABI, raised for a fix.
-
 ## 2.9 arm32 hard-float (AAPCS-VFP) specifics
 
 `abi.cc.vfp` — On arm32-linux, float scalar arguments use the VFP bank under
@@ -278,12 +274,6 @@ float argument that spills to the stack closes the bank for all later float
 arguments. A single float result returns in S0/D0; float multi-return fields
 use D0–D3 via the same allocator. Float-containing aggregates deliberately do
 **not** use the VFP bank (§4.7).
-
-> _Status._ The back-fill allocator is implemented on the callee side and in
-> the concrete-register lookup; the caller-side spill classification
-> currently approximates it with a monotonic 8-register budget, so caller
-> and callee diverge for a call with more than 8 float-scalar arguments — a
-> recorded gap, raised for a fix.
 
 ## 2.10 arm32 AEABI helper calls
 

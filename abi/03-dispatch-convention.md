@@ -69,18 +69,6 @@ the stack, per Ch.2's GP rules. Per argument type:
   may pass a bare narrow value), and a consumer shall not rely on a narrow
   slot's high bits.
 
-> _Status._ Two recorded gaps against this section, both raised. (1) Narrow
-> values: the native backends' shims and seam callers currently neither
-> re-extend narrow slot words nor re-canonicalize narrow seam-call results
-> (only direct calls get the §2.3 caller-side cleanup) while native callees
-> rely on canonical register form — a latent cross-producer hazard pending
-> verification. (2) The native arm32 backend applies AAPCS32 even-pair
-> padding to 64-bit and 8-aligned dispatch slots and (hard-float) places
-> float scalars in VFP registers on this seam, diverging from the positional
-> all-integer encoding the LLVM backend and the VM implement; the placements
-> coincide only at even register parity — pending an owner decision on which
-> encoding is the contract.
-
 ## 3.4 The static triple: shim, vtable, handle
 
 `abi.dispatch.triple` — For every compiled function that can be reached
@@ -136,13 +124,9 @@ limit of the interpreter (§19.5), not a language rule.
 > impl's native handle vtable, and `TrampolineAggregate` performs the same
 > substitution on the result copy, so compiled code never sees a VM index.
 
-> _Status._ Compiled→interpreted **multi-return** indirect calls are
-> currently unrealized (raised): the VM's trampoline selection recognizes
-> only single aggregate results, so a multi-return interpreted function
-> value receives `TrampolineScalar` — mismatching the retbuf shape §3.2
-> requires — and `TrampolineAggregate` itself rejects multi-result metadata.
-> Relatedly, the VM selects the aggregate trampoline for a zero-size struct
-> result where compiled producers use the scalar shape.
+> _Note._ Like the seven-slot argument bank, the cross-mode **result** copy
+> is bounded: the VM's aggregate trampoline rejects (loudly) a result image
+> wider than 64 bytes.
 
 ## 3.6 Closure environments
 
@@ -168,9 +152,10 @@ captures in either mode.
 
 `abi.dispatch.subword` — Shims do not widen sub-word results; the platform
 guarantee (correct low bits) is all this seam promises for a narrow scalar
-result. The VM re-narrows after every potentially-cross-mode call; compiled
-seam callers currently do **not** re-canonicalize (the §2.3 caller-side
-cleanup applies to direct calls only — see the §3.3 _Status_ note).
+result. Consumers therefore defend: shims re-extend register-passed narrow
+slot arguments before invoking the underlying function, compiled seam
+callers re-canonicalize a narrow scalar result after the call, and the VM
+re-narrows after every potentially-cross-mode call.
 
 > _Status._ Moving the widening into every producer's shim (and dropping the
 > VM-side narrow) is a recorded, deferred cleanup; until it lands the VM-side

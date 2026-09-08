@@ -255,8 +255,9 @@ C's unsigned `size_t`); a managed-slice `@[]T` → its 4-word `{data, len, backi
 value → a 2-word `{data, vtable}`; a **function value**
 → a 2-word `{vtable, data}`, the **reverse** field order of an interface value
 (§7.13.9 `type.layout.func-value`), which a C typedef must match; a struct by-value or by-reference
-per the ≤16-byte cutoff (§7.13.11 `type.layout.byval-cutoff`); a multi-return as its packed
-anonymous result struct or `sret`. Unlike `__c_call`/`__c_global` above (restricted to a scalar or
+per the ≤16-byte cutoff (§7.13.11 `type.layout.byval-cutoff`); a multi-return as a struct
+with the result fields, returned per the platform C ABI (by value or `sret`
+as C dictates for that struct). Unlike `__c_call`/`__c_global` above (restricted to a scalar or
 pointer), the *export* direction rejects **nothing** at the ABI level.
 
 > _Note (managed-value discipline, not an ABI gate)._ A managed value handed to C follows the
