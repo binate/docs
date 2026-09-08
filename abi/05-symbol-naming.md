@@ -81,16 +81,14 @@ Examples: `pkg/binate/parser.parseExpr` →
 `abi.sym.reserved` — In source, identifiers beginning `__` and identifiers
 containing `__bn_inst__` are rejected in user declarations; every
 compiler-synthesized source-level name lives in the `__` namespace (`__init`,
-`__entry`, `__funclit_<n>`, `__dtor_…`, `__copy_…`, `__Package`, …). A
+`__entry`, `__funclit_<n>`, `__dtor_…`, `__copy_…`, `__Package`, the
+per-package descriptor globals `__pkgname` / `__pkg_info` / `__pkg_funcs` /
+`__pkg_globals` / `__pkg_vtables` / `__pkg_satentries` / `__pkg_satfrag`, …). A
 "."-member containing the infix `__bn_inst__` marks a monomorphized generic
-instantiation, with the verbatim `ArgList` following the marker.
-
-> _Status._ Gap (raised): the per-package descriptor emitters synthesize
-> **single**-underscore globals (`_pkgname`, `_pkg_info`, `_pkg_funcs`,
-> `_pkg_globals`, `_pkg_vtables`, `_pkg_satentries`, `_pkg_satfrag`) through
-> the ordinary `bn_G` namespace, and single-underscore user identifiers are
-> not reserved — a user package-level `var _pkg_info …` collides silently.
-> Until resolved, treat `_pkg*` package-level names as reserved in practice.
+instantiation, with the verbatim `ArgList` following the marker. Single-
+underscore identifiers (`_foo`, `_pkg…`) are a normal user convention and are
+NOT reserved — they cannot collide with a synthesized name, which always carries
+the `__` prefix.
 
 ## 5.5 Decorated symbol families
 
