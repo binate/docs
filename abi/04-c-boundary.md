@@ -44,12 +44,9 @@ differ, the entry presents the platform's coerced form; where the internal
 convention srets a tuple that C returns in registers, the entry hands the
 definition a local buffer and re-loads it packed. Tuples on which the two
 conventions already agree are entered directly (§4.4). The mangled
-definition and internal callers are unaffected.
-
-> _Status._ `__c_entry` of a multi-result function does not yet route
-> through this adaptation — the callback pointer presents the internal
-> convention to its C caller. Raised; the decided fix extends the
-> `__centry.` thunk (§4.5) with the same return adaptation.
+definition and internal callers are unaffected. The same return adaptation
+applies to a callback reached through `__c_entry` (§4.5), not only to a
+`#[c_export]` name.
 
 ## 4.3 Outbound: `__c_call`
 
@@ -99,22 +96,32 @@ mangled symbol and pay none of this.
 ## 4.5 Inbound: `__c_entry`
 
 `abi.cabi.centry` — `__c_entry(f)` yields a C-callable pointer to `f`
-(language spec `pkg.centry`). On the LLVM backend the value is `f`'s mangled
-definition address (that definition is already the C entry). On the native
-backends, if `f` has any narrow GP register parameter the value is a **weak**
-thunk `__centry.<mangled>` — emitted by every referencing translation unit
-and coalesced by the linker to one address program-wide, which realizes the
-same-pointer identity of `pkg.centry.identity` — performing the §4.4
-normalization then jumping to the mangled entry; otherwise it is the mangled
-entry itself. Narrow **stack** arguments need no thunk on any backend: every
-native function re-canonicalizes them unconditionally at its mangled entry
-(§2.3).
+(language spec `pkg.centry`). When `f`'s C form coincides with its internal
+convention the value is `f`'s mangled definition address (that definition is
+already the C entry). When they differ, the value is a **weak** thunk
+`__centry.<mangled>` — emitted by every referencing translation unit and
+coalesced by the linker to one address program-wide, which realizes the
+same-pointer identity of `pkg.centry.identity` — that performs the §4.4
+adaptation (re-extending narrow register arguments and/or repacking a
+divergent multi-value return, §4.2) then enters the mangled definition. The
+two backends differ in *which* divergence needs the thunk: a **divergent
+multi-value return** forces it on **both** backends; a **narrow GP register
+parameter** forces it only on the **native** backends — the LLVM calling
+convention already re-extends narrow arguments, so LLVM keeps the mangled-
+definition address for a narrow-parameter-only `f`. Narrow **stack** arguments
+need no thunk on any backend: every native function re-canonicalizes them
+unconditionally at its mangled entry (§2.3).
 
-> _Status._ The same-pointer identity currently holds **within one
-> producer's program**: for the same narrow-parameter `f`, the LLVM lowering
-> yields the mangled definition address while the native lowering yields the
-> `__centry.` thunk address, so a mixed-producer program would violate
-> `pkg.centry.identity` — raised for harmonization.
+> _Status._ For a **divergent multi-value return** the two backends agree —
+> both yield the weak `__centry.<mangled>` thunk address, so
+> `pkg.centry.identity` holds across producers. A residual gap remains for a
+> **narrow-parameter-only** `f`: the LLVM lowering yields the mangled
+> definition address while the native lowering yields the `__centry.` thunk,
+> so a mixed-producer program would still violate `pkg.centry.identity` there
+> — raised for harmonization. Separately, a `>16-byte` **by-value aggregate
+> parameter** is not yet adapted on the `__c_entry` path on either backend (a
+> tracked follow-up); such a callback is currently mis-ABI'd for a C caller
+> passing the struct by value.
 
 ## 4.6 Sub-word values at the C boundary
 
