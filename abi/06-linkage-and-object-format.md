@@ -134,15 +134,15 @@ choices are backend-private (§1.6).
   `bn_entry`.
 - **Library**: the host calls `bn_init` (idempotent; run-once guard).
 
-A **program** artifact defines `bn_entry` and no `bn_init`; a **library**
-artifact defines `bn_init` and no `bn_entry`. `bn_entry` builds the
-interface-satisfaction registry, runs package initialization in dependency
-order (through an internal dispatcher), then calls `main.main`
-(language spec §17); `bn_init` likewise builds the registry first (from the
-facade's satisfaction-graph node, just after its run-once guard), then runs
-the package initializers.
+`bn_init` is defined in **every** artifact: idempotent (run-once guard), it
+builds the interface-satisfaction registry from the build root's
+satisfaction-graph node, then runs package initialization in dependency
+order. A **program** artifact additionally defines `bn_entry` =
+`bn_init()` then `main.main()` (language spec §17); a library has no `main`
+and hence no `bn_entry`.
 
-> _Status._ One recorded divergence, raised for the owner: the cited
-> `prog.entry.glue` reads as if both glue symbols exist in every artifact
-> and as if `bn_entry` reaches initialization through a `bn_init` call,
-> neither of which the realization does.
+> _Status._ Decided contract, tracked for implementation: the current
+> realization emits `bn_init` only in `--library` artifacts, and a
+> program's `bn_entry` reaches initialization through an internal
+> dispatcher rather than a `bn_init` call — so today a program-shaped link
+> defines only `bn_entry`.
