@@ -183,11 +183,16 @@ built-in `__c_global` (another internal foreign-function primitive, §15.8):
 `__c_global("symbol", T)` yields the **address** of the C global named by the
 string literal — emitted **verbatim, with no name mangling** (like `__c_call`) —
 as a **raw pointer `*T`**, where `T` is the variable's C type. Read the global with
-`*p` and write it with `*p = …`. `T` must be a C-ABI-passable **scalar or pointer**
-(a C global is read/written as a scalar or pointer; aggregate C-global types are
-not yet supported — narrower than `__c_call`'s arguments, which admit any
-defined-layout type); the result is **always raw** (`*T`, never `@T`) — the storage
-belongs to the C side and carries no reference-count header. `__c_global` is **compiled-mode only** (the bytecode VM performs no FFI).
+`*p` and write it with `*p = …`. `T` must have a **defined ABI layout** — any such
+type maps to a C type the C side can declare, exactly the widened
+C-representability `__c_call` admits for its arguments: a scalar, a pointer, a
+struct or array by value, a raw or managed slice, an interface or function value.
+The only rejection is an **opaque-by-value** type (its layout is unavailable here).
+Honoring the ABI is the **C side's responsibility** — including the reference-count
+discipline for a managed-typed global (e.g. an immortal managed pointer with a
+valid header) — exactly as for a `__c_call` argument. The result is **always raw**
+(`*T`, never `@T`) — the recovered pointer itself borrows C-side storage and is
+never reference-counted. `__c_global` is **compiled-mode only** (the bytecode VM performs no FFI).
 For example, POSIX `environ` has C type `char **` (Binate `**char`), so
 `__c_global("environ", **char)` is a `***char` and `*` of it is the current
 `**char`.
