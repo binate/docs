@@ -260,9 +260,14 @@ C-variadic call, with the platform rules:
   registers/stack, never the VFP bank.
 
 No C **default argument promotions** are performed on a variadic tail: each
-argument crosses at its own declared type, so a variadic argument must
-already have its promoted C type (`float64`, not `float32`; int-width
-integers) or the C callee's `va_arg` mis-reads it.
+argument crosses at its own declared type. A variadic-tail argument shall
+therefore already have its C-promoted type — `float64` (not `float32`), an
+integer of at least `int` width (not a sub-word integer, `bool`, or `char`)
+— else the C callee's `va_arg` mis-reads it; such arguments are **rejected
+at compile time**.
+
+> _Status._ Rejection decided (2026-09-12), tracked for implementation —
+> today the unpromoted shapes are silently accepted.
 
 ## 2.9 arm32 hard-float (AAPCS-VFP) specifics
 

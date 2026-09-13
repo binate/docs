@@ -60,12 +60,13 @@ R0–R3 and the stack (AAPCS); on aarch64 the internal pointer form already
 **is** the platform convention and nothing changes. A variadic `__c_call` is
 a true C-variadic call (§2.8, including its no-default-promotions rule).
 
-The declared result must be a scalar, a pointer, or `void`
-(language spec `pkg.ccall`).
-
-> _Status._ Aggregate `__c_call` **returns** (an sret out-call to C) are
-> unsupported — a tracked follow-up; the pointer-out-parameter idiom is the
-> workaround the language spec documents.
+The declared result may be **any type with a defined C-ABI layout**, or
+`"void"` (language spec `pkg.ccall`): an aggregate result is returned per
+the platform C ABI — a hidden sret buffer above the byval cutoff
+(§7.13.11), register-coerced below it. Opaque-by-value types are rejected,
+and on **arm32 hard-float** a homogeneous-float aggregate return is
+rejected (the platform returns it in VFP registers, which the internal
+convention does not use — §4.7; use a pointer out-parameter there).
 
 ## 4.4 Inbound: `#[c_export]`
 
@@ -84,9 +85,7 @@ pointer-to-copy form (§2.5; the aarch64 conventions coincide), and a
 multi-result return is adapted per §4.2. Internal callers enter at the
 mangled symbol and pay none of this.
 
-> _Note._ Export signatures are not yet *validated* against the C mapping —
-> a tracked follow-up — but the shapes above are adapted, not mis-ABI'd.
-> One declaration-parity nuance: a plain-**alias** export's narrow scalar
+> _Note._ One declaration-parity nuance: a plain-**alias** export's narrow scalar
 > parameters are declared without extension attributes on the LLVM backend
 > (an alias cannot carry them, and attributing the shared internal
 > definition would miscompile internal callers). This is functionally
@@ -112,16 +111,15 @@ definition address for a narrow-parameter-only `f`. Narrow **stack** arguments
 need no thunk on any backend: every native function re-canonicalizes them
 unconditionally at its mangled entry (§2.3).
 
-> _Status._ For a **divergent multi-value return** the two backends agree —
-> both yield the weak `__centry.<mangled>` thunk address, so
-> `pkg.centry.identity` holds across producers. A residual gap remains for a
-> **narrow-parameter-only** `f`: the LLVM lowering yields the mangled
-> definition address while the native lowering yields the `__centry.` thunk,
-> so a mixed-producer program would still violate `pkg.centry.identity` there
-> — raised for harmonization. Separately, a `>16-byte` **by-value aggregate
-> parameter** is not yet adapted on the `__c_entry` path on either backend (a
-> tracked follow-up); such a callback is currently mis-ABI'd for a C caller
-> passing the struct by value.
+> _Status._ For a target needing a **return or parameter adaptation** the
+> two backends agree — both yield the weak `__centry.<mangled>` thunk
+> address, so `pkg.centry.identity` holds across producers; a target needing
+> no adaptation yields the mangled entry on both. The one residual is a
+> **narrow-register-parameter-only** `f`: the LLVM lowering yields the
+> mangled definition address while the native lowering yields the
+> `__centry.` thunk. Harmonization decided (2026-09-12) and tracked: the
+> LLVM backend will emit the weak `__centry.` forwarding thunk for that
+> case too, closing the identity gap in mixed-producer links.
 
 ## 4.6 Sub-word values at the C boundary
 
@@ -154,7 +152,10 @@ HFA types across the arm32-linux C boundary by value.
 
 `abi.cabi.cglobal` — `__c_global("sym", T)` is an **address materialization,
 not a call**: the verbatim symbol becomes an undefined **data** external
-(object-format prefix applied, §5.6), with `T` restricted to a scalar or
-pointer (language spec `pkg.cglobal`), and one symbol cannot be both a
-`__c_call` function and a `__c_global` object in a program. The relocation
-form of the address load is per §6.4's C-globals rule.
+(object-format prefix applied, §5.6). `T` may be any type with a defined
+C-ABI layout (opaque-by-value rejected; language spec `pkg.cglobal`);
+honoring the layout — including the reference-count discipline for a
+managed-typed global — is the C side's responsibility, and the recovered
+pointer is always raw. One symbol cannot be both a `__c_call` function and
+a `__c_global` object in a program. The relocation form of the address load
+is per §6.4's C-globals rule.
