@@ -161,7 +161,12 @@ of the internal foreign-function primitives, §15.8): `__c_call("symbol", RetTyp
 args…)` calls the C symbol named by the string literal — emitted **verbatim**,
 with **no name mangling** (the only such path; every other symbol is mangled from
 its package path) — with the C signature given as explicit Binate types (a `...`
-marker separates fixed from variadic arguments). Each **argument** may be **any
+marker separates fixed from variadic arguments). A **variadic-tail argument** (at
+or past the `...` marker) must already be its **C-promoted type** — `float64` (not
+`float32`) and an integer of at least C `int` width (not a sub-`int` integer,
+`bool`, or `char`); no default argument promotion happens at the boundary, so an
+unpromoted tail argument is **rejected at compile time** (ABI §2.8
+`abi.cc.variadic`). Each **argument** may be **any
 type with a defined C-ABI layout**: a scalar, a pointer, a struct **by value**, a
 raw slice `*[]T` (its `{T*, ptrdiff_t}` header), a managed-slice `@[]T`, a managed
 pointer `@T`, or an interface / function value — passed per the platform C ABI

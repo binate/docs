@@ -266,9 +266,6 @@ integer of at least `int` width (not a sub-word integer, `bool`, or `char`)
 — else the C callee's `va_arg` mis-reads it; such arguments are **rejected
 at compile time**.
 
-> _Status._ Rejection decided (2026-09-12), tracked for implementation —
-> today the unpromoted shapes are silently accepted.
-
 ## 2.9 arm32 hard-float (AAPCS-VFP) specifics
 
 `abi.cc.vfp` — On arm32-linux, float scalar arguments use the VFP bank under
