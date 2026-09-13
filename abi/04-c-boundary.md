@@ -95,31 +95,23 @@ mangled symbol and pay none of this.
 ## 4.5 Inbound: `__c_entry`
 
 `abi.cabi.centry` — `__c_entry(f)` yields a C-callable pointer to `f`
-(language spec `pkg.centry`). When `f`'s C form coincides with its internal
-convention the value is `f`'s mangled definition address (that definition is
-already the C entry). When they differ, the value is a **weak** thunk
-`__centry.<mangled>` — emitted by every referencing translation unit and
-coalesced by the linker to one address program-wide, which realizes the
-same-pointer identity of `pkg.centry.identity` — that performs the §4.4
-adaptation (re-extending narrow register arguments and/or repacking a
-divergent multi-value return, §4.2) then enters the mangled definition. The
-two backends differ in *which* divergence needs the thunk: a **divergent
-multi-value return** forces it on **both** backends; a **narrow GP register
-parameter** forces it only on the **native** backends — the LLVM calling
-convention already re-extends narrow arguments, so LLVM keeps the mangled-
-definition address for a narrow-parameter-only `f`. Narrow **stack** arguments
-need no thunk on any backend: every native function re-canonicalizes them
+(language spec `pkg.centry`). The pointer is `f`'s mangled definition address
+when f needs no C-boundary adaptation, or a **weak** `__centry.<mangled>`
+thunk when it does — the SAME set of f's on **every** backend, so a
+mixed-producer program hands out one pointer value for f
+(`pkg.centry.identity`): the weak `__centry.` copies each referencing
+translation unit emits coalesce to one address program-wide. A thunk is used
+when f has a **narrow GP register parameter**, a **>16-byte by-value aggregate
+parameter** whose C form diverges from the internal single pointer (§2.5), or
+a **divergent multi-value return** (§4.2); it performs the §4.4 adaptation
+then enters the mangled definition. On the LLVM backend a
+narrow-register-parameter thunk is a pure **forwarder** — the LLVM calling
+convention already re-extends narrow arguments through the mangled
+definition, so the thunk is functionally redundant there and is emitted only
+for the cross-producer identity; the native backends' thunk does the real
+argument-register re-canonicalization (§2.3). Narrow **stack** arguments need
+no thunk on any backend: every native function re-canonicalizes them
 unconditionally at its mangled entry (§2.3).
-
-> _Status._ For a target needing a **return or parameter adaptation** the
-> two backends agree — both yield the weak `__centry.<mangled>` thunk
-> address, so `pkg.centry.identity` holds across producers; a target needing
-> no adaptation yields the mangled entry on both. The one residual is a
-> **narrow-register-parameter-only** `f`: the LLVM lowering yields the
-> mangled definition address while the native lowering yields the
-> `__centry.` thunk. Harmonization decided (2026-09-12) and tracked: the
-> LLVM backend will emit the weak `__centry.` forwarding thunk for that
-> case too, closing the identity gap in mixed-producer links.
 
 ## 4.6 Sub-word values at the C boundary
 
