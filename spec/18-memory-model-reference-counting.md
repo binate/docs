@@ -243,6 +243,32 @@ detectable fault for a silent leak, which is worse. The discipline is to own wit
 a managed value (`@[]T`) anything whose lifetime must extend past the borrow,
 rather than to keep a raw view alive (§18.1, `mem.managed-vs-raw`).
 
+`mem.managed-provenance` — A **managed pointer** designates the **base** of an
+allocation created as its pointee type: a `@T` comes from `make(T)` or `box`
+(§15.2), or is a copy of such a value, and addresses a `T` payload with its own
+management header (`mem.header`). The safe language provides **no** way to form a
+managed pointer to a **subobject**, or to retype one: `&x` yields a **raw**
+pointer (§13.8 `expr.unary.addr`), and neither an implicit conversion (§8.1) nor
+a `cast` (§8.5) relates `@A` to `@B` for distinct `A`, `B`. (A managed-**slice**
+makes no such claim: `@[]T` carries a separate backing handle, and a sub-slice
+addresses the interior of its backing — §7.13 `type.layout.slice-managed`.)
+
+Consequently, managed pointers of **distinct** pointee types designate
+**disjoint** objects: in a **defined** program, an access through a `@A` never
+reads or modifies the object a `@B` designates, for `A` and `B` not identical.
+Identity here is the ordinary type identity of §7, which for structs is
+**nominal** and package-qualified (§7.4 `type.struct.named-nominal`) — so two
+named structs sharing one layout are distinct, as are same-named structs from
+different packages. An implementation **may** rely on this when optimizing:
+forwarding or reordering an access across a store through a differently-typed
+managed pointer.
+
+Making two such pointers designate one object anyway — with `bit_cast` (§8.6) or
+`unsafe_cast` (§8.7), or by reconstructing a managed pointer from a raw pointer —
+and then accessing that object through either is **undefined** (Ch.21), alongside
+the other raw-aliasing escapes above. The escape hatches remain available; what
+is undefined is expecting the two views to stay coherent.
+
 `mem.determinism` — Reference counting is **transparent and deterministic**:
 cleanup happens at well-defined points (statement end, scope exit, last
 reference), with no background collector and no non-deterministic finalization.

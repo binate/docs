@@ -282,6 +282,7 @@ mem.determinism	positive	18-memory-model-reference-counting.md
 mem.header	positive	18-memory-model-reference-counting.md
 mem.immortal	positive	18-memory-model-reference-counting.md
 mem.invariant	positive	18-memory-model-reference-counting.md
+mem.managed-provenance	positive	18-memory-model-reference-counting.md
 mem.managed-vs-raw	positive	18-memory-model-reference-counting.md
 mem.move	positive	18-memory-model-reference-counting.md
 mem.move.optimization	untestable	18-memory-model-reference-counting.md
@@ -315,7 +316,7 @@ pkg.build.errors	constraint	16b-build-constraints.md
 pkg.build.gate	positive	16b-build-constraints.md
 pkg.build.variants	positive	16b-build-constraints.md
 pkg.build.version	constraint-candidate	16b-build-constraints.md
-pkg.ccall	positive	16b-build-constraints.md
+pkg.ccall	constraint-candidate	16b-build-constraints.md
 pkg.centry	positive	16b-build-constraints.md
 pkg.centry.eligible	constraint	16b-build-constraints.md
 pkg.centry.identity	positive	16b-build-constraints.md

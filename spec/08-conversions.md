@@ -153,7 +153,16 @@ conversions, the named↔underlying scalar crossing, constant typing
   between two named types with the same underlying (`Celsius` ↔ `float64`, or two
   structs sharing one layout); §8.2 requires a `cast` here. This holds for **any**
   type, not just scalars — it is a same-layout retype (no reinterpret, no
-  reference-count change), so it is always safe.
+  reference-count change), so it is always safe. It is a **value** conversion —
+  it retypes a value, which is copied — and does **not** extend to the pointer or
+  handle forms: `@A → @B` (likewise `*A → *B`) for distinct named `A`, `B` is
+  outside `cast` even when the two share a layout, and needs `bit_cast` (§8.6).
+
+> _Note._ Excluding the pointer forms is deliberate and load-bearing, not an
+> oversight about layout. Managed pointers of distinct pointee types designate
+> disjoint objects, and implementations optimize on that basis (§18.7
+> `mem.managed-provenance`); admitting a same-layout `@A → @B` into the safe set
+> would silently withdraw that guarantee.
 
 `cast` does **not** drop element-level `readonly` — that moves to `unsafe_cast`
 (§8.7). (Outermost `readonly` on the whole value needs no `cast`: it is adjusted

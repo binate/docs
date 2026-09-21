@@ -184,7 +184,10 @@ for the anonymous type. Anonymous types may not be method receivers (§7.3).
 > _Open._ A bare type name written as a struct field (an "embedded" field) is
 > currently parsed but stored as an ordinary positional field with no name; no
 > field or method **promotion** from embedded fields is provided. Whether Binate
-> adopts embedding/promotion semantics is unspecified and not yet decided.
+> adopts embedding/promotion semantics is unspecified and not yet decided. Any
+> form adopted must not yield a **managed pointer** to an embedded field: a
+> managed pointer designates a whole allocation, and optimizations depend on that
+> (§18.7 `mem.managed-provenance`).
 
 ## 7.5 Arrays
 
