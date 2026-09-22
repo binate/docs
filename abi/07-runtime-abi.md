@@ -54,10 +54,17 @@ object defines or may reference them as symbols.
 
 ## 7.4 Per-target assembly members
 
-`abi.rt.asm` — Parts of the runtime surface are provided as assembly under
-their exact mangled symbols (e.g. an aarch64 `MemZero`) and linked into
-every affected build; to callers they are indistinguishable from Binate
-definitions. Separately, the arm32 bare-metal runtime provides the **AEABI
-helper set** under its standard unmangled `__aeabi_*` names with the AEABI
-register conventions (§2.10). Both are implementation arrangements, not
-additional ABI surface.
+`abi.rt.asm` — Runtime-owned assembly reaches a build through two
+arrangements. Members of an ordinary runtime package ride the general
+**package assembly-file** mechanism (§6.8; language spec §16.10) — e.g. the
+aarch64 `MemZero`, a build-gated assembly file in the runtime package whose
+object ships beside the package's compiled object in every artifact, plain
+compile-to-objects sets included, with no per-symbol knowledge in the
+compiler. The arm32 bare-metal **platform floor**, by contrast, is still
+supplied as per-target link-time runtime files: the startup glue, the
+semihosting members (mangled Binate symbols defined in assembly for a
+`.bni`-only package), and the **AEABI helper set** under its standard
+unmangled `__aeabi_*` names with the AEABI register conventions (§2.10).
+To callers, assembly definitions are indistinguishable from Binate
+definitions under either arrangement; both are implementation
+arrangements, not additional ABI surface.

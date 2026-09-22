@@ -57,7 +57,7 @@ every term they need is defined.
 | 14.8 | [Control-flow statements](14b-control-flow.md) | mixed | language rules Stable; a few open semantic items; type-switch stmt §14.10 implemented (§11.12); defer §14.13 implemented | `stmt` |
 | 15 | [Built-in Operations](15-builtin-operations.md) | mixed | mostly Stable (opaque-gate + VM-panic gaps flagged) | `builtin` |
 | 16 | [Packages and Program Structure](16-packages-and-program-structure.md) | mixed | Stable core | `pkg` |
-| 16.7 | [Annotations, Build Constraints, FFI](16b-build-constraints.md) | mixed | arch/os MVP; most predicates deferred | `pkg` |
+| 16.7 | [Annotations, Build Constraints, FFI, Assembly Files](16b-build-constraints.md) | mixed | arch/os MVP; most predicates deferred; package assembly files §16.10 implemented | `pkg` |
 | 17 | [Program Initialization and Execution](17-program-initialization-and-execution.md) | mixed | Stable rules; entry/termination host-dependent; panic gaps flagged | `prog` |
 | 18 | [Memory Model: Reference Counting and Object Lifetime](18-memory-model-reference-counting.md) | mixed | Stable axioms (ownership-transfer DECIDED); move is an optimization | `mem` |
 | 19 | [Execution Model: the Abstract Machine and Dual-Mode Interop](19-execution-model-dual-mode.md) | mixed | Contract Stable; in-process embedding a goal | `exec` |

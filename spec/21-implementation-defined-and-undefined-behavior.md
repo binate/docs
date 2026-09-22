@@ -152,6 +152,7 @@ detectable fault for a silent leak, which is worse (§18.7).
 | `unsafe_div` / `unsafe_rem` on a **zero** or signed **`MIN / -1`** divisor (the guard-free `/` and `%`) | §13.4 `expr.arith.unsafe`; §15.8 `builtin.internal` |
 | `unsafe_index(c, i)` with an **out-of-range** index (the bounds-check-free indexed access) | §15.6 `builtin.unsafe-index`; §13.9 `expr.index.bounds` |
 | Behavioral **mode-dependence** of a defined operation **beyond** the one-indirection cost of crossing modes (any such dependence is otherwise a defect, §21.9) | §19.4 `exec.interop.funcval` |
+| An **assembly-file definition** of a declared Binate function that violates the declared signature's obligations — its calling convention, its parameter/result representations, or its reference-counting duties | §16.10 `pkg.asmfile.semantics` |
 
 > _Note._ A reference **cycle** of managed values **leaks** — the one "leak" a
 > conforming program may exhibit — and is **user error**, not undefined behavior

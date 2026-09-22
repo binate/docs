@@ -1,11 +1,11 @@
-# 16.7–16.9 Annotations, build constraints, and the FFI boundary
+# 16.7–16.10 Annotations, build constraints, the FFI boundary, and package assembly files
 
-> **Status:** mixed · **Maturity:** the annotation/build-constraint surface covers `arch`/`os` membership plus a compiler-`version` matcher (further predicates deferred); `__c_call` is compiled-mode only; `#[c_export]` is implemented; `__c_entry` is Draft (ratified, not yet implemented); linker-placement is **Draft/pending**  
+> **Status:** mixed · **Maturity:** the annotation/build-constraint surface covers `arch`/`os` membership plus a compiler-`version` matcher (further predicates deferred); `__c_call` is compiled-mode only; `#[c_export]` and `__c_entry` are implemented; linker-placement is **Draft/pending**; package assembly files (§16.10) are implemented  
 > **Rule-ID prefix:** `pkg`
 
 This continues [Ch.16 Packages and Program Structure](16-packages-and-program-structure.md)
-with the annotation system (§16.7), build constraints (§16.8), and the
-foreign-function boundary (§16.9).
+with the annotation system (§16.7), build constraints (§16.8), the
+foreign-function boundary (§16.9), and package assembly files (§16.10).
 
 ## 16.7 The annotation system
 
@@ -333,3 +333,66 @@ point (§17) that a reset vector / linker script must find.
 > syscalls or platform assembly — is a design goal (see Ch.1 and Ch.19 once
 > authored). The C runtime is intended to shrink over time, with `__c_call`/extern
 > as the FFI escape.
+
+## 16.10 Package assembly files
+
+`pkg.asmfile` — A package's implementation directory may contain **assembly
+files** (`.s`) alongside its `.bn` implementation files. An included assembly
+file's symbols are **defined in every compiled artifact the package
+participates in** — a whole-program executable, a `--library` archive, a test
+binary, and a compile-to-objects set. Assembly files belong to the
+implementation directory that supplies the package's build-included `.bn`
+files: a directory containing only assembly files is **not** an
+implementation directory, and where every `.bn` file of a directory is
+excluded for a configuration, its assembly files are excluded with it, their
+own gates notwithstanding. The assembly language is the **implementation's
+own assembler dialect** — a toolchain surface this specification does not
+define (not the host platform assembler's). Assembly files are
+**compiled-mode-only** artifacts: the interpreter performs no assembly, and
+under the VM such symbols exist only in the compiled runtime floor it stands
+on (§19.2 `exec.vm.runtime-floor`).
+
+> _Note._ The object-set mechanics — each assembly file assembled into its
+> own object beside the package's compiled object, making even a plain
+> compile-to-objects set self-contained — are the ABI specification's
+> (its assembly-defined-symbols section).
+
+> _Status._ One known gap, raised: a `--library` **facade** package's own
+> assembly files are currently omitted from the archive (dependency
+> packages' are included); latent — no facade package carries assembly
+> today.
+
+`pkg.asmfile.gate` _(Constraint)_ — An assembly file may carry a file-level
+build gate: at most **one** comment line in the file's **leading comment
+block** (before the first non-blank, non-comment line) whose comment content
+begins with an annotation block `#[…]`. That line is parsed and evaluated
+exactly as a package clause's annotation line (§16.7–§16.8): its
+`build(EXPR)` entries gate the **whole file** — conjunctively, if several —
+under `pkg.build`'s constraint language; namespaced annotations in it are
+ignored; an unknown unqualified annotation, or a constraint that fails to
+evaluate, is a **hard error that aborts the load**, never a silent skip
+(§16.8 `pkg.build.errors`). A **second** such annotation line in the leading
+block is an error in every context. A file with **no** gate line is included
+for **every** configuration; a `#[` that does not begin its comment's
+content is ordinary comment text, not a gate. Where build-configuration
+gating is inactive (contexts that never assemble), the at-most-one rule
+still applies but the gate is retained **unvalidated**, mirroring §16.7's
+annotation-name caveat.
+
+`pkg.asmfile.semantics` — The contents of an assembly file are **outside the
+language's semantic guarantees**: the language assigns them no meaning
+beyond defining symbols. In particular, an assembly file may define the
+linker symbol of a **declared Binate function** — typically partitioning
+targets against a build-gated Binate body of the same function, so exactly
+one definition survives in any configuration. A **declaration** of the
+function must itself survive every configuration (the package's `.bni`
+serves), so callers typecheck; the assembly supplies only the link-time
+definition. Every obligation of the declared signature then falls on the
+assembly author: the calling convention a Binate-compiled definition would
+have, the declared parameter and result representations (§7.13), and the
+reference-counting obligations of Ch.18. A definition that violates them is
+**undefined behavior** (§21.6).
+
+> _Note._ The gate rides in a comment, so the assembler itself never sees
+> it: file gating is a load-time concern, symmetric with source-file gating,
+> and the assembly dialect needs no conditional machinery.

@@ -143,3 +143,30 @@ and hence no `bn_entry`.
 
 > _Status._ Implemented: `bn_init` is emitted in every artifact and a program's
 > `bn_entry` is literally `bn_init(); main.main()`.
+
+## 6.8 Assembly-defined symbols
+
+`abi.obj.asm-symbols` — A package assembly file (language spec §16.10
+`pkg.asmfile`) contributes ordinary symbols to its package's object set: the
+file is assembled into its own object, placed beside the package's compiled
+object in **every** artifact the package participates in — a
+compile-to-objects set included. Its symbols bind as written (local by
+default; global or weak by directive) and resolve under the ordinary rules
+(§6.2). Per symbol, an assembly file may opt a symbol into the **platform
+C-symbol prefix** (§5.6) — whether it **defines** the symbol or only
+**references** it (an opted-in undefined reference resolves to the
+platform-correct name of a compiler-emitted definition): the opted-in
+symbol is emitted verbatim in ELF objects and `_`-prefixed in Mach-O
+objects, definitions and references alike resolving through the symbol
+table, so a single assembly file serves both object formats. A symbol not
+opted in is emitted exactly as written.
+
+> _Status._ Known gap, raised: a `--library` facade package's own assembly
+> objects are currently omitted from the archive (dependency packages' are
+> included).
+
+When an assembly file defines the mangled symbol of a **declared Binate
+function**, the definition shall implement the declared signature's calling
+convention (Ch.2), including canonical sub-word form (§2.3), exactly as a
+compiled definition would — callers cannot tell the difference, and nothing
+re-checks the boundary (language spec `pkg.asmfile.semantics`).

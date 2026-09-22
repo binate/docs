@@ -15,7 +15,8 @@ and termination are Ch.17.
 
 `pkg.files` — A package is a **directory of `.bn` implementation files**, a
 single **`.bni` interface file** that sits beside that directory (same parent,
-same base name), or **both**:
+same base name), or **both** (the implementation directory may additionally
+carry assembly files, §16.10 `pkg.asmfile`):
 
 ```
 pkg/

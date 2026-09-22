@@ -119,4 +119,6 @@ differently, and only the handle name is contract.
 `abi.sym.prefix` — Mach-O symbols carry a leading `_`; ELF symbols are bare.
 The prefix applies uniformly to mangled, decorated, reserved, and C-facing
 names, and is outside the mangling scheme (demangling operates on the bare
-name).
+name). Symbols defined in package **assembly files** opt into the prefix
+per symbol (§6.8); an assembly symbol not opted in is emitted exactly as
+written.
