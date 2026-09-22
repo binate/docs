@@ -357,11 +357,6 @@ on (§19.2 `exec.vm.runtime-floor`).
 > compile-to-objects set self-contained — are the ABI specification's
 > (its assembly-defined-symbols section).
 
-> _Status._ One known gap, raised: a `--library` **facade** package's own
-> assembly files are currently omitted from the archive (dependency
-> packages' are included); latent — no facade package carries assembly
-> today.
-
 `pkg.asmfile.gate` _(Constraint)_ — An assembly file may carry a file-level
 build gate: at most **one** comment line in the file's **leading comment
 block** (before the first non-blank, non-comment line) whose comment content

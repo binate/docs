@@ -161,10 +161,6 @@ objects, definitions and references alike resolving through the symbol
 table, so a single assembly file serves both object formats. A symbol not
 opted in is emitted exactly as written.
 
-> _Status._ Known gap, raised: a `--library` facade package's own assembly
-> objects are currently omitted from the archive (dependency packages' are
-> included).
-
 When an assembly file defines the mangled symbol of a **declared Binate
 function**, the definition shall implement the declared signature's calling
 convention (Ch.2), including canonical sub-word form (§2.3), exactly as a
