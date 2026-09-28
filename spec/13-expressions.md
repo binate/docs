@@ -89,7 +89,11 @@ are the opt-out for hot paths the caller has proven safe.
 `expr.bitwise` — `&`, `|`, `^` (binary) and `~` (unary complement) require
 **integer** operands. `~x` is the bitwise complement of `x`, of `x`'s own type
 (sub-word-correct — `~` of a `uint8` is an 8-bit result). (`~` is the complement
-operator; `^` is binary XOR.)
+operator; `^` is binary XOR.) When the operands are all untyped constants, the
+operators act on their exact, width-independent values (§6.4
+`const.expr.bitwise`): `var u uint8 = ~1` is an error (`~1` is -2), not `254`. On
+an untyped non-constant integer expression they act at the type it acquires
+(`expr.shift.untyped-value.typing`).
 
 `expr.shift` — `<<` and `>>` require integer operands. The **count** (right
 operand) may be any integer type, independent of the value's type; the **result
@@ -101,7 +105,9 @@ logical.
 width** yields a **defined** result on every backend: `0` for a logical shift,
 and a full sign-fill (all bits equal the sign bit) for an arithmetic `>>`. (It is
 not hardware-masked.) The check reads the **untruncated** count, so a runtime
-count wider than the value is detected correctly.
+count wider than the value is detected correctly. (A constant shift of an
+untyped value has no width and is exact instead, §6.4 `const.expr.shift`: `1 << 64`
+is an error, not `0`.)
 
 `expr.shift.negative` — A **negative** shift count is an error, not a defined
 result: a **compile-time** error for a constant count, and a **defined

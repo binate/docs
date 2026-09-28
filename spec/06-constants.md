@@ -6,9 +6,9 @@
 This chapter defines **constants** — values known at compile time — and in
 particular how literals are typed: which literals are *untyped* and how an
 untyped constant takes a type (§6.1–§6.2); the integer-constant value range and
-constant-expression arithmetic (§6.3–§6.4); floating-point constants and the
-strict integer/floating rule (§6.5); string and character literal typing
-(§6.6); and overflow checking (§6.7).
+constant-expression arithmetic, bitwise, and shift operations (§6.3–§6.4);
+floating-point constants and the strict integer/floating rule (§6.5); string and
+character literal typing (§6.6); and overflow checking (§6.7).
 
 > _Note._ "Constant" is used in two distinct senses. This chapter concerns
 > **untyped literals and constant expressions** over them. The **`const`
@@ -104,6 +104,62 @@ expression) must fit the range of the type required by context: a signed target
 of `n` bits requires the value to lie in `[-2^(n-1), 2^(n-1)-1]`; an unsigned
 target of `n` bits requires `[0, 2^n-1]`. Otherwise it is a compile error
 (§6.7).
+
+`const.expr.bitwise` — A bitwise operator `~`, `&`, `|`, or `^` whose operands
+are all **untyped** integer constants acts on each constant's
+**two's-complement representation extended infinitely to the left**: a
+non-negative value has infinitely many leading `0` bits, a negative value
+infinitely many leading `1` bits. Each result is therefore an exact integer that
+depends on no width: `~x` is `-x - 1`, and `a & b`, `a | b`, `a ^ b` combine the
+two representations bit by bit. As for every constant operation, a result
+outside the union range is rejected (`const.expr.precision`); the value then
+fits a type, or does not, like any other constant (`const.expr.fit`).
+
+`const.expr.shift` — A shift that is a constant expression (both operands
+constants, §13.5 `expr.shift.untyped-value`) whose value `x` is an **untyped**
+integer constant, with count `k` (a negative constant count is an error,
+`expr.shift.negative`), is exact for every `x` of either sign: `x << k` is
+`x·2^k`, and `x >> k` is `⌊x / 2^k⌋` (rounded toward −∞, so the sign fills in).
+The value has no width, so `expr.shift.overshift` does not apply: for a large
+`k`, `x >> k` is `0` when `x ≥ 0` and `-1` when `x < 0`, and `0 << k` is `0`;
+any other result outside the union range is rejected — `1 << 64` is an error,
+not `0`. `unsafe_shl(x, k)` and `unsafe_shr(x, k)` with constant operands fold
+the same way (§13.5 `expr.shift.untyped-value.unsafe`).
+
+```
+~1                            -> -2
+~-1                           -> 0
+-2 | 1                        -> -1
+-2 & 0xFF                     -> 254
+-2 ^ 3                        -> -3
+0xFFFFFFFFFFFFFFFF & ~1       -> 2^64 - 2       (fits uint64)
+-1 << 3                       -> -8
+-1 << 63                      -> -2^63
+-16 >> 2                      -> -4
+-3 >> 1                       -> -2             (rounded toward −∞)
+-1 >> 1000                    -> -1
+~0xFFFFFFFFFFFFFFFF           -> -2^64          (rejected: outside the union range)
+0xFFFFFFFFFFFFFFFF ^ -1       -> -2^64          (rejected)
+1 << 64                       -> 2^64           (rejected)
+var v uint8 = -2 | 1          -> error: -1 does not fit uint8
+```
+
+> _Note._ Of these operations on in-range values, `~x` for `x ≥ 2^63` and `^`
+> of a value `≥ 2^63` with a negative value always leave the union range
+> (landing in `[-2^64, -2^63-1]`); `&` and `|` never do. A left shift leaves it
+> exactly when `x·2^k` lies outside it.
+
+> _Note._ Because an untyped constant keeps its exact value until it is typed,
+> a complemented untyped mask does not fit an unsigned type: with `x` of any
+> unsigned type, `x & ~1` is an error (`~1` is -2), and so are
+> `var u uint8 = ~1`, `const C uint8 = ~1`, `Mask uint8 = ~(1 << iota)` in a
+> `const` group, and `(1 << n) & ~1` in a `uint8` context (`~1` is its maximal
+> untyped constant subexpression, §13.5 `expr.shift.untyped-value.typing`).
+> Write the mask directly (`x & 0xFE`), or complement a typed constant
+> (`x & ~cast(uint8, 1)`, where `~` is taken at `uint8`'s width, §13.5
+> `expr.bitwise`). By contrast `m & ~(1 << n)` is valid at `m`'s type:
+> `1 << n` is not a constant, so its `~` is taken at the type the expression
+> acquires.
 
 ## 6.5 Floating-point constants
 
