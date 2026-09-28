@@ -19,6 +19,12 @@ TypeParams    = "[" TypeParamDecl { "," TypeParamDecl } "]" ;
 TypeParamDecl = identifier Type ;   (* the Type is checker-restricted — see gen.constraint *)
 ```
 
+The parameter names are **distinct** — no two parameters of one declaration have
+the same name — except that any number of them may be the **blank identifier**
+`_`, which declares that type parameter **without naming it**
+(`func two[_ any, _ any]() int`); `_` is not in scope as a type in the
+declaration.
+
 `gen.constraint` — A type parameter's **constraint** is a **single named
 interface** or the bare universal `any` (§11.5). There is **no `+` operator** to
 combine constraints: to require that a type argument satisfy several interfaces,
