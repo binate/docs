@@ -20,7 +20,10 @@ strict integer/floating rule (§6.5); string and character literal typing
 
 `const.untyped` — An **integer**, **floating-point**, **string**, or
 **boolean** literal is *untyped*: it has no inherent type and takes a type from
-its context (§6.2, §6.5, §6.6), defaulting as in §6.2. A literal is assignable
+its context (§6.2, §6.5, §6.6), defaulting as in §6.2. (An untyped integer
+constant used as the value of a non-constant shift is typed the same way, as
+part of an untyped non-constant integer expression; §13.5
+`expr.shift.untyped-value`.) A literal is assignable
 to any type that can represent it: an **integer** literal to any integer type
 whose range includes its value (the fit *is* enforced — §6.4, §6.7), a
 **floating-point** literal to any floating-point type (no magnitude or precision

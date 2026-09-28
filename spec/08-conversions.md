@@ -19,6 +19,9 @@ following holds:
 
 1. `S` and `D` are identical (§7).
 2. `S` is an **untyped constant** whose value the type `D` can represent (Ch.6).
+   (An untyped non-constant integer expression — a non-constant shift of an
+   untyped value, §13.5 `expr.shift.untyped-value` — is first typed from `D`
+   as an untyped constant would be, then checked under case 1.)
 3. `S` or `D` is a **named-distinct** type, exactly one side is named, that named
    side's underlying is an **unnamed composite**, and the underlying is
    assignable to the other side (`conv.named`, §7.3).

@@ -111,6 +111,92 @@ runtime count. The guard-free intrinsics `unsafe_shl(v, n)` / `unsafe_shr(v, n)`
 the caller asserts `n` is in `[0, width)`, and an out-of-range `n` is undefined
 (Ch.21).
 
+`expr.shift.untyped-value` — A shift is a **constant expression** exactly when
+both its value and its count are constants (§6.4). A shift that is not a
+constant expression and whose value operand is **untyped** — an untyped integer
+constant (§6.1 `const.untyped.coercion`: a literal, an untyped constant
+expression, or an untyped `const` name) or an *untyped non-constant integer
+expression* — is itself an **untyped non-constant integer expression**. So are:
+a parenthesized untyped non-constant integer expression; a unary `-` or `~`
+applied to one; and a binary arithmetic (`+ - * / %`) or bitwise (`& | ^`)
+operator whose operands are each an untyped integer constant or an untyped
+non-constant integer expression, at least one being the latter. (`(1 << n) << 2`
+is one: its count is constant but its value is not.) An arithmetic or bitwise
+operator combining an untyped non-constant integer expression with an untyped
+floating-point, boolean, or string constant is an error (§6.5).
+
+`expr.shift.untyped-value.typing` — An untyped non-constant integer expression
+is typed **exactly as an untyped integer constant in the same position would
+be** (Ch.6, §8.1). For example, it takes the type its context requires at a
+conversion boundary (§8.8 `conv.boundaries`: a variable, field, element,
+parameter — the element type `T` for a variadic trailing argument — or result),
+from the other operand of an enclosing binary arithmetic, bitwise, or comparison
+operator when that operand is typed (the typed operand wins: in
+`var w int64 = x + (1 << n)` with `x int32` the shift is `int32`, and the
+declaration is then an error), from the tag of the enclosing `switch` for a case
+expression, or as the target of an enclosing `cast` / `unsafe_cast`; where the
+required type is an interface type (`*I`, `@I`, `*any`, `@any`) it takes its
+default type `int` and then converts as an `int` value would (§11.4); and where
+no type is required it takes its **default type `int`** (§6.2) — for example in
+a short or untyped variable declaration (`x := e`, `var x = e`), a blank
+`_ = e` assignment, a `switch` tag, an index, sub-slice bound, `make_slice`
+length, `unsafe_index` index, shift count, `bit_cast` / `box` operand,
+`__c_call` argument, a selector receiver, or a comparison against another
+untyped operand. (A type-parameter target takes whatever an untyped constant
+takes there, Ch.12.)
+
+The type flows down **only through the operands that make up the expression**
+— the operands of `-`, `~`, and the arithmetic and bitwise operators, and the
+value operand of each shift; a shift count is its own position (`int` by default
+when it is untyped: in `var u uint8 = 1 << (1 << n)` the inner shift is `int`).
+Every shift reached this way produces a result of that type; every **maximal
+untyped constant subexpression** reached this way — including each shift's
+value operand — is evaluated as a constant expression (§6.4) and its **value
+must fit** that type (`const.expr.fit`): into a `uint8`, `(1 << n) + (300 - 100)`
+is valid (200 fits) and `(1 << n) + (0 - 1)` is an error (-1 does not). A shift
+count's type never contributes. The shifted result is not a constant: it is
+computed at that type, with `expr.shift.overshift`.
+
+`expr.shift.untyped-value.integer` — The type so determined must be an
+**integer type** (an integer type, or a named-distinct, alias, or `readonly`
+type whose underlying type is one); otherwise it is an error — the value of a
+shift must be an integer. `cast(float64, 1 << n)` and `var f float64 = 1 << n`
+are errors; write the width explicitly, `cast(float64, cast(int64, 1) << n)`.
+An untyped floating-point, boolean, or string constant is never a valid shift
+value (`1.0 << n` is an error).
+
+`expr.shift.untyped-value.not-const` — Such an expression is not a constant, so
+it cannot appear where a constant is required: `const C = 1 << n` and
+`const C int64 = 1 << n` are errors, as is an array length `[1 << n]T`.
+`1 << iota` is a constant shift and is unaffected.
+
+`expr.shift.untyped-value.unsafe` — `unsafe_shl(v, c)` / `unsafe_shr(v, c)`
+(§15.8 `builtin.internal`) are typed and folded exactly like `v << c` /
+`v >> c`: a constant expression exactly when both operands are constants, and an
+untyped non-constant integer expression under the same conditions as a shift.
+
+> _Example._ With `var n uint8 = 9`, `var m uint8 = 0xF0`, `var x int32 = 1`:
+>
+> ```
+> var a uint8 = 1 << n                     // uint8: 0 (overshift at 8 bits)
+> var b int64 = 1 << n                     // int64: 512
+> c := 1 << n                              // int: 512 (default type)
+> var d int64 = cast(int64, (0 + 1) << n)  // int64: 512 — typed like a literal value
+> var e uint8 = m & ~(1 << n)              // uint8: the shift and `~` at m's type (0xF0)
+> var f uint8 = (1 << n) << 2              // uint8
+> var g int64 = x + (1 << n)               // error: the shift is int32 (x's type)
+> var h uint8 = (1 << n) + 300             // error: 300 does not fit uint8
+> var i int8 = -1 << n                     // int8: `(-1) << n`; 0 (overshift)
+> var j int64 = 0x100000000 << n           // int64, on every target
+> k := 0x100000000 << n                    // error on a 32-bit target: does not fit int
+> var l uint8 = 256 << n                   // error: 256 does not fit uint8
+> var p float64 = cast(float64, 1 << n)    // error: the value would be float64
+> fmt.Print(1 << n)                        // int (an interface parameter)
+> ```
+>
+> Precedence (§13.2): `1 << n + 1` is `1 << (n + 1)`; `x + 1 << n` is
+> `(x + 1) << n`, whose value is typed, so these rules do not apply.
+
 > _Open (residual)._ The native (aarch64/x64/arm32) sub-word `~` and negate paths
 > are a tracked residual (Annex C).
 
