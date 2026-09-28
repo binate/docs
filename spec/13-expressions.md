@@ -366,8 +366,11 @@ the number of elements: `[...]int{1, 2, 3}` has type `[3]int`.
 managed-slice (a new backing, reference count 1; managed elements are retained).
 A raw-slice literal is permitted only with **const elements**, `*[]readonly T{…}`
 (a read-only view of static data or a scope-bound stack backing); a non-const
-`*[]T{…}` is rejected (use `*[]readonly T{…}` or `@[]T{…}`). A string literal has
-natural type `[N]readonly char` and **default type** `@[]readonly char` (a
+`*[]T{…}` is rejected (use `*[]readonly T{…}` or `@[]T{…}`). The scope-bound
+backing holds its own copies of the elements: managed elements are retained when
+the literal is evaluated and released when the enclosing scope exits, exactly as
+for a local `[N]T` array, so the view stays valid for the whole scope. A string
+literal has natural type `[N]readonly char` and **default type** `@[]readonly char` (a
 managed-slice view); it is also assignable to the other char array/slice targets —
 `@[]char`, `*[]readonly char`, `[N]char`, and `[N]readonly char` (§6.6, §8.1).
 
