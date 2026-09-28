@@ -49,10 +49,16 @@ predeclared or in-scope type: a bracket entry that resolves to a type
 (`Cursor[int]`) would be a **specific-instantiation** receiver, which is
 **rejected** (`gen.no-conditional-impls`, §12.4). Predeclared names like `int` are
 ordinary identifiers (§5), so this is a semantic check.
-The binders' **constraints are inherited** from the type's declaration (they are
-not restated; an unconstrained `[T any]` type yields an unconstrained `T`, on
-which no method may be called — `gen.constraint`), and their count **must equal**
-the type's arity. The names are in scope for the whole signature and body; the
+The names are **distinct** — no two positions bind the same name — except that any
+number of positions may be the **blank identifier** `_`, which binds that type
+parameter **without naming it** (`func (p *Pair[_, V]) Second() V`); `_` is not in
+scope as a type in the signature or body.
+The binders' **constraints are inherited** from the type's declaration **by
+position** (they are not restated; an unconstrained `[T any]` type yields an
+unconstrained `T`, on which no method may be called — `gen.constraint`): a
+constraint that refers to another of the type's parameters (`type W[X any, C
+Cont[X]]`) refers to the binder at that parameter's position, whatever the binders
+are named (`func (w *W[_, D])`). Their count **must equal** the type's arity. The names are in scope for the whole signature and body; the
 method itself introduces no type parameter (`gen.no-generic-methods`). Each
 `(type, type-argument)` instantiation **monomorphizes** the method to a concrete
 signature (`Cursor[int].Next() (int, bool)`; `gen.mono`), so it occupies a fixed
