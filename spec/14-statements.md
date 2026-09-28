@@ -187,8 +187,8 @@ with the right-hand value's default type (a string literal binds its default
 
 `stmt.shortvar.rebind` — Unlike Go, `:=` does **not** require that at least one
 left-hand name be new, and re-using a name already bound in the same scope
-**rebinds** it (the redeclaration error of `decl.var.redeclare` applies only to
-the `var` form, §14.7). Re-declaring a name in an inner scope shadows the outer
+**rebinds** it (the redeclaration errors of `decl.var.redeclare` and
+`decl.const.redeclare` apply only to the `var` and `const` forms, §14.7). Re-declaring a name in an inner scope shadows the outer
 binding.
 
 ## 14.7 Local declarations
@@ -196,8 +196,9 @@ binding.
 `stmt.decl` — A `var` or `const` declaration may appear as a statement
 (`BlockDecl`); its rules are those of §9.1–§9.2.
 
-`stmt.decl.redeclare` _(Constraint)_ — Declaring with `var` a name already
-declared in the **same** block scope (including a function parameter, which lives
-in the body scope) is an error ("redeclared in this scope"). Shadowing a name
+`stmt.decl.redeclare` _(Constraint)_ — Declaring with `var` or `const` a name
+already declared in the **same** block scope (including a function parameter,
+which lives in the body scope) is an error ("redeclared in this scope";
+`decl.var.redeclare`, `decl.const.redeclare`). Shadowing a name
 from an **enclosing** scope is permitted (§9.5). A function-local `type`
 declaration is a parse error (`stmt.no-local-type`, §14.1).

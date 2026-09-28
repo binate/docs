@@ -37,6 +37,12 @@ recognized **only** inside a grouped const block; referencing it anywhere else
 (including a single non-grouped `const X = iota`) is an `undefined: iota` error.
 It is not a universe-scope binding.
 
+`decl.const.redeclare` _(Constraint)_ — Declaring with `const` a name already
+declared in the **same** block scope — a parameter, an earlier declaration of the
+block, or an earlier member of the same group — is an error ("redeclared in this
+scope"), as for `var` (`decl.var.redeclare`). A `const` in an inner block may
+instead shadow an outer name (§9.5).
+
 ## 9.2 Variable declarations
 
 `decl.var` — A `var` declaration binds a name to **storage** of a given type. A
@@ -85,8 +91,9 @@ non-blank name is bound in the current scope with the right-hand value's
 
 `decl.shortvar.no-new-name-rule` — Unlike Go, `:=` does **not** require that at
 least one name on the left be new, and re-using a name already bound in the same
-scope rebinds it rather than being an error. (The redeclaration error of
-`decl.var.redeclare` applies only to the `var` form.)
+scope rebinds it rather than being an error. (The redeclaration errors of
+`decl.var.redeclare` and `decl.const.redeclare` apply only to the `var` and
+`const` forms.)
 
 > _Note (grammar disambiguation)._ A statement beginning with an expression list
 > is parsed as an expression list first; the `:=` token then reinterprets the
