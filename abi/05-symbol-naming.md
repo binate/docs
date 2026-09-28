@@ -33,10 +33,16 @@ one of:
 the output alphabet `[A-Za-z0-9_]`; counts are decimal with no leading zero;
 demangling is an exact inverse. The alphabet guarantee presupposes that
 identifiers and package-path segments themselves use only those characters —
-identifiers do by the language grammar; package paths are currently
-**unvalidated** (an out-of-set byte, or a `.`, would leak into symbols and
-break the decorated-name discriminator, §5.5) — a recorded enforcement
-gap.
+identifiers do by the language grammar, and package paths are **validated**:
+every package a producer loads must have a path that is a `/`-separated sequence
+of **non-empty** `[A-Za-z0-9_]` segments, and any other path (an import, a build
+target, a transitive dependency) is rejected with an error before it reaches the
+mangler — otherwise an out-of-set byte, or a `.`, would leak into symbols and
+break the decorated-name discriminator (§5.5). The non-empty requirement is
+slightly stricter than the `PkgPath` production below, whose `Ident` could
+encode a 0-length segment; a conforming producer never emits one. (A path with
+**zero** segments is different: `segcount` 0 is the empty path of a primitive
+leaf, e.g. `int` is `N0_3_int`, §5.3.)
 
 ```
 Symbol   = "bn_" Kind Body
@@ -93,7 +99,9 @@ the `__` prefix.
 ## 5.5 Decorated symbol families
 
 `abi.sym.decorated` — Decorations prefix a mangled core (these symbols
-contain a `.`). The coalescing families — `__ivt.`, `__ivtshim.`,
+contain a `.`, which a mangled core never does — identifiers and validated
+package paths draw only on `[A-Za-z0-9_]`, §5.2 — so the `.` unambiguously
+marks a decorated name). The coalescing families — `__ivt.`, `__ivtshim.`,
 `__typeinfo.`, `__ifaceid.`, `__satentry.`, `__handle.`, `__centry.` — are
 weak, link-coalesced definitions (§6.1); the blob families (`*_name.`,
 `*fields.`, `*fieldnames.`, `*_typesym.`, `*_ifacesym.`) are
