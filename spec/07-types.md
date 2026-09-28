@@ -94,6 +94,14 @@ declarations are package-level only; a function-local `type` is a parse error.
 respect: identity, assignability, method resolution, and comparison see through
 it. An alias of an interface is the same interface for `impl` matching.
 
+`type.alias.acyclic` _(Constraint)_ — An alias's target may not refer to the
+alias itself, directly or through other aliases, at any depth — including
+behind a pointer, slice, or function type: `type N = struct { v int; next *N }`
+and `type A = B; type B = *A` are rejected. An alias has no identity of its own
+(`type.alias.transparency`), so a self-referential alias would denote an
+infinite structural type. A self-referential type is written as a distinct
+type, whose recursion goes through its name: `type N struct { v int; next *N }`.
+
 `type.named.transparency` — A distinct type is **transparent** to its underlying
 type for operators (arithmetic, bitwise, shift, relational, equality), the
 built-ins that act on the underlying kind (`len`, `present`, `same`), indexing
