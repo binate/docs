@@ -77,12 +77,15 @@ compile-time error (§6).
 `expr.arith.minover` — For **signed** integer `/` or `%`, the case *dividend is
 the type's most-negative value and divisor is −1* (the two's-complement overflow
 case) is a **defined non-recoverable panic** (`runtime error: integer overflow
-(MIN / -1)`). Unsigned types have no such case.
+(MIN / -1)`). Unsigned types have no such case. A constant `MIN / -1` or
+`MIN % -1` is instead a compile-time error (§6.4 `const.expr.typed`).
 
 `expr.arith.unsafe` — `unsafe_div(a, b)` and `unsafe_rem(a, b)` (§15) perform the
 same integer division and truncated remainder **without** the divide and MIN/−1
 fault checks — hardware semantics, undefined on a zero or MIN/−1 divisor. They
-are the opt-out for hot paths the caller has proven safe.
+are the opt-out for hot paths the caller has proven safe. With constant
+operands they are constant expressions, evaluated like `a / b` and `a % b`, so a
+zero divisor or `MIN / -1` there is a compile-time error.
 
 ## 13.5 Bitwise and shift operators
 
@@ -180,6 +183,10 @@ it cannot appear where a constant is required: `const C = 1 << n` and
 (§15.8 `builtin.internal`) are typed and folded exactly like `v << c` /
 `v >> c`: a constant expression exactly when both operands are constants, and an
 untyped non-constant integer expression under the same conditions as a shift.
+As a constant expression, a negative count, and a count at least the width of a
+typed value's type — both undefined for the unsafe forms at run time
+(`expr.shift.negative`) — are compile-time errors: `unsafe_shl(cast(uint8, 1),
+8)` is an error, while `unsafe_shl(1, 8)`, whose value is untyped, is `256`.
 
 > _Example._ With `var n uint8 = 9`, `var m uint8 = 0xF0`, `var x int32 = 1`:
 >

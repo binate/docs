@@ -204,9 +204,10 @@ correct alternative:
 `conv.cast.const-not-laundered` — A `cast` does **not** launder a constant. If
 `x` is a constant — an untyped literal, a constant expression, or a
 `const`-declared name, **including** one given a type by an enclosing `cast` —
-then `cast(T, x)` is **itself a constant**, and its mathematical value must fit
-`T`'s range, exactly as for a constant assignment (§6.4 `const.expr.fit`). An
-out-of-range constant cast is a **compile-time error**:
+then `cast(T, x)` is **itself a constant**, and its value — a typed constant's
+value at its type (§6.4 `const.expr.typed`) — must fit `T`'s range, exactly as
+for a constant assignment (§6.4 `const.expr.fit`). An out-of-range constant cast
+is a **compile-time error**:
 
 ```
 cast(uint, -1)                     // error: -1 not in uint range

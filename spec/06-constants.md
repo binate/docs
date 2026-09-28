@@ -11,7 +11,8 @@ floating-point constants and the strict integer/floating rule (§6.5); string an
 character literal typing (§6.6); and overflow checking (§6.7).
 
 > _Note._ "Constant" is used in two distinct senses. This chapter concerns
-> **untyped literals and constant expressions** over them. The **`const`
+> **untyped literals, typed constants, and constant expressions** over them.
+> The **`const`
 > declaration** (Ch.9), which binds a name to a compile-time constant value, is
 > a separate construct; the keyword `const` (`term.const`) is unrelated to the
 > type modifier `readonly` (`term.readonly`).
@@ -77,11 +78,13 @@ bases (decimal, hexadecimal, octal, binary) denote values in this one space.
 
 ## 6.4 Constant-expression arithmetic
 
-`const.expr.precision` — A **constant expression** is evaluated on abstract
-integer values at **union-range precision** (`[-2^63, 2^64-1]`); each operation
-yields the exact mathematical result. If any **intermediate** result falls
-outside the union range, the constant expression is rejected at compile time.
-There is no wraparound and no arbitrary-precision (bignum) evaluation.
+`const.expr.precision` — A **constant expression** whose operands are **untyped**
+constants is evaluated on abstract integer values at **union-range precision**
+(`[-2^63, 2^64-1]`); each operation yields the exact mathematical result. If any
+**intermediate** result falls outside the union range, the constant expression
+is rejected at compile time. There is no wraparound and no arbitrary-precision
+(bignum) evaluation. (An operator with a **typed** operand is evaluated at its
+type instead, `const.expr.typed`.)
 
 ```
 1000 - 1000                         -> 0                  (ok)
@@ -95,12 +98,13 @@ There is no wraparound and no arbitrary-precision (bignum) evaluation.
 > the expression in source. Go avoids this with arbitrary precision; Binate
 > deliberately does not, in exchange for a fixed-width implementation.
 
-`const.expr.signedness` — Constant arithmetic operates at abstract precision
-across signedness: e.g. `0xFFFFFFFFFFFFFFFF + (-1)` evaluates to 2^64−2, a
-non-negative value usable in a `uint64` context.
+`const.expr.signedness` — Untyped constant arithmetic operates at abstract
+precision across signedness: e.g. `0xFFFFFFFFFFFFFFFF + (-1)` evaluates to
+2^64−2, a non-negative value usable in a `uint64` context.
 
-`const.expr.fit` — The mathematical value of a constant (literal or constant
-expression) must fit the range of the type required by context: a signed target
+`const.expr.fit` — The value of a constant (literal or constant expression) —
+the exact value of an untyped constant, a typed constant's value at its type
+(`const.expr.typed`) — must fit the range of the type required by context: a signed target
 of `n` bits requires the value to lie in `[-2^(n-1), 2^(n-1)-1]`; an unsigned
 target of `n` bits requires `[0, 2^n-1]`. Otherwise it is a compile error
 (§6.7).
@@ -156,10 +160,47 @@ var v uint8 = -2 | 1          -> error: -1 does not fit uint8
 > `const` group, and `(1 << n) & ~1` in a `uint8` context (`~1` is its maximal
 > untyped constant subexpression, §13.5 `expr.shift.untyped-value.typing`).
 > Write the mask directly (`x & 0xFE`), or complement a typed constant
-> (`x & ~cast(uint8, 1)`, where `~` is taken at `uint8`'s width, §13.5
-> `expr.bitwise`). By contrast `m & ~(1 << n)` is valid at `m`'s type:
+> (`x & ~cast(uint8, 1)`, where `~` is taken at `uint8`'s width,
+> `const.expr.typed`). By contrast `m & ~(1 << n)` is valid at `m`'s type:
 > `1 << n` is not a constant, so its `~` is taken at the type the expression
 > acquires.
+
+`const.expr.typed` — An operator whose operands are integer constants of which
+at least one is **typed**, of type `T` (a type whose underlying type is an
+integer type — including a named or alias type, and `char`), is evaluated
+exactly as it is for operands of type `T` that are not constants (§13.3–§13.5),
+and its result is a constant of type `T`. So `+`, `-`, `*` and unary `-` wrap
+(§13.3 `expr.arith.defined`), `/` and `%` truncate, `~` is the complement at
+`T`'s width, and `&`, `|`, `^` act on `T`'s bits (§13.5 `expr.bitwise`). An
+untyped operand takes `T` and must fit it (`const.expr.fit`); it is itself
+evaluated exactly first (`const.expr.precision`). A shift takes `T` from its
+value operand alone: the count is its own position, of any integer type, and its
+value is exact; `expr.shift.overshift` applies. Where the same operation on
+operands that are not constants panics — a division or remainder by zero, a
+signed `MIN / -1` or `MIN % -1` (§13.4), a negative shift count (§13.5
+`expr.shift.negative`) — the constant expression is a compile-time error
+instead. A comparison of constants is a boolean constant. `sizeof` and
+`alignof` are typed `uint` constants, and `len` of an array a typed `int`
+constant (§15), so arithmetic on them wraps too.
+
+```
+cast(uint8, 200) + cast(uint8, 100)   -> 44    (uint8)
+cast(uint8, 1) - cast(uint8, 2)       -> 255
+~cast(uint8, 1)                       -> 254
+-cast(int8, -128)                     -> -128
+cast(uint8, 1) << 8                   -> 0
+'a' - 'b'                             -> 255   (char is uint8)
+cast(uint8, 1) + 256                  -> error: 256 does not fit uint8
+cast(uint8, 1) / cast(uint8, 0)       -> error: division by zero
+cast(int8, -128) / cast(int8, -1)     -> error: MIN / -1
+```
+
+> _Note._ A typed constant is never evaluated at union-range precision — the
+> operator is the operator of its type — while every untyped subexpression of it
+> stays exact and is fit-checked where it takes `T`. A `cast` of a typed
+> constant is still fit-checked, against the constant's value at its type
+> (§8 `conv.cast.const-not-laundered`): `cast(int8, cast(uint8, 200) + cast(uint8,
+> 100))` is `44`, while `cast(int8, cast(uint8, 200))` is an error.
 
 ## 6.5 Floating-point constants
 
@@ -228,7 +269,7 @@ freely usable where `uint8` / `byte` is expected, but requires an explicit
 ## 6.7 Overflow and range checking
 
 `const.overflow` — Assigning a constant — a literal or a constant expression —
-to a type that cannot hold its mathematical value is a **compile-time error**.
+to a type that cannot hold its value is a **compile-time error**.
 Fit is checked at compile time against the target type's range (§6.4
 `const.expr.fit`).
 
