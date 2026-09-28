@@ -89,6 +89,10 @@ not carry methods. A distinct type may be formed over any underlying — a scala
 (`type Celsius float64`), a pointer (`type Handle @Box`), a slice
 (`type Buf @[]int`), an array, a struct, or a function value. `type`
 declarations are package-level only; a function-local `type` is a parse error.
+A type declaration whose name is the **blank identifier** `_` binds **no name**:
+any number may appear, and `_` does not become a type. Its type is still
+checked, so a declaration such as `type _ struct { … }` or `type _ = U` asserts
+that the type is valid.
 
 `type.alias.transparency` — An alias is the same type as its target in every
 respect: identity, assignability, method resolution, and comparison see through
