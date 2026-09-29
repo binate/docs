@@ -155,7 +155,11 @@ two words — the raw-slice header — not the backing). Both are
 **target-parameterized**: the constant depends on the compilation target's
 pointer and integer widths (§7.13), so e.g. `sizeof(*T)` is 8 on a 64-bit target
 and 4 on a 32-bit target. (The opaque-type gate noted in §15.2 applies to
-`sizeof`/`alignof` as well.)
+`sizeof`/`alignof` as well.) In a generic declaration (including a method or
+`impl` on a generic type), `sizeof` or `alignof` of a type in which a type
+parameter occurs is a constant fixed per instantiation:
+its value is that of the type with the instantiation's type arguments, and what
+depends on it is checked per instantiation (§12.3 `gen.mono.check`).
 
 ## 15.5 Reference tests: `present`, `same`
 

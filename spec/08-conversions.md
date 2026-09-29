@@ -1,6 +1,6 @@
 # 8. Conversions
 
-> **Status:** normative · **Maturity:** mostly Stable  
+> **Status:** normative · **Maturity:** mostly Stable; §8.9 `conv.typeparam` Draft — specified, not yet implemented  
 > **Rule-ID prefix:** `conv`
 
 A **conversion** changes the type of a value. Binate has a small **closed set
@@ -9,7 +9,8 @@ one type is used where another is expected — and three explicit conversion
 built-ins on two orthogonal axes: the **logical** conversions `cast` (§8.5, safe
 only) and its possibly-unsafe superset `unsafe_cast` (§8.7), and the low-level
 **bit reinterpret** `bit_cast` (§8.6). Everything not in the implicit set requires
-an explicit conversion.
+an explicit conversion. In a generic declaration, an explicit conversion involving a
+type parameter is checked per instantiation (§8.9).
 
 ## 8.1 Assignability — the closed set of implicit conversions
 
@@ -344,3 +345,21 @@ struct fields and slice/array elements. The additional *receiver smoothing* that
 adapts a receiver value to a method's receiver kind (the permissive→restrictive
 directions among raw/managed/`readonly`) is part of method dispatch and is
 specified in §7.11 and Ch.10, not here.
+
+## 8.9 Conversions involving type parameters
+
+`conv.typeparam` — In a generic declaration (including a method or `impl` on a
+generic type), the validity of a `cast` (§8.5), `bit_cast` (§8.6) or
+`unsafe_cast` (§8.7) whose source or target type is one in which a type parameter
+occurs is **dependent** (§12.3 `gen.mono.check`): it is checked for each
+instantiation the program names, with the conversion's source and target types
+those of the instantiation, and a conversion outside the accepted set for an
+instantiation is a compile-time error. A type parameter's constraint does not
+make a conversion valid or invalid.
+
+> _Example._ `func conv[T any](x @Thing) T { return cast(T, x) }` is accepted for
+> `conv[@any]` (interface widening) and rejected for `conv[@[]int64]`.
+
+> _Draft; not yet implemented._ See §12.3's _Unenforced_ note: today a
+> conversion involving a type parameter is not checked at the declaration, and a
+> bad instantiation is caught only when code is generated.

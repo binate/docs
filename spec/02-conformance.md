@@ -19,7 +19,8 @@ specification **defines**. A program whose result depends on **undefined**
 behavior (Ch.21) is **not** conforming. A program whose result depends on
 **unspecified** or **implementation-defined** behavior (Ch.21) is conforming but
 **not portable**: its behavior may differ between conforming implementations (or
-targets), even though any one conforming implementation accepts and runs it.
+targets), even though any one conforming implementation accepts and runs it
+(within its implementation limits, §2.2 `conf.implementation.limits`).
 
 `conf.program.diagnostics` — A conforming program contains **no** Constraint
 violation. Whether a particular implementation happens to accept a
@@ -33,6 +34,12 @@ program and realizes the behavior this specification defines for it, and issues 
 diagnosed. Binate implementations emit **errors only** — there are no warnings
 (advisory analysis is the province of separate tooling, not the
 compiler/interpreter; Ch.15).
+
+`conf.implementation.limits` — An implementation may reject a program that
+exceeds one of its **implementation limits** — each catalogued, with a stated
+minimum, in §21.4 — with a diagnostic; a program within every limit's stated
+minimum is accepted by every conforming implementation. `conf.implementation`'s
+"accepts every conforming program" is subject to these limits.
 
 `conf.implementation.conformant` — An implementation is **conformant with respect
 to a rule** when its observable behavior on that rule matches the specification. A

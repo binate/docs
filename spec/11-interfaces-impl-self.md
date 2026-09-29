@@ -1,6 +1,6 @@
 # 11. Interfaces, impl, and Self
 
-> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice` and §11.4 `iface.construct.value-borrow`, both Provisional — implemented, design may still change); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3) and the 32-bit-ARM platform gap (§11.11) remain)  
+> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice` and §11.4 `iface.construct.value-borrow`, both Provisional — implemented, design may still change; §11.12 `iface.assert.typeparam` Draft — specified, not yet implemented); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3) and the 32-bit-ARM platform gap (§11.11) remain)  
 > **Rule-ID prefix:** `iface`
 
 Binate interfaces are **nominal**: a type satisfies an interface only through an
@@ -396,6 +396,28 @@ structural spelling and its **destructor** the slice's element-drop.
 > char-slice, so recovering a string operand needs a slice target. Because the four
 > string spellings are distinct identities, a formatter enumerates one `case` per
 > spelling it accepts — a library concern, not a language one.
+
+`iface.assert.typeparam` — In a generic declaration (including a method or `impl`
+on a generic type), an assertion or type-switch case whose target names a type
+parameter — `x.(T)`, `x.(*T)`, `x.(@T)`, `case *T:` — is **dependent** (§12.3
+`gen.mono.check`): it is checked, and at run time matches, as the assertion its
+instantiation spells, for each instantiation the program names. A bare target `T`
+recovers a value **of type `T`**: when the type argument has an outermost `@` or
+`*` (a managed or raw pointer, slice or interface value), that is the recovery
+kind and the rest is the target (`T = @U` makes `x.(T)` the assertion `x.(@U)`,
+`T = *[]char` makes it `x.(*[]char)`); otherwise it is a value recovery of the
+type argument (`T = U` makes it `x.(U)`). A written kind applies to the type
+argument as written (`x.(@T)` with `T = U` is `x.(@U)`). A target that is illegal
+for an instantiation (`iface.assert.kind`, `iface.assert.slice` — e.g. `x.(@T)`
+with `T = @U`) is a compile-time error. A type parameter's constraint does not
+make a target legal or illegal.
+
+> _Example._ `func as[T any](x @any) T { return x.(T) }`: `as[@Thing](a)` asserts
+> `a.(@Thing)`, `as[Celsius](a)` copies out a `Celsius`, and `as[[2]int](a)` is a
+> compile-time error (an array is not an assertion target).
+
+> _Draft; not yet implemented._ Today an assertion whose target names a type
+> parameter is rejected at the generic declaration.
 
 `iface.assert.absent` — An interface value has two "empty" states (§15.5
 `builtin.present`), and neither is a `nil` case — interface values are **not

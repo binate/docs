@@ -1,6 +1,6 @@
 # 12. Generics and Enumerations
 
-> **Status:** mixed · **Maturity:** language rules Stable (v1 scope); methods + impls on generic types (§12.1 `gen.method.generic-recv` / `gen.impl.generic-recv`) Draft — specified, not yet implemented; one v1-restriction unenforced — see the §12.4 gap (constraint satisfaction unchecked for generic struct/interface instantiation)  
+> **Status:** mixed · **Maturity:** language rules Stable (v1 scope); methods + impls on generic types (§12.1 `gen.method.generic-recv` / `gen.impl.generic-recv`) Draft — specified, not yet implemented; per-instantiation checking (§12.3 `gen.mono.instances` / `gen.mono.check`) Draft — specified, not yet implemented; one v1-restriction unenforced — see the §12.4 gap (constraint satisfaction unchecked for generic struct/interface instantiation)  
 > **Rule-ID prefix:** `gen`
 
 This chapter covers **generics** — type-parameterized functions, structs, and
@@ -77,8 +77,11 @@ per `gen.method.generic-recv`), and its interface list may reference them:
 satisfies `Iterator[T]` for **every** `T` (§11.3 `iface.impl.form`). The
 method-shape match (`iface.impl.coverage`) is verified **abstractly** at the `impl`
 declaration with the binders held abstract, exactly as for a non-generic impl;
-constraint satisfaction and the concrete `(Cursor[int], Iterator[int])` vtable are
-resolved **per monomorphized instantiation** (`gen.satisfy`, §12.4). A
+the constraints of the instantiations in its interface list are satisfied through
+the type's parameters' constraints, checked once at the `impl` declaration (§12.3
+`gen.mono.check`), while the type argument's satisfaction of the type's own
+constraints (`gen.satisfy`, §12.4) and the concrete `(Cursor[int],
+Iterator[int])` vtable are resolved **per monomorphized instantiation**. A
 **conditional** impl (an extra constraint beyond the type's own) and a
 **specific-instantiation** impl (concrete receiver arguments) are **both**
 disallowed (`gen.no-conditional-impls`, §12.4): the parameterized form is the
@@ -133,6 +136,102 @@ lowered at instantiation time to a **direct call** to the concrete method named
 by the type argument's `impl` — **no vtable, no indirection** (unlike interface
 dispatch, §11.11). The instantiated body has the shape of hand-written code over
 the concrete type.
+
+`gen.mono.instances` _(Constraint)_ — The instantiations a program **names** are:
+every instantiation whose type arguments contain no type parameter, written anywhere
+in the program's source — in any declaration at any scope, including a function or
+method body (whether or not it executes), a signature, a struct field, a variable
+or constant declaration, a type or alias declaration, an `impl` declaration's
+receiver or interface list, a constraint, a type argument, and a package interface
+file (`.bni`) — and, for each instantiation so named, every instantiation its
+generic declaration names with its type parameters bound to the type arguments:
+for a generic function, in its signature and body; for a generic struct, in its
+fields, in the signature and body of **every** method declared on it (whether or
+not the program calls it), and in each parameterized `impl` of it
+(`gen.impl.generic-recv`); for a generic interface, in its method signatures and
+the interfaces it extends. The set of instantiations a program names **shall be
+finite**: if an instantiation the program names names, directly or through other
+generics, instantiations of its own generic with ever-growing type arguments
+(`func f[T any]() { f[@T]() }`, `type L[T any] struct { next @L[@T] }`), the set
+is infinite, which is a compile-time error. An implementation may bound the length
+of a chain of instantiations, each named from the previous one and starting from
+one written in the program (which counts as one); the bound is
+implementation-defined and at least 128 (§21.4), and a longer chain is a
+compile-time error (§2.2 `conf.implementation.limits`).
+
+> _Note._ Every method of a named generic-struct instantiation is included because
+> a method on `Box[T]` is promised for every `T` its constraint admits (there are
+> no conditional impls, `gen.no-conditional-impls`), and whether a method is
+> reachable through an interface's vtable depends on `impl`s anywhere in the
+> program. A consequence: the body of a generic in a `.bni` is part of its
+> package's interface — a change to it can break a program that names the
+> generic.
+
+`gen.mono.check` _(Constraint)_ — In a generic declaration (including a method or
+`impl` on a generic type), a construct is **dependent** when checking it needs a
+fact that depends on a type argument:
+- `sizeof` or `alignof` of a type in which a type parameter occurs (directly, or
+  in an element, field or pointee type, a type argument, or an array length),
+  `len` of an array whose length is such a value, and a constant expression or
+  array length using such a value;
+- the rules that consume such a value: the fit of such a constant to the type its
+  context requires (§6.4 `const.expr.fit`, including a constant `cast`, §8.5
+  `conv.cast.const-not-laundered`), array type identity and assignability where a
+  length is such a value (§7.5 `type.array.form`, `type.array.value`; §8.1), the
+  positions an array literal of such a length fills (§13.10
+  `expr.composite.array`, `expr.composite.array.indexed`), and the size equality
+  `bit_cast` requires (§8.6);
+- a use of a type in which a type parameter occurs that requires its layout — a
+  by-value variable, field, parameter or result, `make` or `make_slice` — which the
+  opaque-type gate restricts (§7.12 `type.opaque.builtin-rejection`, §15.2
+  `builtin.opaque-gate`);
+- the validity of a `cast`, `bit_cast` or `unsafe_cast` whose source or target type
+  is one in which a type parameter occurs (§8.9 `conv.typeparam`), and of a type
+  assertion or type-switch case whose target names a type parameter (§11.12
+  `iface.assert.typeparam`).
+
+The check of a generic declaration against its type parameters' constraints
+decides every other rule once, for all its instantiations, and **defers** the
+dependent constructs: each is checked for every instantiation the program names
+(`gen.mono.instances`), with the type parameters bound to the type arguments, and
+a violation is a compile-time error. In that check:
+- names resolve where the generic is declared;
+- the `impl`s, visibility and opacity of a type supplied by a root instantiation's
+  type arguments are those at that root — the instantiation written in the program
+  that the chain of instantiations started from; a type written in a generic's own
+  declaration is judged where it is written;
+- an instantiation whose type arguments are built from the enclosing
+  declaration's type parameters satisfies its constraints through those
+  parameters' constraints (`gen.satisfy` is not re-established per
+  instantiation).
+
+An instantiation named through several chains is checked for each. A generic of
+which the program names no instantiation is **not** checked for its dependent
+constructs, even ones no type argument could satisfy. A violation found in a named
+instantiation (this rule, §8.9 `conv.typeparam`, §11.12
+`iface.assert.typeparam`, or `gen.mono.instances`) is
+reported at the instantiation written in the program, and identifies the position
+of the violating construct in the generic and the chain of instantiations that led
+to it. An interactive interpreter checks an instantiation when an input names it
+(`conf.implementation.timing`).
+
+> _Example._
+> ```
+> func scale[T any]() uint8 { return cast(uint8, sizeof(T) * 100) }
+> scale[int8]()    // accepted: 100 fits uint8
+> scale[int64]()   // compile-time error: 800 does not fit uint8
+> ```
+
+> _Note._ Both branches of an `if` whose condition depends on a type parameter are
+> checked for every instantiation: `if sizeof(T) == 4 { … bit_cast(uint32, t) … }
+> else { … bit_cast(uint64, t) … }` fails at least one branch's size check for
+> every `T`, so no instantiation of it is accepted.
+
+_Unenforced:_ the current implementation checks a generic declaration only
+against its constraints — a violation in a dependent construct is diagnosed only
+when code is generated (as an internal error without a source position), or not
+at all — and neither bounds nor diagnoses an infinite set of instantiations (a
+generic function's polymorphic recursion crashes the compiler).
 
 ## 12.4 Constraint satisfaction
 
