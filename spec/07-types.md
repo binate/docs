@@ -154,6 +154,13 @@ is comparable. The one deviation from Go is that **slices are never comparable**
 array types is not currently available (rejected). The full equality and
 relational rules — including which aggregate types are comparable — are Ch.13.
 
+`type.named.nillability` — Nillability follows the underlying type: `nil` is
+assignable to a named type whose underlying is a pointer or function-value type
+(`type P *int`, `type F *func() int`), as to the underlying itself (§7.7), and to
+no named slice or interface type. A named function value is, like any function
+value, never compared — not even with `nil` (Ch.13 `expr.compare.incomparable`);
+test it with `present`.
+
 `type.named.methods-same-package` — A method or `impl` requires a receiver that,
 after stripping `*`/`@`/`readonly`, is a named type declared in the **same
 package** as the method. Aliases, predeclared/builtin types, anonymous types,
