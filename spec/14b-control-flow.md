@@ -59,8 +59,9 @@ be empty.
 
 `stmt.for.in` — A range loop `for … in coll` iterates a **slice, managed-slice,
 or array**; ranging over any other type is an error ("cannot range over
-non-iterable type"). It **always declares new variables**, scoped to the loop
-block:
+non-iterable type"). A **string literal** operand is an array: it is ranged with
+its natural type `[N]readonly char` (§6.6), over its `N` bytes. The loop **always
+declares new variables**, scoped to the loop block:
 
 - `for v in coll` binds **`v` to the element value** at each iteration.
 - `for i, v in coll` binds **`i` to the index** (type `int`) and **`v` to the
@@ -70,6 +71,25 @@ block:
 > opposite of Go's `for i := range coll` (where a single variable is the index).
 > Drop the index when you do not need it: `for v in coll`. A blank value
 > `for _ in coll` binds nothing.
+
+`stmt.for.in.duplicate` _(Constraint)_ — The index and value variables must have
+different names: `for i, i in coll` is an error. Either may be `_`
+(`for _, _ in coll`).
+
+`stmt.for.in.operand` — The operand is evaluated **once**, before the first
+iteration, into a hidden variable that lives until the loop exits — as if by
+`tmp := coll` (§9.3), whatever the operand: a variable, a field, an element, a
+dereference, a call result or a composite literal. The loop ranges over that
+variable. So an **array** operand is copied: a write to the original array
+during the loop is not seen by the loop. A **slice** operand's length is fixed
+when the loop starts, and its elements are read through its data pointer at
+each iteration: a write to a later element of the same backing is seen. A
+**managed** operand is held by the hidden variable (released when the loop exits,
+however it exits), so reassigning the variable the operand came from, or a
+managed pointer through which it was reached, during the loop does not free
+what the loop ranges over. Any temporary the operand's evaluation produced and
+the operand borrows from (the managed-slice behind a raw view `view(mk())`)
+likewise lives until the loop exits.
 
 `stmt.for.in.ownership` — When the element type is managed, the value variable
 **copy-owns** its binding: the element is retained on bind and released at the end

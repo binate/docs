@@ -98,6 +98,7 @@ decl.scope.package-decls	positive	09-declarations-and-scope.md
 decl.scope.shadow	positive	09-declarations-and-scope.md
 decl.scope.statement	positive	09-declarations-and-scope.md
 decl.shortvar	positive	09-declarations-and-scope.md
+decl.shortvar.duplicate	constraint	09-declarations-and-scope.md
 decl.shortvar.no-new-name-rule	positive	09-declarations-and-scope.md
 decl.type.package-only	constraint	09-declarations-and-scope.md
 decl.var	positive	09-declarations-and-scope.md
@@ -425,6 +426,8 @@ stmt.expr	positive	14-statements.md
 stmt.for	positive	14b-control-flow.md
 stmt.for.clause	positive	14b-control-flow.md
 stmt.for.in	constraint-candidate	14b-control-flow.md
+stmt.for.in.duplicate	constraint	14b-control-flow.md
+stmt.for.in.operand	positive	14b-control-flow.md
 stmt.for.in.ownership	positive	14b-control-flow.md
 stmt.if	positive	14b-control-flow.md
 stmt.if.no-init	positive	14b-control-flow.md

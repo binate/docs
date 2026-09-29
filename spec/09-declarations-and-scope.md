@@ -100,6 +100,12 @@ scope rebinds it rather than being an error. (The redeclaration errors of
 `decl.var.redeclare` and `decl.const.redeclare` apply only to the `var` and
 `const` forms.)
 
+`decl.shortvar.duplicate` _(Constraint)_ — A non-blank name may appear at most
+once on the left of one short variable declaration: `a, a := 1, 2` is an error
+(the first binding could never be used — it is not in scope on the right-hand
+side and is replaced at once). `_` may appear any number of times
+(`_, _ := f()`).
+
 > _Note (grammar disambiguation)._ A statement beginning with an expression list
 > is parsed as an expression list first; the `:=` token then reinterprets the
 > left-hand expressions as declared names (disambiguation rule D1, Annex A).
