@@ -54,17 +54,26 @@ type** — an 8-bit unsigned integer — under three spellings; no conversion is
 needed between them. (They are alternative names for one type, not distinct
 alias types.) A character literal has type `char` (= `uint8`; Ch.6).
 
+`type.scalar.distinct` — Apart from those three spellings of `uint8`, the
+predeclared scalar types are pairwise **distinct types** on every target,
+whatever their widths: `int` is not `int64` even where both are 64 bits wide,
+nor `int32` where both are 32, and likewise `uint` is neither `uint64` nor
+`uint32`. A type constructed from one (a pointer, slice, array, struct,
+function signature, or generic instance over it) is accordingly distinct from
+the same construction over another, and a value of one is not assignable to
+another without a conversion (Ch.8).
+
 `type.scalar.bool` — `bool` is a distinct non-numeric type with values `true`
 and `false`. It is not an integer, is not a relational operand, and is the
 required operand type of the logical operators `&&` and `||` (Ch.13).
 
 `type.scalar.no-implicit-mix` — There is no implicit conversion between scalar
 types. A binary arithmetic, bitwise, or relational operator requires its two
-typed operands to be the *same* type (same width and signedness for integers,
-same width for floats); there is no implicit widening between integer types and
-no implicit `int`↔`float` mixing. Convert explicitly with `cast` (Ch.8, Ch.15).
-The untyped-constant rules that let a literal take a scalar type from context
-are in Ch.6.
+typed operands to be the *same* type — equal width and signedness is not
+enough (`type.scalar.distinct`); there is no implicit widening between integer
+types and no implicit `int`↔`float` mixing. Convert explicitly with `cast`
+(Ch.8, Ch.15). The untyped-constant rules that let a literal take a scalar type
+from context are in Ch.6.
 
 > _Note._ Scalar **sizes and alignments** — including the target-parameterized
 > width of `int`/`uint` and the alignment clamp to the target's maximum — are

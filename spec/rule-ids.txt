@@ -547,6 +547,7 @@ type.readonly.surface	positive	07-types.md
 type.readonly.vs-const	constraint-candidate	07-types.md
 type.scalar.bool	positive	07-types.md
 type.scalar.char-byte-uint8	positive	07-types.md
+type.scalar.distinct	positive	07-types.md
 type.scalar.int-width	positive	07-types.md
 type.scalar.no-implicit-mix	positive	07-types.md
 type.scalar.universe	positive	07-types.md
