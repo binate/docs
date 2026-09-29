@@ -92,7 +92,8 @@ there denotes the binding already in scope (`x := x + 1`; `a, b := b, a`
 exchanges the values of `a` and `b`). A blank identifier `_` on the left is
 skipped — the corresponding right-hand value is still evaluated, but no name is
 bound. Each non-blank name is bound in the current scope with the right-hand
-value's (default; Ch.6) type.
+value's (default; Ch.6) type; a right-hand `nil`, which has no default type, is
+an error (§7.7 `type.nil.literal`).
 
 `decl.shortvar.no-new-name-rule` — Unlike Go, `:=` does **not** require that at
 least one name on the left be new, and re-using a name already bound in the same

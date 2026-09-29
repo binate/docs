@@ -288,7 +288,10 @@ against `nil`) is rejected. Test emptiness with `len(s) == 0` or `present(s)`.
 
 `type.nil.literal` — `nil` is a predeclared constant of a distinct nil type,
 assignable only to **nillable** types: raw and managed pointers, and function
-values (§7.8, §7.9). It is not assignable to slices or interface values.
+values (§7.8, §7.9), and named types over them (`type.named.nillability`). It is
+not assignable to slices or interface values. `nil` has **no default type**: it
+takes a type only from a destination that names one, so it cannot initialize a
+name whose type is inferred (`x := nil`, `var x = nil`) nor be `box`ed.
 
 `type.slice.len0-no-backing` — *(representation invariant)* Every length-0 slice
 has **no backing**: its representation is the nil-equivalent — `{null, 0}` for a
