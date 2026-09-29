@@ -183,7 +183,10 @@ the right-hand side (the full rule is `decl.shortvar`, §9.3). The left-hand sid
 is a list of plain identifiers; each non-blank name is bound in the current scope
 with the right-hand value's default type (a string literal binds its default
 `@[]readonly char`, §6.6). A multi-valued call distributes positionally
-(`q, r := divmod(…)`), and a blank `_` evaluates its value but binds nothing.
+(`q, r := divmod(…)`); otherwise each name pairs with the expression in its
+position, and every right-hand expression is evaluated, left to right, before
+any name is bound (`a, b := b, a` exchanges `a` and `b`). A blank `_` evaluates
+its value but binds nothing.
 
 `stmt.shortvar.rebind` — Unlike Go, `:=` does **not** require that at least one
 left-hand name be new, and re-using a name already bound in the same scope

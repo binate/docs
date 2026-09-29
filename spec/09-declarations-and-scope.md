@@ -84,10 +84,15 @@ ShortVarDecl = IdentifierList ":=" ExpressionList ;
 
 The left-hand side is a list of identifiers. A multi-valued right-hand side
 (a single call returning several values) distributes positionally to the
-left-hand names. A blank identifier `_` on the left is skipped — the
-corresponding right-hand value is still evaluated, but no name is bound. Each
-non-blank name is bound in the current scope with the right-hand value's
-(default; Ch.6) type.
+left-hand names; otherwise the right-hand side has one expression per name, and
+each name takes the value of the expression in its position. Every right-hand
+expression is evaluated, left to right, before any name is bound, so a name the
+statement declares is not in scope in its own right-hand side — an occurrence
+there denotes the binding already in scope (`x := x + 1`; `a, b := b, a`
+exchanges the values of `a` and `b`). A blank identifier `_` on the left is
+skipped — the corresponding right-hand value is still evaluated, but no name is
+bound. Each non-blank name is bound in the current scope with the right-hand
+value's (default; Ch.6) type.
 
 `decl.shortvar.no-new-name-rule` — Unlike Go, `:=` does **not** require that at
 least one name on the left be new, and re-using a name already bound in the same
