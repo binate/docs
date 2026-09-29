@@ -137,9 +137,10 @@ a confusing "undefined" far from the cause.
 > _Note._ The active target (the `arch`/`os` values `is(...)` is tested against)
 > is taken from the `pkg/builtins/build` package, which the build tooling
 > resolves per host or `--target`; that package also exposes `IntSize`/`PtrSize`
-> as compile-time constants. When no build configuration is resolved (e.g. the
-> REPL, the bytecode tool, unit tests), gating is **inactive** and every file and
-> declaration is kept.
+> as compile-time constants. Every tool resolves one: a tool that runs code on
+> the host rather than compiling it for a chosen target (the bytecode
+> interpreter, the REPL) gates by the host's own target. The gate applies to the
+> program's root package (`main`) exactly as to an imported one.
 
 > _Provisional._ The predicate functions are `is` (membership for `arch`/`os`,
 > exact for `version`) and the ordered `at_least`/`at_most` (`version` only).
