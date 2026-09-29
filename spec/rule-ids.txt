@@ -162,6 +162,7 @@ expr.type-assert	positive	13-expressions.md
 expr.unary	positive	13-expressions.md
 expr.unary.addr	constraint-candidate	13-expressions.md
 func.call.apply	positive	10-functions-methods-function-values.md
+func.call.value	constraint	10-functions-methods-function-values.md
 func.closure.allocation	positive	10b-function-values.md
 func.closure.capture	positive	10b-function-values.md
 func.closure.captured	positive	10b-function-values.md

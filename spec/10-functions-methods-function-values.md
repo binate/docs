@@ -87,6 +87,21 @@ assignable to its target. A blank `_` target discards its result (the call is
 still evaluated). _(Destructuring a function-value or interface-method call is
 Provisional.)_
 
+`func.call.value` _(Constraint)_ — A call with **one** result is a value of that
+result's type. A call with **no** result — a `__c_call` whose result is spelled
+`"void"` (`pkg.ccall`) included — has **no value**: it is used only as an
+expression statement (`stmt.expr`) or a deferred call (`stmt.defer`), and in any
+other position is an error ("has no value"), including the right-hand side of a
+blank assignment `_ = f()` or declaration `var _ = f()` (a blank target still
+receives a value). A call with **several** results is not a value either: its
+results are distributed only by `func.return.tail` and `func.destructure` (and
+discarded by an expression statement or `defer`); in any other position — an
+initializer, a single assignment, an argument (there is no forwarding: `g(f())`
+is an error even when `g`'s parameters match `f`'s results), an operand, a
+callee (`f()()`), a receiver (`f().m()`) — it is an error ("returns N values").
+A call that returns **one** function value is one value, however many results
+that function value has. Parentheses around a call change none of this.
+
 > _Note._ A function with multiple results returns them packed into a single
 > (anonymous) struct; individual results are extracted by position. This
 > representation is shared by functions, function values, and interface methods
