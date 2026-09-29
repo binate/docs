@@ -170,7 +170,12 @@ cross-package types with the same short name are distinct.
 There is no `struct Name { … }` shorthand; `struct{ … }` is only a type
 expression, named through a `type` declaration. A struct has an ordered list of
 **fields**, each a `(name, type)` pair; field names and order are significant.
-A field may be of any type, including managed types.
+A field may be of any type, including managed types. Field names are
+**distinct**, except that any number of fields may be named `_`: a **blank field**
+is unnamed **padding** — it takes its place in the layout (§7.13) like any field,
+but it cannot be selected, named as a composite-literal key, or addressed; a
+positional literal fills it (§13 `expr.composite.struct`), a keyed one leaves it
+zero, and it takes part in `==` and reflection like any field.
 
 `type.struct.value` — A struct is a value type: copied on assignment and
 parameter passing, living inline. Only a raw pointer may be taken to a struct

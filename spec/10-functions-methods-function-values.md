@@ -33,7 +33,8 @@ the type's parameters through its receiver — `func (it *Cursor[T]) Next() (T, 
 `func.decl.params` — Each parameter is written **name before type** and is
 **individually typed** (`name Type`). There is **no** same-type shorthand:
 `a, b int` is rejected (after parameter `a` the parser expects a type but finds
-`,`). Duplicate parameter names in one signature are an error. The **final**
+`,`). Duplicate parameter names in one signature are an error, except that any
+number of parameters may be the blank `_` (§9.5 `decl.blank`). The **final**
 parameter may be **variadic** (`name ...T`; §10.3), the one position where a
 `...` precedes the type.
 

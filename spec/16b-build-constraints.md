@@ -257,7 +257,9 @@ verbatim-symbol path as `__c_call`/`__c_global`. `c_export` is an **unqualified,
 annotation (§16.7 `pkg.annotation.namespace`), joining `build`.
 
 `pkg.cexport.eligible` _(Constraint)_ — Only a **top-level function** may be `#[c_export]`'d;
-the annotation on any other declaration (or on a method) is a compile error. Package visibility
+the annotation on any other declaration (or on a method) is a compile error. A **blank**
+function (`func _`; §9.5 `decl.blank`) may be exported: it binds no Binate name, so it is
+callable only from C, through its export name(s). Package visibility
 is **not** required: a package-private function may be exported — a package wrapping a C library
 legitimately hands that library a **callback** that is a private implementation detail, not part
 of its Binate `.bni` surface.

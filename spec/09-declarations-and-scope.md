@@ -124,6 +124,21 @@ currently diagnosed**.
 > errors only, never warnings (§1). No shadowing lint exists yet; this rule
 > describes the implemented behavior.
 
+`decl.blank` — The **blank identifier** `_` never binds a name. It may appear in
+any declaring position — a `const`, `var`, `type`, `interface` or `func`
+declaration; a parameter, result or receiver name; a short-variable, range or
+type-switch binder; a type parameter or receiver binder (§12.1); an import alias
+(§16) — and there it declares **nothing**: any number may appear in one scope,
+and `_` never becomes a name that can be referred to (not even as `pkg._`). A
+blank declaration is still **checked** — its type, initializer, signature, body
+or methods — so it can serve as a compile-time assertion that its constituents
+are valid; a blank `var`'s initializer is still evaluated; a blank declaration
+in a `.bni` exports nothing and needs no counterpart in a `.bn`. `_` is never an
+operand: reading it (`x := _`) is an error; as an assignment target it discards
+the value (§14 `stmt.assign.blank`). A struct field named `_` is unnamed padding
+(§7.4 `type.struct.decl`). A **method** or an **interface method** may not be
+named `_`: a method exists to be called by name, or to fill a method set.
+
 ## 9.6 Scope levels and package-scope declarations
 
 `decl.scope.levels` — There are these scope levels, innermost last:

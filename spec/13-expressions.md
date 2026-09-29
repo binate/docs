@@ -354,8 +354,10 @@ read-only static storage — sound because it cannot be mutated).
 
 `expr.composite.struct` — A struct literal is **keyed** (`T{x: 1, y: 2}` — order
 irrelevant; a key naming no field is an error) or **positional** (`T{1, 2}` — by
-declaration order). Omitted fields are zero-initialized (`T{}` is all-zero); each
-value must be assignable to its field.
+declaration order), never both. Omitted fields are zero-initialized (`T{}` is
+all-zero); each value must be assignable to its field. A blank `_` field
+(§7.4 `type.struct.decl`) cannot be keyed; a positional literal fills it in
+order — the one way to give padding a non-zero value.
 
 `expr.composite.array` — An array literal `[N]T{…}` fills positions in order;
 omitted trailing positions are zero (`[3]int{7}` → `{7, 0, 0}`; `[N]T{}` is
