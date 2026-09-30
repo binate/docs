@@ -153,7 +153,12 @@ the interfaces it extends. The set of instantiations a program names **shall be
 finite**: if an instantiation the program names names, directly or through other
 generics, instantiations of its own generic with ever-growing type arguments
 (`func f[T any]() { f[@T]() }`, `type L[T any] struct { next @L[@T] }`), the set
-is infinite, which is a compile-time error. An implementation may bound the length
+is infinite, which is a compile-time error. A generic struct is rejected at its
+declaration, whether or not the program names an instantiation of it, if following
+fields alone — its own, with its type parameters abstract, then those of each
+generic-struct instantiation named there, and so on — reaches instantiations with
+ever-growing type arguments (`L` above, or `type E[T any] struct { e E[[1]T] }`):
+none of its instantiations could be named. An implementation may bound the length
 of a chain of instantiations, each named from the previous one and starting from
 one written in the program (which counts as one); the bound is
 implementation-defined and at least 128 (§21.4), and a longer chain is a
@@ -230,8 +235,8 @@ to it. An interactive interpreter checks an instantiation when an input names it
 _Unenforced:_ the current implementation checks a generic declaration only
 against its constraints — a violation in a dependent construct is diagnosed only
 when code is generated (as an internal error without a source position), or not
-at all — and neither bounds nor diagnoses an infinite set of instantiations (a
-generic function's polymorphic recursion crashes the compiler).
+at all — and does not bound a generic function's chain of instantiations (its
+polymorphic recursion crashes the compiler).
 
 ## 12.4 Constraint satisfaction
 

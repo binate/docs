@@ -115,6 +115,30 @@ and `type A = B; type B = *A` are rejected. An alias has no identity of its own
 infinite structural type. A self-referential type is written as a distinct
 type, whose recursion goes through its name: `type N struct { v int; next *N }`.
 
+`type.named.value-acyclic` _(Constraint)_ — A distinct type may not contain
+itself **by value**. Walk its underlying type — and, at every named type
+reached, that type's underlying (for an instantiation, with its type arguments
+substituted) — through struct fields, array elements, and alias and `readonly`
+wrappers: along no path may the walk come back to a type already on that path,
+the type itself included. Every other type ends the walk: a scalar; a type
+parameter (a cycle through its argument passes through a distinct type that is
+itself rejected); and a raw or managed pointer, an interface value (`*I`,
+`@I`), a raw or managed slice, or a function value, whose layout is fixed
+whatever it refers to. Such a type has no well-defined layout (§7.13): its
+alignment — and in general its size — would be defined in terms of its own; a
+zero-length array does not break the cycle, since its alignment is its element
+type's (`type.layout.array`). A generic struct is checked at its declaration,
+with its type parameters abstract, whether or not the program instantiates it:
+such a cycle cannot depend on the type arguments, so it is not a dependent
+construct (§12.3 `gen.mono.check`). Rejected: `type C struct { self C }`,
+`type C [2]C`, `type C [0]C`, `type A struct { b B }; type B struct { a A }`,
+`type A B; type B A`, `type N struct { b Box[N] }` (with
+`type Box[T any] struct { v T }`), `type Bad[T any] struct { x Bad[T] }`, and
+`type Bad2[T any] struct { x Bad2[int] }`; valid:
+`type Node struct { v int; next @Node }`. A walk through ever-growing
+instantiations (`type E[T any] struct { e E[[1]T] }`) does not end; such a
+generic is rejected at its declaration by §12.3 `gen.mono.instances`.
+
 `type.named.transparency` — A distinct type is **transparent** to its underlying
 type for operators (arithmetic, bitwise, shift, relational, equality), the
 built-ins that act on the underlying kind (`len`, `present`, `same`), indexing
