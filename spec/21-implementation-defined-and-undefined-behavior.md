@@ -126,7 +126,7 @@ target-pinned promise. None is observable in the result of a conforming program.
 
 | Item | Home |
 |------|------|
-| Cross-operand side-effect order in an assignment beyond "RHS before LHS designator" (which **is** pinned) | §14.4 `stmt.assign.eval-order` |
+| The order in which an expression's operands are evaluated where it is not pinned — e.g. the two operands of an arithmetic, bitwise or comparison operator. Pinned: index and sub-slice operands (§13.9 `expr.index.eval-order`), a call's callee and arguments (§10.3 `func.call.eval-order`), the short-circuit operators (§13.7 `expr.logical`), every assignment (§14.4 `stmt.assign.eval-order`) | §13.1 |
 | The order in which a scope's managed locals are released at scope exit (not observable — deferred calls, §14.13, run **before** the function-exit releases, so no user code runs between the releases; the impl uses declaration order) | §18.4 `mem.scope-exit` |
 | Whether a **move** is applied — only **intermediate** refcounts (as read by reflection) may differ; *when* an allocation is freed is identical | §18.6 `mem.move.optimization`; §18.5 `mem.return` |
 | The observable **form** of a defined abort whose form is mode/target-dependent — nil-interface dispatch faults silently in compiled native code but diagnoses-and-exits under the VM (the *fact* of the abort is defined) | §19.5 `exec.divergence`; §17.5; §11.11 `iface.dispatch.nil` |
@@ -146,6 +146,7 @@ detectable fault for a silent leak, which is worse (§18.7).
 | Item | Home |
 |------|------|
 | Using a **raw borrow** (`*T`, `*[]T`) after the managed value it borrows from is released — a **use-after-free** | §18.7 `mem.raw-uaf` |
+| Releasing, while evaluating a later operand, a managed value an earlier operand of the same expression or statement read (or the object a location it designates lies in), before its use completes — e.g. `f(s, g())` where `g` reassigns `s` | §18.7 `mem.operand-release` |
 | Dereferencing a **dangling** `*T`, or breaking refcount invariants through **raw aliasing** | §18.7 `mem.cycles`, `mem.determinism` |
 | Accessing an object through managed pointers of **two distinct pointee types** — a `@A` and a `@B` made to designate one object by `bit_cast`, `unsafe_cast`, or raw reconstruction. Distinct managed pointer types otherwise designate **disjoint** objects, which an implementation may rely on when optimizing | §18.7 `mem.managed-provenance` |
 | `bit_cast(T, x)` out of contract — a **same-size** reinterpret whose source **alignment** does not meet the target's, or that **violates a type invariant** (e.g. a slice `len` / element-size mismatch). A **different**-proximal-size `bit_cast` is a compile-time **error**, not UB. | §8.6 `conv.bit-cast`; §15.3 `builtin.bit-cast` |

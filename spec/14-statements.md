@@ -139,16 +139,33 @@ the new value is retained before the prior occupant is released, which makes
 self-aliasing stores such as `x = x` and `s[i] = s[i]` safe (the copy-then-destroy
 rule of §18).
 
-> _Open._ The right-hand side is evaluated **before** the left-hand designator's
-> address is computed — the reverse of the common "evaluate the lvalue, then the
-> value" intuition. This is observable only when the designator and the value
-> share a side effect; whether this order is normatively guaranteed is not yet
-> pinned (`stmt.assign.eval-order`).
+`stmt.assign.eval-order` — Every form of assignment evaluates in three steps:
+1. its **right-hand side** — the expression of a simple or compound assignment,
+   the single multi-valued right-hand side of a multiple assignment (a call, or a
+   comma-ok form such as `v, ok = x.(T)`), or every expression of a parallel
+   assignment, left to right;
+2. the operands of every target's **designator**, target by target, left to
+   right, each exactly once — for `s[i]` the base `s` and then the index `i`
+   (`expr.index.eval-order`), for `*p` the pointer `p`, for `s.f` the operand
+   `s`; a blank `_` has none;
+3. the **stores**, left to right — and only after the last store, the releases
+   of the values the stores replaced (`stmt.assign.store`; §18).
+
+The right-hand side thus comes **before** the designator — the reverse of the
+common "evaluate the location, then the value" intuition: `(*p())[i()] = v()`
+calls `v`, then `p`, then `i`. Every value is read and every target fixed before
+any store, so one target's store cannot redirect another: `i, a[i] = f()` and
+`i, a[i] = 1, 2` both store into the element at the **old** `i`. And no replaced
+value is released before the last store, so a target inside an object that an
+earlier store of the same statement replaces is still alive when it is stored
+into: `p, p.v = q, 1` stores `1` into the **old** `*p`. A compound
+assignment `L op= R` evaluates `R`, then `L`'s operands once, then reads `L`,
+applies `op`, and stores.
 
 `stmt.assign.parallel` — A **parallel assignment** with a matched-arity expression
 list on each side — `a, b = e1, e2`, including the swap idiom `a, b = b, a` —
-**evaluates all right-hand expressions first**, then stores into the targets, so
-the swap exchanges the two values. Each right-hand expression must be assignable
+**evaluates all right-hand expressions first**, then its targets, then stores
+(`stmt.assign.eval-order`), so the swap exchanges the two values. Each right-hand expression must be assignable
 to its corresponding target. This is distinct from `stmt.assign.multi`, which
 distributes the results of a single multi-valued call.
 
@@ -163,12 +180,14 @@ IncDecStmt = Expression ( "++" | "--" ) ;
 `x++` and `x--` add or subtract one in place. They are **postfix and
 statement-only** (there is no prefix `++x` and no use in expression position; cf.
 §13). The operand must be of **integer** type, and a `const` operand is rejected
-(a constant has no storage to mutate).
+(a constant has no storage to mutate). `x++` and `x--` evaluate as `x += 1` and
+`x -= 1` do (`stmt.assign.eval-order`): the operand's designator once, its base
+before its index (`expr.index.eval-order`).
 
 > _Note._ The operand may be any integer-typed assignable location — a bare
 > identifier (`x++`), an index (`a[i]++`, `s[i]++`), a struct field (`p.f++`,
 > including a value-struct field), or a dereference (`(*p)++`) — each is
-> incremented in place; the lvalue forms lower like the corresponding assignment.
+> incremented in place.
 
 ## 14.6 Short variable declarations
 

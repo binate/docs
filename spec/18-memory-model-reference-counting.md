@@ -243,6 +243,16 @@ detectable fault for a silent leak, which is worse. The discipline is to own wit
 a managed value (`@[]T`) anything whose lifetime must extend past the borrow,
 rather than to keep a raw view alive (§18.1, `mem.managed-vs-raw`).
 
+`mem.operand-release` — Evaluating an operand does not acquire a managed value it
+reads, nor the managed object a location it designates lies in (`s[i]`, `p.f`):
+the program's own references keep them alive. If evaluating a **later** operand
+of the same expression or statement — a call that reassigns the variable holding
+the only reference, for instance — releases such a value before the operation
+that uses it completes, the behavior is **undefined** (Ch.21): `f(s, g())` where
+`g` reassigns `s`, or `s[g()] = v`. An implementation **must not** acquire the
+operand to rescue this, which would add a reference-count adjustment the source
+does not ask for.
+
 `mem.managed-provenance` — A **managed pointer** designates the **base** of an
 allocation created as its pointee type: a `@T` comes from `make(T)` or `box`
 (§15.2), or is a copy of such a value, and addresses a `T` payload with its own

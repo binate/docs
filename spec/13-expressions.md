@@ -20,6 +20,14 @@ composite literal (§13.10). Postfix operators — selector `.name`, type assert
 `.(T)` (§13.8, §11.12), index/slice `[…]`, and call `(args)` — then apply (§13.8,
 §13.9).
 
+> _Note._ The order in which an expression's operands are evaluated is pinned
+> where this specification says so — index and sub-slice operands left to right
+> (`expr.index.eval-order`), a call's callee and then its arguments left to right
+> (§10.3 `func.call.eval-order`), the short-circuit right operand of `&&` / `||`
+> only when needed (`expr.logical`), and every assignment (§14.4
+> `stmt.assign.eval-order`). Elsewhere — the two operands of an arithmetic,
+> bitwise or comparison operator, for instance — it is **unspecified** (§21.5).
+
 ## 13.2 Operator precedence and associativity
 
 `expr.precedence` — Operators bind at eleven precedence levels, from tightest
@@ -344,6 +352,14 @@ a raw slice `*[]T` (§7.5–§7.6).
 (`runtime error: index out of bounds`; §17). **Raw-pointer** indexing is **not**
 bounds-checked (a pointer carries no length). `unsafe_index(x, i)` (§15) performs
 the indexed access **without** the bounds check.
+
+`expr.index.eval-order` — The operands of an index expression are evaluated
+**left to right**, each exactly once: in `x[i]`, the base `x` (with its own
+operands) and then the index `i`; in `x[lo:hi]`, `x`, then `lo`, then `hi`. The
+order is the same wherever the expression appears — read, assigned to (§14.4),
+incremented (§14.5), address-taken (`&x[i]`), or as the operand of a selector or
+of a further index (`x[i].f`, `x[i][j]`): `(*p())[i()]++` calls `p` before `i`,
+exactly as `(*p())[i()] += 1` and a read of `(*p())[i()]` do.
 
 ## 13.10 Composite literals
 

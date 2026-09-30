@@ -120,6 +120,13 @@ zero arguments (`func f()` called as `f(1, 2)` is "too many arguments"). For a
 way, and the remainder form the variadic argument (`func.variadic.pack` /
 `func.variadic.spread`).
 
+`func.call.eval-order` — A call evaluates its **callee** and then its
+**arguments**, **left to right**, each exactly once, before control enters the
+callee: for a method call `x.M(…)` the callee is the receiver `x`; for a call
+through a function value `fv(…)`, the expression `fv`; a variadic argument's
+individual elements (`func.variadic.pack`) are evaluated in the same left-to-right
+order. `o().M(a(), b())` calls `o`, then `a`, then `b`.
+
 > _Note._ There is no heterogeneous-variadic call form: every call — including
 > the predeclared `panic`, a **fixed** single-parameter function (§15.7) — binds
 > a fixed signature, and `...T` variadics (below) are **homogeneous** (one
