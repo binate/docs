@@ -235,9 +235,11 @@ exhibit. **Raw** pointers are the sanctioned escape hatch for breaking a cycle �
 an unowned reference that holds no count (and carries no safety net: the
 programmer ensures the referent outlives it).
 
-`mem.raw-uaf` — Using a **raw borrow** (`*T`, `*[]T`) after the managed value it
-borrows from has been released is a **use-after-free** — **user error** and
-**undefined behavior** (Ch.21), not a compiler defect. An implementation **must
+`mem.raw-uaf` — Using a **raw borrow** (`*T`, `*[]T`, `*func`) after the managed
+value it borrows from has been released is a **use-after-free** — **user error**
+and **undefined behavior** (Ch.21), not a compiler defect. So is calling a
+capturing `*func` closure after the frame that holds its closure record has ended
+(§10.10 `func.closure.allocation`). An implementation **must
 not** suppress a release to prevent such a use-after-free: doing so would trade a
 detectable fault for a silent leak, which is worse. The discipline is to own with
 a managed value (`@[]T`) anything whose lifetime must extend past the borrow,

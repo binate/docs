@@ -15,7 +15,7 @@ shift operators (§13.5), comparison and comparability (§13.6), logical operato
 `expr.primary` — A primary expression (operand) is one of: a literal (integer,
 floating-point, string, character; or `true`/`false`/`nil`); an identifier or
 package-qualified selector (`pkg.name`); a parenthesized expression
-`( Expression )`; a function literal (§10.10); a built-in call (§15); or a
+`( Expression )`; a function literal (§10.9); a built-in call (§15); or a
 composite literal (§13.10). Postfix operators — selector `.name`, type assertion
 `.(T)` (§13.8, §11.12), index/slice `[…]`, and call `(args)` — then apply (§13.8,
 §13.9).

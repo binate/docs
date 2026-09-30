@@ -1,12 +1,12 @@
 # 10. Functions, Methods, and Function Values
 
-> **Status:** mixed · **Maturity:** Stable (functions/methods); function values — core Stable, a few interactions Provisional, one construct Draft (§10.8)  
+> **Status:** mixed · **Maturity:** Stable (functions/methods); function values (§10.8–§10.12) core Stable; tail-return / destructure *through* a function value Provisional (§10.2)  
 > **Rule-ID prefix:** `func`
 
 This chapter covers function and method declarations (§10.1), returns and
 destructuring (§10.2), argument binding — variadic parameters and spread (§10.3),
 method receivers (§10.4–§10.6), and method dispatch (§10.7). **Function values, closures, and
-method values** — a recent, Provisional feature — are specified in the
+method values** — core Stable, with a few Provisional interactions — are specified in the
 companion section **[§10.8–§10.12, Function Values](10b-function-values.md)**.
 
 ## 10.1 Function and method declarations
@@ -15,7 +15,7 @@ companion section **[§10.8–§10.12, Function Values](10b-function-values.md)*
 results *block*; a method inserts a parenthesized receiver before the name.
 Functions and methods are declared at **package scope only** — there are no
 nested or local function declarations; a `func` in expression position is a
-function *literal* (§10.10).
+function *literal* (§10.9).
 
 ```
 FuncDecl   = "func" identifier [ TypeParams ] Signature Block ;

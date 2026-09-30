@@ -168,9 +168,10 @@ scalar, not an unnamed composite).
 `type.named.func-value-nominal` — As an exception to the unnamed-composite rule,
 a named **function-value** type is *nominal*: a bare existing `@func(int) int`
 value is **not** implicitly assignable to `Fn`. `Fn` is constructible from a
-function *reference* (a named function); construction from a function *literal*
-(`var f Fn = func(…){…}`) is a known gap — not yet supported and currently
-rejected.
+function *reference* (a named function; §10.9 `func.ref.decay`) or from a
+function *literal* (`var f Fn = func(…){…}`); a literal whose destination has
+type `Fn` and whose signature matches has type `Fn` itself (§10.9
+`func.lit.inferred-default`).
 
 `type.named.comparison` — Comparability follows the underlying type: `type ID int`
 is comparable. The one deviation from Go is that **slices are never comparable**
@@ -394,8 +395,11 @@ function-value type (parameters are types only). A trailing `...T` in the
 parameter position marks a **variadic** function-value type (§10.3).
 
 `type.func.kinds` — The two function-value kinds — raw `*func(…)` and managed
-`@func(…)` — differ only in whether the capture/data pointer is reference-counted
-(a managed function value needs destruction). Function-value type identity is
+`@func(…)` — differ in who owns the closure record the data pointer designates: a
+managed function value holds a counted reference to it (and needs destruction); a
+raw one borrows it — from an `@func`, or, for a capturing `*func` literal or method
+value, from the enclosing frame, which keeps one record per closure site (§10.10
+`func.closure.allocation`). Function-value type identity is
 **structural** on the signature: same kind, identical parameter types in order,
 identical result types in order, **and identical variadic-ness of the final
 parameter** (a variadic `*func(...T)` is never identical to a fixed `*func(*[]T)`;

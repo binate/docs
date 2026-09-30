@@ -132,7 +132,14 @@ the single-named-side composite crossing, and **interface widening** (a concrete
 assignability case 7) are all valid casts. (Constructing a **managed** interface
 value `@I`/`@any` still needs an already-managed source: a bare **value** is not
 assignable to `@I` — it requires an explicit `box` first, no implicit heap (§8.1
-note) — so `cast(@I, value)` is rejected with that guidance.)
+note) — so `cast(@I, value)` is rejected with that guidance.) A **function
+literal** operand takes `T` as its destination type (§10.9
+`func.lit.inferred-default`; likewise for `unsafe_cast`, §8.7), so when `T` is a
+function-value type of matching signature the literal already has type `T` (less
+any outermost `readonly`) and the cast changes nothing: `cast(*func(…), func(…){…})` is a raw closure whose
+record, if it captures, is kept in the enclosing frame (§10.10
+`func.closure.allocation`), and `cast(Fn, func(…){…})` constructs a value of the
+named function-value type `Fn`.
 
 **(2) Explicit safe conversions** that are not implicit — the numeric scalar
 conversions, the named↔underlying scalar crossing, constant typing

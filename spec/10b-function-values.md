@@ -2,8 +2,7 @@
 
 > **Status:** mixed · **Maturity:** core **Stable** (implemented across all
 > backends and execution modes; conformance-mixed — tracked defects at §10.12);
-> tail-return / destructure *through* a function value Provisional (§10.2);
-> named-value-from-a-literal construction Draft/unimplemented (§10.9)  
+> tail-return / destructure *through* a function value Provisional (§10.2)  
 > **Rule-ID prefix:** `func`  
 > Part of Ch.10 ([Functions, Methods, and Function Values](10-functions-methods-function-values.md)).
 
@@ -13,9 +12,9 @@ representation (§10.8), non-capturing literals and function references (§10.9)
 closures (§10.10), method expressions and method values (§10.11), and equality,
 indirect calls, and dual-mode dispatch (§10.12). The **core** feature is
 **Stable** — implemented across all backends and execution modes and exercised by
-the conformance suite; a few specific interactions remain **Provisional** and one
-construct is **Draft** (unimplemented), both flagged inline, and backend
-implementation-conformance defects are tracked separately (Annex C).
+the conformance suite; a few specific interactions (§10.2) remain
+**Provisional**, and backend implementation-conformance defects are tracked
+separately (Annex C).
 
 ## 10.8 Function-value types
 
@@ -53,10 +52,9 @@ is not testable with `==`/`!=`; use `present` — §10.12.)
 `func.value.named-nominal` — Named function-value types are **nominal** (§7.3):
 a value of one function-value type does not implicitly assign into a distinct
 named function-value type. A named function-value type is constructed from a
-function *reference* (§10.9) — **not** from a method expression, nor by assigning
-an already-bound `*func`/`@func` value (both are of function-value kind, which
-this nominal rule rejects). (Construction from a function *literal* is intended
-but not yet implemented — §10.9.)
+function *reference* or a function *literal* (§10.9) — **not** from a method
+expression, nor by assigning an already-bound `*func`/`@func` value (both are of
+function-value kind, which this nominal rule rejects).
 
 ## 10.9 Non-capturing function literals and function references
 
@@ -71,43 +69,81 @@ position evaluates to a function value. A **non-capturing** literal (one that
 references no enclosing local) carries a null data word and works in all
 execution modes.
 
-`func.lit.inferred-default` — Where no destination type is supplied, a function
-literal's (and a bare function reference's) default type is the **managed**
-`@func(…)`, mirroring the `@[]T` default. A destination that hints a `*func` slot
-of matching signature pins the literal to the raw `*func` form (a stack-allocated
-closure borrowed by the destination; §10.10).
-
-> _Known gap._ Constructing a **named** function-value type from a function
-> *literal* (`var f Fn = func(…){…}`) is rejected in all modes; only the function
-> *reference* form (`var f Fn = add`) works (§7.3; Annex C).
+`func.lit.inferred-default` — A function literal takes its type from its
+**destination**: the expected type where the literal is a variable initializer,
+an assignment's right-hand side, a call argument, a `return` operand, or a
+composite-literal field or element (the assignment boundaries of §8.8), or the
+target type of a `cast` / `unsafe_cast` (§8.5, §8.7; not of a `bit_cast`, which
+reinterprets its operand as it is). Alias and `readonly` wrappers on the
+destination type are peeled, and signatures match as in `func.value.identity`
+(names ignored). A raw `*func` destination of matching signature makes the
+literal that `*func` (its closure record, if it captures, is kept in the
+enclosing frame and borrowed by the destination; §10.10
+`func.closure.allocation`). A **named** function-value destination of matching
+signature (`var f Fn = func(…){…}`) gives the literal that named type — raw or
+managed as `Fn`'s underlying type is (§7.3), with the corresponding closure
+allocation. Otherwise — no destination (`:=`, `var f = …`, an operand), an
+`@func` destination, or one whose type or signature does not match — a function
+literal's (and a bare function reference's) type is the **managed** `@func(…)`
+default, mirroring the `@[]T` default, and the destination's ordinary
+assignability check applies.
 
 ## 10.10 Closures
 
 `func.closure.capture` — A function literal that references an enclosing local is
 a **closure**. Capture is **always by value** — a snapshot taken when the literal
-is evaluated. There are no capture lists; captured variables are inferred by
-free-variable analysis. Writes to a captured name inside the body affect only the
-closure's copy, and later writes to the original variable are not visible to the
-closure. **Shared mutable state is expressed by capturing a pointer** (the
-pointer is snapshotted; the pointee is shared).
+is evaluated; later writes to the original variable are not visible to the
+closure. There are no capture lists; captured variables are inferred by
+free-variable analysis. Each call of the closure starts with its own copy of the
+captured values: a write to a captured name inside the body changes only that
+copy, not the original variable or the closure record, so the next call starts
+from the record's values again. (A `*func` closure's record is shared by every
+value its site has produced in the frame, and each evaluation of the site
+re-snapshots into it — `func.closure.allocation`.) **Shared mutable state is
+expressed by capturing a pointer** (the pointer is snapshotted; the pointee is
+shared).
 
 `func.closure.captured` — Only ordinary local variables are captured. References
 to package-level functions, constants, types, packages, and interfaces are not
-captured (they are static entities). A captured managed value (`@T`, `@[]T`,
-`@func`) acquires its own reference, released when the closure is destroyed.
+captured (they are static entities). The closure record holds its own reference
+to each captured managed value (`@T`, `@[]T`, `@func`, `@Iface`, or a struct or
+array value with managed fields), released when the record's captures are
+replaced or the record is destroyed (`func.closure.allocation`).
 
-`func.closure.allocation` — A capturing **`*func`** literal stack-allocates its
-closure record in the enclosing frame (lifetime tied to that frame); a capturing
-**`@func`** literal heap-allocates it (reference-counted). `*func` does **not**
-auto-promote to `@func` — a closure that must outlive its frame shall be typed
-`@func` directly.
+`func.closure.allocation` — A capturing **`*func`** closure — a function literal,
+or a method value (§10.11) — keeps its closure record in the **frame** of the
+innermost function or function literal whose body contains it: one frame per call
+of that function or literal. The record lives until the frame ends, after that
+frame's deferred calls have run (§14.13 `stmt.defer.exit`), however deeply nested
+the block in which the closure is evaluated. There is **one record per closure
+site per frame**, where the site is the literal or method-value selector as
+written: evaluating the same site again in that frame re-snapshots into that
+record, releasing the captures it held, so every `*func` value the site has
+produced in the frame calls with the latest captures. (So a closure that
+captures an earlier `*func` value from its own site captures a pointer to its own
+record, and calling that value calls the closure itself; compare
+`func.closure.recursion`.) The captures the record holds when the frame ends are
+released then. A method value evaluated directly in a package-level variable
+initializer, outside any function literal, has no enclosing frame; its record
+lives for the rest of the program. Calling a capturing `*func` closure after the
+frame that holds its record has ended is a use-after-free of the record, which is
+**undefined behavior** (§18.7 `mem.raw-uaf`; Ch.21).
 
-`func.closure.escape-lint` — Escape of a stack-bound capturing `*func` is a
+A capturing **`@func`** literal heap-allocates a fresh, reference-counted record
+on each evaluation. `*func` does **not** auto-promote to `@func`: a closure that
+must outlive its frame, or that must not share its captures with other closures
+from the same site (one per loop iteration, say), shall be typed `@func`
+directly. A method value is always `*func` (§10.11); where a bound method must
+outlive its frame or be independent per evaluation, write an `@func` literal that
+calls the method.
+
+`func.closure.escape-lint` — Escape of a frame-bound capturing `*func` is a
 **lint warning** (`func-value-escape`), not a hard type error: `*func` is an
 opt-in escape hatch whose lifetime is the programmer's responsibility, and the
-warning steers toward `@func`. Detection is best-effort (it covers `return`,
-file-scope initializers, and assignment through a pointer-/managed-rooted
-destination, not every escape path). Separately, an `@func` literal
+warning steers toward `@func`. Detection is best-effort: it covers a capturing
+function literal (not a method value) written directly as a `return` operand or
+assigned through a pointer- or managed-rooted destination, not every escape
+path. Separately, an `@func` literal
 that captures a **raw pointer** is flagged `managed-func-raw-capture` (the
 `@func` can outlive the raw pointer's source).
 
@@ -141,7 +177,12 @@ type uses its own method set; §7.3).
 bridging `x`'s shape to `M`'s receiver shape: a value receiver captures a copy; a
 `*T` receiver captures `&x` (mutations visible); a `@T` receiver captures the
 managed pointer (reference-counted). Capturing a value receiver via the managed/
-raw form takes a snapshot.
+raw form takes a snapshot. The captured receiver is held in the method value's
+closure record, under `func.closure.allocation`: the record lives until the
+enclosing frame ends (for the rest of the program when evaluated directly in a
+package-level variable initializer), and evaluating the same selector again in
+that frame re-captures the receiver into it, for every value the selector has
+produced there.
 
 ## 10.12 Equality, indirect calls, and dual-mode dispatch
 

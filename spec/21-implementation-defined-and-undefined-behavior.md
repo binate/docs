@@ -145,7 +145,8 @@ detectable fault for a silent leak, which is worse (§18.7).
 
 | Item | Home |
 |------|------|
-| Using a **raw borrow** (`*T`, `*[]T`) after the managed value it borrows from is released — a **use-after-free** | §18.7 `mem.raw-uaf` |
+| Using a **raw borrow** (`*T`, `*[]T`, `*func`) after the managed value it borrows from is released — a **use-after-free** | §18.7 `mem.raw-uaf` |
+| Calling a capturing **`*func`** closure (a function literal or a method value) after the frame that holds its closure record has ended — a use-after-free of the record | §10.10 `func.closure.allocation`; §18.7 `mem.raw-uaf` |
 | Releasing, while evaluating a later operand, a managed value an earlier operand of the same expression or statement read (or the object a location it designates lies in), before its use completes — e.g. `f(s, g())` where `g` reassigns `s` | §18.7 `mem.operand-release` |
 | Dereferencing a **dangling** `*T`, or breaking refcount invariants through **raw aliasing** | §18.7 `mem.cycles`, `mem.determinism` |
 | Accessing an object through managed pointers of **two distinct pointee types** — a `@A` and a `@B` made to designate one object by `bit_cast`, `unsafe_cast`, or raw reconstruction. Distinct managed pointer types otherwise designate **disjoint** objects, which an implementation may rely on when optimizing | §18.7 `mem.managed-provenance` |
