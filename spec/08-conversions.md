@@ -1,6 +1,6 @@
 # 8. Conversions
 
-> **Status:** normative · **Maturity:** mostly Stable; §8.9 `conv.typeparam` Draft — specified, not yet implemented  
+> **Status:** normative · **Maturity:** mostly Stable; §8.9 `conv.typeparam` Draft — specified, not yet implemented; two implementation gaps flagged (§8.5 aggregate retype, §8.7 `unsafe_cast` between interface values)  
 > **Rule-ID prefix:** `conv`
 
 A **conversion** changes the type of a value. Binate has a small **closed set
@@ -111,12 +111,14 @@ so it must be **constructed** explicitly, not cast (`*[]T → @[]T` is under-det
 
 ## 8.5 `cast` — explicit safe value conversion
 
-> _Draft (redesign in progress)._ The safe-set **gate** (`conv.cast.safe`), the
-> aggregate retype (`conv.cast.aggregate-retype`), and the companion `unsafe_cast`
-> built-in (§8.7) are specified ahead of the implementation. Until it lands, `cast`
-> is realized in the older ungated form, so a `cast` outside the safe set below is
-> currently a latent defect (a silent miscompile), not yet the compile-time error
-> specified here.
+> _Open / known gap._ The checker realizes the aggregate retype
+> (`conv.cast.aggregate-retype`) only between same-size integer element types
+> (named integer types included) and rejects every other retype this section
+> admits: `bool` to a one-byte integer (`[3]bool` to `[3]uint8`); a named
+> non-integer element type to or from its underlying type or another named type
+> over it (`[2]Celsius` to `[2]float64`, two structs of one layout); a retype that
+> also adds element-level `readonly` (`@[]int8` to `@[]readonly uint8`); and a
+> nested retype (`[2][4]int8` to `[2][4]uint8`) (Annex C).
 
 `conv.cast` — `cast(T, x)` is a built-in that converts the value `x` to type `T`
 (Ch.15); its result type is `T`. `cast` performs only **safe** conversions — each
@@ -304,8 +306,10 @@ counts a span twice the backing) — is **undefined** (Ch.21).
 
 ## 8.7 `unsafe_cast` — possibly-unsafe conversion
 
-> _Draft (redesign in progress)._ `unsafe_cast` is specified ahead of its
-> implementation; it does not yet exist as a built-in in the current tree.
+> _Open / known gap._ `unsafe_cast` rejects every conversion between two
+> interface values — including the identity and the sub-interface to
+> super-interface widening that `cast` accepts (§8.1 case 7) — so
+> `cast ⊆ unsafe_cast` does not yet hold for interface values (Annex C).
 
 `conv.unsafe-cast` — `unsafe_cast(T, x)` is the **possibly-unsafe** companion of
 `cast` (Ch.15); its result type is `T`. It accepts a **superset** of `cast`
@@ -368,5 +372,9 @@ make a conversion valid or invalid.
 > `conv[@any]` (interface widening) and rejected for `conv[@[]int64]`.
 
 > _Draft; not yet implemented._ See §12.3's _Unenforced_ note: today a
-> conversion involving a type parameter is not checked at the declaration, and a
-> bad instantiation is caught only when code is generated.
+> conversion involving a type parameter is checked neither at the declaration
+> nor per instantiation. Code generation rejects some bad instantiations (an
+> interface narrowing through `cast`, an aggregate cast to a different kind, a
+> container retype between different element sizes) as an internal error, and
+> silently lowers the rest as a bit relabel — e.g. `cast(T, x)` with `x` an
+> `@[]int32` and `T = @[]float32`, or `x` an `int8` and `T = bool`.
