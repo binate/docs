@@ -515,11 +515,18 @@ which *does* have storage and an address (`&x` → `*readonly T`).
 `type.opaque.forward` — `type Foo` — an identifier with no body (`=`, `struct`,
 or underlying type expression) and a following statement terminator — is a
 **forward declaration**: it declares that `Foo` is a named type without
-specifying its layout. Placed in a package's `.bni` interface file with the full
-definition (`type Foo struct { … }`) in the package's `.bn`, it exports `Foo`
-**opaquely** (Ch.16). The bare-identifier-then-terminator shape is the syntax;
-`type Foo U` (a type expression follows) is instead the distinct-type form
-(§7.3).
+specifying its layout. Its full definition may declare `Foo` as any named type:
+a struct (`type Foo struct { … }`) or a distinct type over any other type
+(`type Foo int`, `type Foo @[]Node`, `type Foo @func(int) int`; §7.3). Placed in
+a package's `.bni` interface file with the full definition in the package's
+`.bn`, it exports `Foo` **opaquely** (Ch.16). The bare-identifier-then-terminator
+shape is the syntax; `type Foo U` (a type expression follows) is instead the
+distinct-type form (§7.3).
+
+`type.opaque.alias-rejection` _(Constraint)_ — An alias `type Foo = U` cannot be
+the full definition of a forward-declared `Foo` and is rejected: it would make
+`Foo` another name for `U` (§7.3 `type.alias.transparency`), not the named type
+the forward declaration declares.
 
 `type.opaque.handles` — The pointer and handle types over an opaque type — `*Foo`
 and `@Foo` — are first-class: declared, passed, returned, assigned, and
