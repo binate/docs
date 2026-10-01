@@ -401,7 +401,8 @@ raw one borrows it — from an `@func`, or, for a capturing `*func` literal or m
 value, from the enclosing frame, which keeps one record per closure site (§10.10
 `func.closure.allocation`). Function-value type identity is
 **structural** on the signature: same kind, identical parameter types in order,
-identical result types in order, **and identical variadic-ness of the final
+identical result types in order (each apart from its outermost `readonly`, §7.11
+`type.readonly.param-signature`), **and identical variadic-ness of the final
 parameter** (a variadic `*func(...T)` is never identical to a fixed `*func(*[]T)`;
 §10.3 `func.variadic.identity`) — names ignored; the kind is part of identity, so
 `*func(int) int` and `@func(int) int` are not identical (their `@func` → `*func`
@@ -489,8 +490,11 @@ mutable-vs-read-only need (Ch.10).
 `type.readonly.param-signature` — The outermost `readonly` on a function
 **parameter** type is local discipline only (the parameter cannot be reassigned
 in the body); it is not part of the function's type signature and is ignored for
-signature matching and function-value assignability. Element-level `readonly`
-inside a parameter type still matters.
+signature matching and function-value assignability. Likewise the outermost
+`readonly` on a **result** type: a result is returned as a value copy, whose
+outermost `readonly` adjusts freely (`type.readonly.drop`), so it is not part of
+the signature either. Element-level `readonly` inside a parameter or result type
+still matters.
 
 `type.readonly.drop` — **Outermost** `readonly` on a whole value needs no
 conversion built-in: it is adjusted **implicitly** in both directions (`T` ↔
