@@ -321,8 +321,11 @@ the **programmer asserts**. A conversion `cast` already accepts should be writte
 risk). The additional conversions `unsafe_cast` permits over `cast` are:
 
 - **Drop element-level `readonly`** — `*readonly T → *T`, `@[]readonly T → @[]T`
-  (the `const_cast`-like operation). The programmer asserts no other live handle
-  relies on the dropped view's immutability (§8.3, §7.11).
+  (the `const_cast`-like operation), also on a managed → raw borrow —
+  `@readonly T → *T`, `@[]readonly T → *[]T`: the borrow `cast` performs (§8.4)
+  composed with the drop, which the implicit borrow and `cast` both refuse. The
+  programmer asserts no other live handle relies on the dropped view's immutability
+  (§8.3, §7.11).
 - **Raw pointer → managed pointer** — `*T → @T`. This asserts a valid management
   header exists at the pointee's `−2W` offset (§7.13.7); it is the sanctioned
   explicit raw→managed escape the implicit set forbids (§8.4). (The slice and
