@@ -27,7 +27,8 @@ following holds:
    side's underlying is an **unnamed composite**, and the underlying is
    assignable to the other side (`conv.named`, §7.3).
 4. `S` and `D` differ only by **outermost `readonly`** (in either direction), or
-   `D` adds **element-level `readonly`** to `S` (`conv.readonly`, §8.3).
+   `D` adds **element-level `readonly`** to `S` where §8.3 `conv.readonly` permits
+   it.
 5. `S` is a **managed** pointer / slice / function value and `D` is the
    corresponding **raw** form with an identical pointee/element/signature
    (`conv.managed-to-raw`, §8.4).
@@ -77,7 +78,23 @@ single named side over an unnamed composite underlying).
 `conv.readonly` — `readonly` conversions follow the lattice of §7.11. Outermost
 `readonly` is permissive in both directions (`T` ↔ `readonly T`). Adding
 element-level `readonly` (behind a pointer, slice, or array handle) is an
-implicit *widening* (`*T` → `*readonly T`, `@[]T` → `@[]readonly T`). **Dropping**
+implicit *widening* (`*T` → `*readonly T`, `@[]T` → `@[]readonly T`) — at a level
+**below** the outermost shared handle, only when every level between that handle
+and the added `readonly` is also `readonly` in the target: `@[]*char` →
+`@[]readonly *readonly char` and `**char` → `*readonly *readonly char` are
+implicit, but `@[]*char` → `@[]*readonly char` and `**char` → `**readonly char`
+are not, because through the new handle a `*readonly char` could be stored into a
+slot the source handle still reads as a writable `*char`. A pointer or slice
+handle moves one level down; an array's elements and an anonymous struct's fields
+are at their container's level, so a by-value array or struct copies them
+(`[2]*char` → `[2]*readonly char` is a fresh copy) while behind a handle they are
+shared storage (`*[2]*char` → `*[2]*readonly char` is not implicit). A level counts
+as `readonly` only when its slot type itself is — `*(readonly [2]*readonly char)`
+qualifies, `*([2]readonly *readonly char)` does not, since an array or struct with
+`readonly` elements or fields can still be overwritten as a whole value. Such an
+unguarded addition is not a `cast` either (nor through a named type whose
+underlying adds it); it requires `unsafe_cast` (§8.7).
+**Dropping**
 element-level `readonly` is **not** implicit and is **not** a `cast` either — it
 is an *unverifiable* conversion (another live handle may rely on the `readonly`
 view's immutability) and requires **`unsafe_cast`** (§8.7) — with one exception: a
@@ -177,8 +194,9 @@ conversions, the named↔underlying scalar crossing, constant typing
 > `mem.managed-provenance`); admitting a same-layout `@A → @B` into the safe set
 > would silently withdraw that guarantee.
 
-`cast` does **not** drop element-level `readonly` — that moves to `unsafe_cast`
-(§8.7). (Outermost `readonly` on the whole value needs no `cast`: it is adjusted
+`cast` does **not** drop element-level `readonly`, nor add it below a shared
+handle beyond what §8.3 permits implicitly — those move to `unsafe_cast` (§8.7);
+two structs with the same fields convert only when no field does either. (Outermost `readonly` on the whole value needs no `cast`: it is adjusted
 implicitly in both directions — part 1 above, §8.3.) A `T` that removes `readonly`
 from behind a shared pointer/slice/array handle — `*readonly U → *U`, `@[]readonly U
 → @[]U` — is **not** in the safe set (§8.3).
@@ -326,6 +344,10 @@ risk). The additional conversions `unsafe_cast` permits over `cast` are:
   composed with the drop, which the implicit borrow and `cast` both refuse. The
   programmer asserts no other live handle relies on the dropped view's immutability
   (§8.3, §7.11).
+- **Add element-level `readonly` below a shared handle** without every level in
+  between readonly (`@[]*char → @[]*readonly char`, §8.3), also on a managed → raw
+  borrow. The programmer asserts nothing stores a readonly value through the new
+  handle that the source handle then writes through.
 - **Raw pointer → managed pointer** — `*T → @T`. This asserts a valid management
   header exists at the pointee's `−2W` offset (§7.13.7); it is the sanctioned
   explicit raw→managed escape the implicit set forbids (§8.4). (The slice and
