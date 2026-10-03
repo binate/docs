@@ -193,7 +193,13 @@ fact that depends on a type argument:
 - the validity of a `cast`, `bit_cast` or `unsafe_cast` whose source or target type
   is one in which a type parameter occurs (§8.9 `conv.typeparam`), and of a type
   assertion or type-switch case whose target names a type parameter (§11.12
-  `iface.assert.typeparam`).
+  `iface.assert.typeparam`);
+- the type a function literal takes from the target of a `cast` or `unsafe_cast`
+  in which a type parameter occurs (§10.9 `func.lit.inferred-default`), and with it
+  where a capturing literal's closure record lives (§10.10
+  `func.closure.allocation`): each instantiation's literal has its own target type,
+  so `cast(T, func(x int) int { return x + k })` is a raw closure kept in the frame
+  where `T` is a `*func` and a managed closure where it is a `@func`.
 
 The check of a generic declaration against its type parameters' constraints
 decides every other rule once, for all its instantiations, and **defers** the
