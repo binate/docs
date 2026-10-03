@@ -46,7 +46,7 @@ every term they need is defined.
 | 6 | [Constants](06-constants.md) | normative | Stable | `const` |
 | 7 | [Types](07-types.md) | mixed | mostly Stable (caveats) | `type` |
 | 7.13 | [Type Layout & Representation](07b-type-layout.md) | normative | Stable (ABI contract); TypeInfo/RTTI §7.13.14 implemented | `type.layout` |
-| 8 | [Conversions](08-conversions.md) | normative | mostly Stable; §8.9 `conv.typeparam` Draft (specified, not yet implemented); aggregate-retype + `unsafe_cast` interface gaps flagged | `conv` |
+| 8 | [Conversions](08-conversions.md) | normative | mostly Stable; §8.9 `conv.typeparam` Draft (specified, not yet implemented); aggregate-retype nesting gap flagged | `conv` |
 | 9 | [Declarations and Scope](09-declarations-and-scope.md) | normative | Stable | `decl` |
 | 10 | [Functions, Methods, and Function Values](10-functions-methods-function-values.md) | mixed | Stable (functions/methods); variadics + spread §10.3 Draft (implemented) | `func` |
 | 10.8 | [Function Values, Closures, Method Values](10b-function-values.md) | mixed | core Stable; a few interactions Provisional | `func` |

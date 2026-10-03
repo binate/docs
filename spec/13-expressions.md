@@ -344,7 +344,8 @@ precedence level (§13.2). The related **type switch** statement is §14.10 (§1
 thereof) by an **integer** `i`, yielding the element (or pointee) type. `x[lo:hi]`
 takes a sub-slice (endpoints optional and integer; `s[:]`, `s[lo:]`, `s[:hi]`
 shorthands); sub-slicing a slice preserves its kind, sub-slicing an array yields
-a raw slice `*[]T` (§7.5–§7.6).
+a raw slice `*[]T` (§7.5–§7.6) — `*[]readonly T` for a `readonly` array, whose
+elements are read-only (§7.5 `type.array.index-slice`).
 
 `expr.index.bounds` — Indexing and sub-slicing a slice or array are
 **bounds-checked**: an index outside `[0, len)`, or a sub-slice violating

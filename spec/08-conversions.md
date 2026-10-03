@@ -129,13 +129,8 @@ so it must be **constructed** explicitly, not cast (`*[]T → @[]T` is under-det
 ## 8.5 `cast` — explicit safe value conversion
 
 > _Open / known gap._ The checker realizes the aggregate retype
-> (`conv.cast.aggregate-retype`) only between same-size integer element types
-> (named integer types included) and rejects every other retype this section
-> admits: `bool` to a one-byte integer (`[3]bool` to `[3]uint8`); a named
-> non-integer element type to or from its underlying type or another named type
-> over it (`[2]Celsius` to `[2]float64`, two structs of one layout); a retype that
-> also adds element-level `readonly` (`@[]int8` to `@[]readonly uint8`); and a
-> nested retype (`[2][4]int8` to `[2][4]uint8`) (Annex C).
+> (`conv.cast.aggregate-retype`) one container level deep: it rejects a nested
+> retype (`[2][4]int8` to `[2][4]uint8`) (Annex C).
 
 `conv.cast` — `cast(T, x)` is a built-in that converts the value `x` to type `T`
 (Ch.15); its result type is `T`. `cast` performs only **safe** conversions — each
@@ -323,11 +318,6 @@ meet the target's**, or that **violates a type's invariants** — for example re
 counts a span twice the backing) — is **undefined** (Ch.21).
 
 ## 8.7 `unsafe_cast` — possibly-unsafe conversion
-
-> _Open / known gap._ `unsafe_cast` rejects every conversion between two
-> interface values — including the identity and the sub-interface to
-> super-interface widening that `cast` accepts (§8.1 case 7) — so
-> `cast ⊆ unsafe_cast` does not yet hold for interface values (Annex C).
 
 `conv.unsafe-cast` — `unsafe_cast(T, x)` is the **possibly-unsafe** companion of
 `cast` (Ch.15); its result type is `T`. It accepts a **superset** of `cast`

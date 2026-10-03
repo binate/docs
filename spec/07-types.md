@@ -225,8 +225,11 @@ parameter passing, living inline. Only a raw pointer may be taken to a struct
 `type.struct.field-access` — Field access `x.f` looks up `f` by name on the
 wrapper-peeled struct base; a named-distinct or alias wrapper and a single
 pointer indirection are transparent (§7.3). A field takes precedence over a
-same-named method. A `readonly` access path propagates onto the field type, so
-a write through a read-only path is rejected (§7.11).
+same-named method. The readonly-ness of the object reached propagates onto the
+field type — a `readonly` struct value, or the pointee of a `*readonly T` /
+`@(readonly T)` — so a write through it is rejected (§7.11). A `readonly` on the
+pointer itself (`readonly *T`, `readonly @T`) is the handle's alone and stops at
+the indirection: the pointee's fields stay writable (`type.readonly.shallow`).
 
 `type.struct.named-nominal` — Named structs are **nominal**: two struct types
 are identical iff their package-qualified names match; field shape is irrelevant
@@ -261,8 +264,11 @@ have equal length and identical element types.
 
 `type.array.index-slice` — `arr[i]` yields the element type (`i` an integer).
 Sub-slicing an array, `arr[lo:hi]`, yields a **raw slice `*[]T`** (a borrowing
-view — an array has no reference-counted backing). Named/alias/`readonly`
-wrappers around an array are transparent for both operations.
+view — an array has no reference-counted backing). Named and alias wrappers
+around an array are transparent for both operations. A `readonly` array (a
+`readonly [N]T` value, the target of a `*(readonly [N]T)`, or the array field of a
+readonly struct) is a read-only value, so its elements are read-only too:
+`arr[i]` yields `readonly T` and `arr[lo:hi]` yields `*[]readonly T` (§7.11).
 
 ## 7.6 Raw slices and managed-slices
 
