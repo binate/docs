@@ -1,6 +1,6 @@
 # 12. Generics and Enumerations
 
-> **Status:** mixed · **Maturity:** language rules Stable (v1 scope); methods + impls on generic types (§12.1 `gen.method.generic-recv` / `gen.impl.generic-recv`) Draft — specified, not yet implemented; per-instantiation checking (§12.3 `gen.mono.instances` / `gen.mono.check`) Draft — specified, not yet implemented; one v1-restriction unenforced — see the §12.4 gap (constraint satisfaction unchecked for generic struct/interface instantiation)  
+> **Status:** mixed · **Maturity:** language rules Stable (v1 scope); methods + impls on generic types (§12.1 `gen.method.generic-recv` / `gen.impl.generic-recv`) Draft — specified, not yet implemented; one v1-restriction unenforced — see the §12.4 gap (constraint satisfaction unchecked for generic struct/interface instantiation)  
 > **Rule-ID prefix:** `gen`
 
 This chapter covers **generics** — type-parameterized functions, structs, and
@@ -237,12 +237,6 @@ to it. An interactive interpreter checks an instantiation when an input names it
 > checked for every instantiation: `if sizeof(T) == 4 { … bit_cast(uint32, t) … }
 > else { … bit_cast(uint64, t) … }` fails at least one branch's size check for
 > every `T`, so no instantiation of it is accepted.
-
-_Unenforced:_ the current implementation checks a generic declaration only
-against its constraints — a violation in a dependent construct is diagnosed only
-when code is generated (as an internal error without a source position), or not
-at all — and does not bound a generic function's chain of instantiations (its
-polymorphic recursion crashes the compiler).
 
 ## 12.4 Constraint satisfaction
 

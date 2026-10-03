@@ -1,6 +1,6 @@
 # 8. Conversions
 
-> **Status:** normative · **Maturity:** mostly Stable; §8.9 `conv.typeparam` Draft — specified, not yet implemented; two implementation gaps flagged (§8.5 aggregate retype, §8.7 `unsafe_cast` between interface values)  
+> **Status:** normative · **Maturity:** mostly Stable; two implementation gaps flagged (§8.5 aggregate retype, §8.7 `unsafe_cast` between interface values)  
 > **Rule-ID prefix:** `conv`
 
 A **conversion** changes the type of a value. Binate has a small **closed set
@@ -385,11 +385,3 @@ make a conversion valid or invalid.
 
 > _Example._ `func conv[T any](x @Thing) T { return cast(T, x) }` is accepted for
 > `conv[@any]` (interface widening) and rejected for `conv[@[]int64]`.
-
-> _Draft; not yet implemented._ See §12.3's _Unenforced_ note: today a
-> conversion involving a type parameter is checked neither at the declaration
-> nor per instantiation. Code generation rejects some bad instantiations (an
-> interface narrowing through `cast`, an aggregate cast to a different kind, a
-> container retype between different element sizes) as an internal error, and
-> silently lowers the rest as a bit relabel — e.g. `cast(T, x)` with `x` an
-> `@[]int32` and `T = @[]float32`, or `x` an `int8` and `T = bool`.

@@ -1,6 +1,6 @@
 # 11. Interfaces, impl, and Self
 
-> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice` and §11.4 `iface.construct.value-borrow`, both Provisional — implemented, design may still change; §11.12 `iface.assert.typeparam` Draft — specified, not yet implemented); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3) and the 32-bit-ARM platform gap (§11.11) remain)  
+> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice` and §11.4 `iface.construct.value-borrow`, both Provisional — implemented, design may still change); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3) and the 32-bit-ARM platform gap (§11.11) remain)  
 > **Rule-ID prefix:** `iface`
 
 Binate interfaces are **nominal**: a type satisfies an interface only through an
@@ -415,9 +415,6 @@ make a target legal or illegal.
 > _Example._ `func as[T any](x @any) T { return x.(T) }`: `as[@Thing](a)` asserts
 > `a.(@Thing)`, `as[Celsius](a)` copies out a `Celsius`, and `as[[2]int](a)` is a
 > compile-time error (an array is not an assertion target).
-
-> _Draft; not yet implemented._ Today an assertion whose target names a type
-> parameter is rejected at the generic declaration.
 
 `iface.assert.absent` — An interface value has two "empty" states (§15.5
 `builtin.present`), and neither is a `nil` case — interface values are **not
