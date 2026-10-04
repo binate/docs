@@ -471,6 +471,12 @@ it is written on, not nested element types (no deep immutability). It is
 **layout-transparent**: `readonly T` has the same size, alignment, and
 representation as `T` (§7.13).
 
+`type.readonly.named` — A **named type** whose definition is a `readonly` type
+(`type RI readonly int8`, `type RP readonly *int`) is readonly at its own outermost
+level, as an alias of one is: a location of type `RI` (a variable, an element of a
+`@[]RI`, the target of a `*RI`) is read-only, and a `RP` handle cannot be rebound —
+while, readonly being shallow, `RP`'s pointee stays writable.
+
 `type.readonly.lattice-outer` — Outermost (top-level) `readonly` is permissive in
 **both** directions: `T` → `readonly T` (widening) and `readonly T` → `T` (a
 value copy — the read-only handle is unaffected). Types differing only in

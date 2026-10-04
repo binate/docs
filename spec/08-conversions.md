@@ -275,6 +275,15 @@ element direction (§8.7), or convert element-by-element.
 > `bool → numeric` conversion above: `bool → float32` is a valid **scalar** `cast`
 > (a defined widening) but not a **bit-preserving element** retype, so `@[]bool →
 > @[]float32` is not a container `cast`.
+>
+> A **slice** retype (`*[]T → *[]S`, `@[]T → @[]S`) shares the backing with its
+> source, so what the new handle stores the source reads back through the
+> **reverse** conversion. Behind a slice the element conversion must therefore be
+> bit-preserving in **both** directions unless the destination element is `readonly`
+> (nothing can be stored through it): `@[]bool → @[]readonly uint8` is a `cast`,
+> `@[]bool → @[]uint8` is not (it could store a byte other than 0/1 that the bool
+> handle then reads — `unsafe_cast`'s). An array retype copies, so `[3]bool →
+> [3]uint8` stays a `cast`.
 
 `conv.cast.float-int-saturation` — **Float → integer at the out-of-range /
 non-finite edge saturates** to a single value defined identically across every
@@ -312,7 +321,10 @@ reference-count consequences of any managed pointer it thereby fabricates or
 duplicates.
 
 A `bit_cast` between types of **different** proximal size is a
-**compile-time error**. A same-size `bit_cast` whose **source alignment does not
+**compile-time error**, as is a `bit_cast` of the untyped `nil` (`bit_cast(*int, nil)`):
+`nil` takes a type only from a destination that names one (§7.7 `type.nil.literal`),
+so it has no representation of its own to reinterpret — `cast(T, nil)` gives a
+pointer or function value its nil (§8.5). A same-size `bit_cast` whose **source alignment does not
 meet the target's**, or that **violates a type's invariants** — for example reinterpreting
 `*[]int32` as `*[]int64` (equal 2-word proximal size, but the result's `len` then
 counts a span twice the backing) — is **undefined** (Ch.21).

@@ -556,6 +556,7 @@ type.ptr.semantics	positive	07-types.md
 type.readonly.drop	positive	07-types.md
 type.readonly.lattice-element	constraint-candidate	07-types.md
 type.readonly.lattice-outer	positive	07-types.md
+type.readonly.named	positive	07-types.md
 type.readonly.object-dispatch	positive	07-types.md
 type.readonly.param-signature	positive	07-types.md
 type.readonly.shallow	positive	07-types.md

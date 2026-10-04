@@ -199,7 +199,9 @@ same name, is a **compile error** that names both origins — a message of the
 form `X: exposed by both "P" and "Q"` (two exposes) or `X: exposed by "P"
 conflicts with this package's own declaration of the same name` (expose vs. own
 declaration). (Because `expose` is surface-only, A's private names are never
-involved in a collision.)
+involved in a collision.) Two `expose` declarations of the **same** package are not
+such a conflict: a repeated `expose "P"` is idempotent (it re-exports nothing new;
+`bnlint`'s `doubled-expose` rule flags it).
 
 `pkg.expose.dep` — `expose "P"` makes A **depend on** P: P is loaded, checked,
 and initialized before A, exactly as an `import` edge would (Ch.17). `expose`

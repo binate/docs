@@ -193,7 +193,9 @@ ContinueStmt = "continue" ;
 `switch`, see §14.10). `continue` proceeds to the next iteration of the innermost
 enclosing **loop**; it is **not** valid in a `switch` that is not inside a loop. A
 `break` or `continue` with no enclosing loop (or, for `break`, no loop or switch)
-is a compile error. There are **no labels**: break and continue take no operand
+is a compile error. A function literal's body is a function of its own: a loop or
+switch around the literal does not enclose a `break` / `continue` in its body (as
+for `defer`, `stmt.defer.no-loop`). There are **no labels**: break and continue take no operand
 and always target the innermost construct — there is no labeled break/continue and
 no way to break out of an outer loop directly (§14.15).
 
@@ -296,7 +298,9 @@ iff it is one of:
   `else` never terminates);
 - a `for` with **no condition** and no `break` targeting it (an unconditional
   `for { … }` infinite loop);
-- a `switch` with a `default` clause in which **every** case body terminates.
+- a `switch` with a `default` clause in which **every** case body terminates and
+  no `break` targets the switch (one nested in an `if` or block counts; one a
+  nested loop or switch consumes does not).
 
 Because the analysis is syntactic, some functions a reader sees as exhaustive are
 still rejected — e.g. an `if`/`else if` chain with no final `else`, a `switch`

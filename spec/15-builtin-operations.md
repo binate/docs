@@ -122,8 +122,8 @@ doing" escape hatch (§8.6). It is permitted iff `sizeof(source) == sizeof(T)`
 (the **proximal**, top-level size — not element-wise), and takes **no** reference.
 It is the sanctioned tool for moving between a typed pointer and the opaque byte
 pointer `*uint8`, between scalar bit patterns of the same width, and between a
-slice/aggregate and its explicit aggregate form. A different-size `bit_cast` is a
-compile-time error; a same-size one whose source alignment does not meet the
+slice/aggregate and its explicit aggregate form. A different-size `bit_cast`, or
+one of the untyped `nil` (use `cast(T, nil)`; §8.6), is a compile-time error; a same-size one whose source alignment does not meet the
 target's, or that violates a type's invariants, is undefined (Ch.21).
 
 `builtin.unsafe-cast` — `unsafe_cast(T, e)` is the **possibly-unsafe** superset of
