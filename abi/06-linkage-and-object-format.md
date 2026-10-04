@@ -82,9 +82,12 @@ off the symbol type), and arm32 objects carry the ARM mapping symbols
   arm32-linux links) are position-independent **executables**; the native
   arm32 backend emits an absolute code model and forces a non-PIE link. In
   PIE links a PC-relative reference to a *defined* symbol (weak included)
-  binds to the image's own copy (ELF `PC32`), and only
-  undefined-at-assembly targets use `PLT32`. A shared-object target would
-  need the preemptible-symbol rules and is out of scope.
+  binds to the image's own copy. An x86-64 call / jump rel32 to a symbol
+  with no addend is ELF `PLT32` whether or not the symbol is defined at
+  assembly, as clang emits it (the linker resolves it directly when the
+  target cannot be preempted); one with an addend, and every other
+  PC-relative reference, is `PC32`. A shared-object target would need the
+  preemptible-symbol rules and is out of scope.
 - **C globals** (`__c_global`, §4.8): on PIE links the address is loaded
   GOT-indirect (x86-64 `GOTPCREL`; aarch64 ADRP+LDR GOT pair); on the
   native arm32 backend's non-PIE links it is materialized with a MOVW/MOVT
