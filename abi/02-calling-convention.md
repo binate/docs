@@ -125,9 +125,9 @@ Target-specific argument rules:
   a lo/hi little-endian pair (R0:R1 or R2:R3) or an 8-aligned 8-byte stack
   slot. The even rule applies to **arguments only** — multi-return packing
   uses consecutive registers (§2.7).
-- **Spill saturation**: on the splitting conventions (aarch64, arm32; AAPCS
-  stage C.6), once any GP-class argument has taken a stack portion the GP
-  cursor saturates — every later GP-class argument goes to the stack even if
+- **Spill saturation**: on aarch64 and arm32 (AAPCS64 stage C.13, AAPCS32
+  C.6), once any GP-class argument has taken a stack portion the GP cursor
+  saturates — every later GP-class argument goes to the stack even if
   registers remain. Float-file overflow does not trigger GP saturation.
 - **arm32 split only onto an empty stack** (AAPCS stage C.5): an aggregate
   splits across the remaining core registers and the stack only while nothing
@@ -146,9 +146,14 @@ Target-specific argument rules:
 consecutive GP argument registers, one word per register, with the base
 platform's boundary behavior:
 
-- **aarch64, arm32**: the aggregate may **split** across the register/stack
+- **arm32**: the aggregate may **split** across the register/stack
   boundary — in-register-eligible words go to the remaining registers, the
   rest to the stack, and the GP cursor then saturates (§2.4).
+- **aarch64**: all-or-nothing — if the aggregate's words do not all fit in
+  the remaining GP registers it goes **entirely** to the stack, and the GP
+  cursor saturates, so no later argument takes a register either (AAPCS64
+  stage C.13).  This is the case of a two-word aggregate arriving with only
+  X7 left: X7 stays unused.
 - **x86-64**: all-or-nothing — if the aggregate's words do not all fit in the
   remaining GP registers it goes **entirely** to memory (the SysV MEMORY
   class, laid out on the outgoing stack), and the register cursor is left for
