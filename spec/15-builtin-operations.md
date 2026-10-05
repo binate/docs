@@ -203,9 +203,12 @@ the `io.EOF` object?").
 element type. It is exactly `c[i]` **without the bounds check** (§13): the same
 element address computation, but no trap on an out-of-range index. It is the
 opt-out from always-on bounds checking for performance-critical code; an
-out-of-range index is **undefined** (Ch.21), not a trap. (Unlike `len`,
-`unsafe_index` accepts a raw pointer; also unlike `len`, it does not peel a
-named-distinct collection type — only an alias.)
+out-of-range index is **undefined** (Ch.21), not a trap. Its result is
+**addressable** exactly when `c[i]` is (`expr.addressable`, §13), so it may be
+stored to, incremented, addressed, or used as a field or method base, the
+bounds check skipped as for a read. (Unlike `len`, `unsafe_index` accepts a raw
+pointer; also unlike `len`, it does not peel a named-distinct collection type —
+only an alias.)
 
 ## 15.7 Predeclared function: `panic`
 

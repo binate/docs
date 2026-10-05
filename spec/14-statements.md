@@ -101,8 +101,8 @@ assignment in expression position.
 
 `stmt.assign.simple` — In a simple assignment `L = R`, each left-hand operand —
 other than a blank `_` (`stmt.assign.blank`) — must be an **addressable** location
-(`expr.addressable`, §13): a variable, a field selector `s.f`, an index `s[i]`, or
-a pointer dereference `*p`. The right-hand value must in turn be **assignable** to
+(`expr.addressable`, §13): a variable, a field selector `s.f`, an index `s[i]` (or
+`unsafe_index(s, i)`), or a pointer dereference `*p`. The right-hand value must in turn be **assignable** to
 it (Ch.8). A target follows the same recursion as address-of: one whose base is a
 **by-value call result** (`getStruct().f = …`) is rejected for the same reason
 `&getStruct().f` is — it denotes no storage — while a target reached through a

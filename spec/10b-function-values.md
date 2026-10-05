@@ -173,6 +173,15 @@ the captured receiver is managed), correspondingly **variadic** when `M` is
 variadic (§10.3). The receiver base is the type **as written** (a named-distinct
 type uses its own method set; §7.3).
 
+`func.method-value.receiver` _(Constraint)_ — A method value binds its receiver
+exactly as the call `x.M()` would (§10.5): `x.M` is legal iff `x.M()` is, as far
+as the receiver goes. A `*T`- or `*readonly T`-receiver method value of a value
+`x` captures `&x`, so `x` must be **addressable** (`mk().M` is rejected — a call
+result has no storage); a value or a raw `*T` never binds an `@T`-receiver method
+(it would fabricate a reference count); a read-only **object** binds only a
+read-only-receiver method (`func.method.object-const`); and the receiver is looked
+through one pointer level only (`func.method.auto-deref`).
+
 `func.method-value.capture` — The receiver is captured in the form `M` declares,
 bridging `x`'s shape to `M`'s receiver shape: a value receiver captures a copy; a
 `*T` receiver captures `&x` (mutations visible); a `@T` receiver captures the

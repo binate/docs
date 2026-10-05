@@ -11,8 +11,10 @@ choices, relaxable later, not instability.
 
 ## 12.1 Type parameters and constraints
 
-`gen.typeparams` — A **function**, **struct**, or **interface** may declare
-**type parameters** in a bracketed list after its name, each with a constraint:
+`gen.typeparams` — A **function**, a **type declaration** (of any underlying
+type: a struct, an array, a pointer, a slice, a function value, …), or an
+**interface** may declare **type parameters** in a bracketed list after its name,
+each with a constraint:
 
 ```
 TypeParams    = "[" TypeParamDecl { "," TypeParamDecl } "]" ;
@@ -110,6 +112,20 @@ single mechanism, so no impl-overlap can arise.
 explicit **type arguments**: `Name[T1, T2, …]`. There is **no type inference** —
 the type arguments are always written at the instantiation site (`sort[int](xs)`,
 `var v Vec[int]`).
+
+`gen.instantiate.type` — An instantiation of a generic type declaration
+`type N[P₁, …] U` is a **distinct named type** (`gen.mono`) whose underlying type
+is `U` with each type parameter replaced by its type argument, laid out, copied and
+operated on as that underlying type, with the methods declared on `N`
+(`gen.method.generic-recv`): for `type Pair[T any] [2]T`, `Pair[int32]` is a named
+type over `[2]int32`, indexed as an array; for `type List[T any] @[]T`, `List[int]`
+is a named managed-slice of `int`. The underlying type may name the instantiation
+itself through an indirection (`type Tree[T any] @[]Tree[T]`), but not by value
+(`type.named.value-acyclic`).
+
+> _Open._ Whether an **alias** declaration (`type L[T any] = Box[T]`) or a
+> declaration with **no** underlying type (an opaque or forward `type L[T any]`)
+> may take type parameters is undecided.
 
 `gen.instantiate.disambiguation` — The form `name[…]` is disambiguated between a
 type-argument list and an index expression by what `name` resolves to: if it

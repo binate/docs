@@ -128,10 +128,6 @@ so it must be **constructed** explicitly, not cast (`*[]T → @[]T` is under-det
 
 ## 8.5 `cast` — explicit safe value conversion
 
-> _Open / known gap._ The checker realizes the aggregate retype
-> (`conv.cast.aggregate-retype`) one container level deep: it rejects a nested
-> retype (`[2][4]int8` to `[2][4]uint8`) (Annex C).
-
 `conv.cast` — `cast(T, x)` is a built-in that converts the value `x` to type `T`
 (Ch.15); its result type is `T`. `cast` performs only **safe** conversions — each
 is **defined** and cannot corrupt the memory or reference-counting model. Its
@@ -257,7 +253,11 @@ over a **different element type** `S` (`*[]S` / `@[]S` / `[N]S`) **iff** both ho
    does **not** drop element-level `readonly`.
 
 The retype then reinterprets the elements in place with no per-element work:
-`@[]int8 → @[]uint8` and `[4]int8 → [4]uint8` qualify. A **managed** container
+`@[]int8 → @[]uint8` and `[4]int8 → [4]uint8` qualify. The retype **nests**: an
+element that is itself a container satisfies condition (2) when it retypes under
+this rule in turn, so `[2][4]int8 → [2][4]uint8` and `@[]@[]int8 → @[]@[]uint8`
+qualify too (the `readonly` part of condition (2) applying to the whole element
+type). A **managed** container
 retype establishes a new owning handle to the *same* backing and therefore takes a
 **reference** (a `RefInc`, exactly like any managed-value copy, §18); a **raw**
 container retype **borrows** (no reference). When condition (2) fails — a
@@ -363,7 +363,12 @@ risk). The additional conversions `unsafe_cast` permits over `cast` are:
   match (Ch.21).
 - **Invariant-breaking scalar directions** — a leaf conversion that is defined but
   **not** invariant-preserving, e.g. `int8 → bool` (an `int8` outside `{0, 1}` is
-  not a valid `bool`; §8.5 leaf rule).
+  not a valid `bool`; §8.5 leaf rule). `unsafe_cast(bool, i)` **asserts** that `i`
+  is `0` or `1`, as `*T → @T` asserts a header: using a `bool` object whose byte is
+  anything else — however it got there (a scalar `unsafe_cast`, a container
+  retype, `bit_cast`, raw memory) — is **undefined** (Ch.21). A **constant**
+  operand outside `{0, 1}` (`unsafe_cast(bool, 2)`) is a compile-time **error**.
+  `i != 0` is the defined integer → `bool` conversion.
 
 For the conversions it **shares** with `cast`, `unsafe_cast` behaves exactly like
 `cast` — including the value construction and any `RefInc` (a managed interface-value

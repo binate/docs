@@ -301,7 +301,9 @@ whose address exists; `&` (`expr.unary.addr`), an assignment target
 - an **index** `x[i]` is addressable when `x` is a **slice** or a **pointer** — it
   reaches storage through the data/base pointer, even when `x` itself is an
   ephemeral value — or an **array** whose base `x` is itself addressable (so
-  `getArray()[i]`, indexing a by-value array result, is **not** addressable).
+  `getArray()[i]`, indexing a by-value array result, is **not** addressable);
+- an **unchecked index** `unsafe_index(x, i)` (§15.6 `builtin.unsafe-index`) is
+  addressable exactly when `x[i]` is.
 
 Every **other** operand is a computed value with **no storage** and is **not**
 addressable: a **named constant** (§9.1); a **bare literal** (`5`, `3.14`, `true`,
@@ -406,6 +408,38 @@ element rules are those of the underlying struct/array/slice (above) with the
 type arguments substituted; the disambiguation between an instantiated literal
 head and indexing is the expression-context rule of §13.11.
 
+`expr.composite.lifetime` — A composite literal's storage is a temporary of its
+statement (§18.4 `mem.temporary`): its managed fields or elements are released at
+the end of the statement, and a raw pointer into it used after that is a use
+after free (§18.7 `mem.raw-uaf`). A literal whose storage is **addressed** within
+a local `var` / `:=` initializer instead **lives as long as the new binding** —
+it is released when the binding's scope exits (§18.4 `mem.scope-exit`) — whether
+its address is taken by `&` (of the literal, or of a field or element of it), by
+the implicit `&` of a pointer-receiver method call or method value (§10.5), by
+sub-slicing an array literal, or by an implicit value-borrow into a raw interface
+(§11.4 `iface.construct.value-borrow`). So `var q *P = &P{name: mk()}` and
+`h := P{…}.Name` stay valid as long as `q` and `h`. Only the release point moves:
+no reference-count operation is added.
+
+`expr.composite.addr-store` _(Constraint)_ — An **assignment** (to a variable,
+field or element) or a **`return`** may not store the address of a composite
+literal, which would dangle at the end of the statement. A value **holds an
+address into** a literal `L` when it is: `&X`, where `X` designates `L`'s storage
+— `L`, a field or element of it, or a dereference `*p` (or a field or element
+reached through `p`) where `p` holds an address into `L`; a sub-slice of an array
+whose storage is `L`'s, or of a slice that holds an address into `L`; a `cast`,
+`unsafe_cast` or `bit_cast` of such a value; a pointer-receiver method value whose
+receiver is `L`'s storage or holds an address into it; an implicit value-borrow
+of `L`'s storage into a raw interface (§11.4); or a field or element read out of a
+composite literal — directly, through a pointer holding an address into it, or
+out of a slice literal — whose initializer holds an address into `L` (for an
+index that is not constant, any element's). The stored value may neither hold an
+address into a literal nor contain one: as an element of a stored composite
+literal, the operand of a conversion or of `box`, the receiver a value-receiver
+method value copies, or the initializer a field or element read comes from.
+`q = &P{…}`, `return &P{…}`, `s.h = P{…}.Name` and `q = S{p: &P{…}}.p` are
+rejected. An address passed to a call is not stored by this rule; one the call
+hands back is valid only while the literal is.
 > _Open / known defects (composite literals)._ Several composite-literal features
 > in the design are not correctly implemented and are flagged here pending fixes:
 > - **Indexed array literals** `[N]T{ i: v }` (e.g. `[5]int{1: 10, 3: 30}`) are

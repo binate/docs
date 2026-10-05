@@ -137,7 +137,11 @@ applies only to a genuinely value-typed source; a `*T`/`@T` source is unchanged
 - An **addressable** source (an lvalue — a variable, field, or element) borrows by
   an implicit **address-of**: `Opts{Any: x}` is exactly `Opts{Any: &x}` — the same
   `*T` borrow, lifetime, and use-after-free contract (§18.7 `mem.raw-uaf`), in
-  **any** position an explicit `&x` is permitted.
+  **any** position an explicit `&x` is permitted. A composite literal, or a field
+  or element of one, is addressable and borrows the same way — so, like its
+  explicit `&`, it is rejected in a storing position (§13
+  `expr.composite.addr-store`), and in a `var` / `:=` initializer the literal lives
+  as long as the binding (§13 `expr.composite.lifetime`).
 - A **non-addressable** source (a literal, an expression, or a call result) is
   **materialized into a temporary** and borrowed. Because a temporary is released
   at the **end of its statement** (§18.4 `mem.temporary`), this is permitted

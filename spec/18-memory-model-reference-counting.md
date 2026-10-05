@@ -142,7 +142,9 @@ bind) has no prior occupant and so **skips the release** half.
 bound to a named location (a `make`/`box`/`make_slice` result or a managed call
 result used as a temporary) is an unnamed local of that statement's implicit
 scope; it is **released at the end of the statement** (§9.7). A discarded managed
-call result is therefore released, not leaked. **Exception:** a defer
+call result is therefore released, not leaked. A composite literal's storage is
+likewise a statement temporary, except where §13 `expr.composite.lifetime` keeps
+an addressed one alive with a `var` / `:=` binding. **Exception:** a defer
 statement's evaluated callee, receiver, and argument values are **not**
 statement temporaries — they behave as anonymous function-scope locals,
 released with the function's exit releases after all pending deferred calls
