@@ -90,8 +90,9 @@ method call (§10.5).
 
 `iface.construct.no-implicit` — Constructing an interface value from a
 non-interface source admits **no implicit copy** and **no implicit `box`**; the
-source must be pointer-shaped (`*T` or `@T`), with any required conversion written
-explicitly. (Rationale: an interface value can outlive its source, so the language
+source must be pointer-shaped (`*T` or `@T` — a pointer **type**, not a named type
+defined over one, `iface.construct.named-pointer`), with any required conversion
+written explicitly. (Rationale: an interface value can outlive its source, so the language
 refuses to silently capture a reference or copy.) Whether `*T`/`@T` may construct a
 given `*Iface`/`@Iface` is **impl-gated** (§11.3). The **one** relaxation is an
 implicit *address-of* when a **value** source constructs a **raw** `*Iface`
@@ -109,6 +110,23 @@ heap-allocates a managed copy, yielding `@T`; §15) to construct a `@Iface`. For
 raw `*Iface`, the `&t` may be left **implicit** in the positions
 `iface.construct.value-borrow` (Provisional) permits; the `box(t)` for a `@Iface` is
 always explicit.
+
+`iface.construct.named-pointer` — A **named type over a pointer or an interface
+value** (`type H @Node`, `type PS *S`, `type X @J`) is a **value** type for
+construction, as every named type is: only a pointer *type* (`*T` / `@T`, possibly
+behind an alias or `readonly`) is pointer-shaped. A value `h` of type `H` constructs a
+raw `*I` / `*any` through the implicit borrow (`iface.construct.value-borrow`: `&h` for
+an addressable `h`, a temporary otherwise), and a managed `@I` / `@any` only from
+`box(h)`; widening a bare `h` into a managed interface value is a compile error, as is
+`cast(*I, h)` / `cast(@I, h)`, as for any value. Either way the interface value's data
+word points at an `H` object and its dynamic type is `H` (§11.12): `.(@H)` / `.(*H)`
+recover that object, `.(H)` copies the `H` out, and `H`'s value-receiver
+methods are called with the `H` loaded from it. To box the pointee instead, convert
+first: `cast(@Node, h)` (or `var n @Node = h`, §7.3 `type.named.assignability`) gives
+an `@Node`, whose dynamic type is `Node`. (`H` has only its own impls, never its
+pointee's — §7.3 `type.named.methods-not-inherited`.) A raw interface value built from
+a named pointer variable borrows the **variable**, not its pointee, so it dangles once
+the variable does (§18.7 `mem.raw-uaf`).
 
 `iface.construct.value-borrow` — A **value**-typed source (not `*T`/`@T`)
 constructing a **raw** `*Iface` (including `*any`) is admitted via an **implicit

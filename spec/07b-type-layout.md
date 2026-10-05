@@ -295,7 +295,8 @@ carries:
 | size, align | `SizeOf`/`AlignOf` of the type (the target's values) |
 | name | the type's name, as a `*[]readonly char` into static storage |
 | kind | a coarse **KIND** discriminator (values pinned below) telling a reflective reader how to interpret a value's bytes; the exact width comes from `size` (or a field's size) |
-| fields | for a struct, its field table — one entry per field carrying the field's name, byte offset, KIND, and size; a reference to a further `TypeInfo` (the field type's own record for a struct field, or the **element** type's record for an array/slice field — null when there is none); and, for an array/slice field, the **element** KIND and element size (so a reflective reader can walk the elements). Empty for a non-struct |
+| fields | for a struct, its field table — one entry per field carrying the field's name, byte offset, KIND, and size; a reference to a further `TypeInfo` (the field type's own record for a struct field, the **element** type's record for an array/slice field, or the **pointee**'s record for a pointer field — null when there is none or it is not a struct); and, for an array/slice/pointer field, the **element** (or pointee) KIND and size (so a reflective reader can walk the elements, or follow the pointer). Empty for a non-struct |
+| element | for a pointer, array or slice type, the same three facts a field of that type carries: the **pointee**'s or **element**'s KIND and size, and a reference to its `TypeInfo` when it is a struct (else null) — so a reflective reader follows a boxed value of a named pointer type (§11.4 `iface.construct.named-pointer`) to its pointee, as it does a pointer field. Empty for any other type |
 
 The **KIND** values are a cross-artifact contract — the compiler emits them and
 stdlib readers (`pkg/builtins/reflect`, `pkg/stdx/fmt`) match them — so, like the
