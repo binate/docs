@@ -420,18 +420,24 @@ on a generic type), an assertion or type-switch case whose target names a type
 parameter — `x.(T)`, `x.(*T)`, `x.(@T)`, `case *T:` — is **dependent** (§12.3
 `gen.mono.check`): it is checked, and at run time matches, as the assertion its
 instantiation spells, for each instantiation the program names. A bare target `T`
-recovers a value **of type `T`**: when the type argument has an outermost `@` or
-`*` (a managed or raw pointer, slice or interface value), that is the recovery
-kind and the rest is the target (`T = @U` makes `x.(T)` the assertion `x.(@U)`,
-`T = *[]char` makes it `x.(*[]char)`); otherwise it is a value recovery of the
-type argument (`T = U` makes it `x.(U)`). A written kind applies to the type
-argument as written (`x.(@T)` with `T = U` is `x.(@U)`). A target that is illegal
+recovers a value **of type `T`**: aliases and an outermost `readonly` of the type
+argument are read through, and when what remains has an outermost `@` or `*` (a
+managed or raw pointer, slice or interface value), that is the recovery kind and
+the rest is the target (`T = @U` makes `x.(T)` the assertion `x.(@U)`, `T =
+*[]char` makes it `x.(*[]char)`); otherwise it is a value recovery (`T = U` makes
+it `x.(U)`). The recovered value keeps the outer `readonly` (it is freely
+choosable, `iface.assert.kind`): `T = readonly *U` makes `x.(T)` the assertion
+`x.(*U)` recovered into a read-only handle. A named type argument is not read
+through (`type P readonly *U` makes `x.(T)` the value recovery `x.(P)`). A written
+kind applies to the type argument as written (`x.(@T)` with `T = U` is `x.(@U)`;
+`x.(readonly T)` with `T = *U` recovers as `T = readonly *U` does). A target that is illegal
 for an instantiation (`iface.assert.kind`, `iface.assert.slice` — e.g. `x.(@T)`
 with `T = @U`) is a compile-time error. A type parameter's constraint does not
 make a target legal or illegal.
 
 > _Example._ `func as[T any](x @any) T { return x.(T) }`: `as[@Thing](a)` asserts
-> `a.(@Thing)`, `as[Celsius](a)` copies out a `Celsius`, and `as[[2]int](a)` is a
+> `a.(@Thing)`, `as[Celsius](a)` copies out a `Celsius`, `as[readonly *Thing](a)`
+> borrows `a.(*Thing)` into a read-only handle, and `as[[2]int](a)` is a
 > compile-time error (an array is not an assertion target).
 
 `iface.assert.absent` — An interface value has two "empty" states (§15.5
