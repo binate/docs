@@ -19,8 +19,7 @@ Each layout fact is classified (§3.1):
 
 - **target-invariant** — fixed on every target: the composite **word counts**
   and **field orders** below, the struct padding/alignment **algorithm**, the
-  rule that a managed-slice's first two words equal a raw slice, and the
-  >16-byte by-value parameter cutoff.
+  rule that a managed-slice's first two words equal a raw slice.
 - **target-parameterized** — a function of `TargetInfo`: every absolute byte
   size, offset, and alignment (all derive from `PointerSize`/`IntSize`/`MaxAlign`).
 - **implementation-defined** — **byte order (endianness)**
@@ -239,12 +238,16 @@ it to the concrete struct first. They introduce no representation change (§7.3,
 
 `type.layout.byval-cutoff` — An aggregate value (struct, array, slice,
 managed-slice, function value, or interface value) passed as a parameter is
-passed **by value when its size is ≤ 16 bytes** and **by indirect reference when
-its size exceeds 16 bytes** (measured with the target-aware `SizeOf`, after
-peeling transparent wrappers). The 16-byte threshold is target-invariant (it
-matches the common 64-bit calling conventions); the measured size is
-target-parameterized. This is a single layout fact that IR-gen and every backend
-must agree on.
+passed **by value**: the callee observes its own copy. It travels as the
+target's **platform C calling convention** passes an aggregate of its size and
+alignment, so a by-value aggregate crosses to and from C code unchanged. An
+aggregate of **at most 16 bytes** travels in registers where the platform
+convention puts it there; one **larger than 16 bytes** travels as the platform
+passes a large aggregate — in stack memory (x86-64), split across registers and
+the stack (arm32), or as a pointer to a copy (aarch64). Sizes are measured with
+the target-aware `SizeOf`, after peeling transparent wrappers. This is a single
+layout fact that IR-gen and every backend must agree on; the ABI specification
+gives the per-target rules.
 
 ## 7.13.12 Byte order
 

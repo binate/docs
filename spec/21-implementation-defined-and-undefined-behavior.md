@@ -22,7 +22,7 @@ constraint (§21.3).
 (defined in Ch.3 and used consistently):
 
 - **target-invariant** — the same on every target (e.g. a managed-slice is
-  *exactly* four words; field order; the 16-byte by-value cutoff).
+  *exactly* four words; field order).
 - **target-parameterized** — determined by the compilation target's `TargetInfo`
   (pointer/int width, alignment), fixed once the target is fixed (e.g. the
   *absolute* size of a managed-slice; struct offsets).
@@ -91,7 +91,7 @@ magnitudes are **parameterized** by `TargetInfo`.
 | Raw slice = 2 words `{data, len}`; managed-slice = 4 words `{data, len, backing, backingLen}` | structure target-invariant; sizes parameterized | §7.13.5–7.13.6 `type.layout.slice-raw`, `type.layout.slice-managed` |
 | Interface value = 2 words `{data, vtable}`; function value = 2 words `{vtable, data}` (**reverse** order) | structure target-invariant; sizes parameterized | §7.13.8 `type.layout.iface-value`, §7.13.9 `type.layout.func-value` |
 | Management header = 2 words `{refcount, free_fn}` at a negative offset | structure target-invariant; size parameterized | §7.13.7 `type.layout.header` |
-| By-value parameter cutoff (≤ 16 bytes by value, > 16 by reference) | target-invariant threshold | §7.13.11 `type.layout.byval-cutoff` |
+| How a by-value aggregate parameter travels (registers, stack memory, or a pointer to a copy) | per the target's platform C convention | §7.13.11 `type.layout.byval-cutoff` |
 | The **immortal sentinel** refcount value (a deeply-negative count) | impl-defined; currently unfinalized | §18.2 `mem.immortal`; §7.13.7 `type.layout.immortal` |
 | Panic **message text**, **exit code**, and diagnostic **output stream** | impl-defined (modes must agree) | §17.4 `prog.terminate`; §17.5 `prog.panic.defined` |
 | **Symbol decoration** / name mangling (observable in consequence; the scheme is informative) | impl-defined | §16.6 `pkg.identity`; Annex B |

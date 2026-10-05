@@ -15,10 +15,11 @@ C convention** (§1.5) — its argument registers, stack discipline, alignment,
 and return registers — with exactly the following deliberate, Binate-internal
 deviations, each chosen to match what the LLVM backend emits (§1.2):
 
-1. a by-value aggregate **larger than 16 bytes** is passed as a single
-   pointer to **caller-owned memory holding the value**, the callee copying
-   it at entry (§2.5), on **every** target — where SysV AMD64 and AAPCS32
-   would pass it by value in memory/registers;
+1. on aarch64, a by-value aggregate **larger than 16 bytes** is passed as
+   AAPCS64 passes it, as a single pointer, but to **caller-owned memory
+   holding the value**, the callee copying it at entry (§2.5) — where AAPCS64
+   hands the callee a temporary it owns (x86-64 and arm32 pass it by value
+   exactly as their C conventions do);
 2. **multiple results** are returned field-per-register under a
    register-count rule that exceeds the platform C ABI (§2.7) — C has no
    multi-return, so this layer is Binate-defined;
@@ -128,6 +129,12 @@ Target-specific argument rules:
   stage C.6), once any GP-class argument has taken a stack portion the GP
   cursor saturates — every later GP-class argument goes to the stack even if
   registers remain. Float-file overflow does not trigger GP saturation.
+- **arm32 split only onto an empty stack** (AAPCS stage C.5): an aggregate
+  splits across the remaining core registers and the stack only while nothing
+  is on the stack yet. Under hard-float a float argument can overflow the VFP
+  bank to the stack while core registers remain; after that, an aggregate that
+  does not fit the remaining core registers goes **wholly** to the stack, and
+  the GP cursor saturates.
 - **Darwin (aarch64) natural-size stack args**: a *fixed* (non-variadic)
   narrow scalar stack argument occupies its natural size at natural
   alignment; 8-byte scalars, aggregates, and all variadic arguments take full
@@ -158,20 +165,24 @@ platform's boundary behavior:
   **not** apply the HFA rule — §4.7.)
 
 `abi.cc.agg.large` — A by-value aggregate **larger than 16 bytes** (notably
-the 32-byte managed-slice on 64-bit targets, and any large struct) is passed
-as a **single pointer** to the argument value, in the next free GP register or
-one stack word; the pointer shall be aligned to at least the argument type's
-`AlignOf`. The pointee is owned by the caller for the duration of the
-call; by-value semantics are preserved by the **callee copying** the pointee
-into its own frame at entry. This is the internal deviation §2.1(1): it
-matches the LLVM backend's plain-pointer lowering (AAPCS64's C convention is
-already this form; SysV AMD64 and AAPCS32 C conventions are not, and the
-outbound C boundary re-adapts — §4.3; inbound entries do not yet, §4.4
-_Status_). Where this pointer form **is** the platform C convention
-(aarch64), one thing still changes at a C boundary: the pointee shall be a
-**private per-call temporary**, because a platform-C callee performs no
-entry copy and may mutate the pointee in place — internal calls tolerate
-shared storage only because the internal callee copies at entry.
+the 32-byte managed-slice on 64-bit targets, and any large struct) is passed as
+the base platform C convention passes it:
+
+- **x86-64**: by value in memory (the SysV MEMORY class) — its bytes on the
+  outgoing stack in the next argument stack slots, 8-byte aligned, consuming no
+  GP register. The callee's copy is that stack memory.
+- **arm32**: by value, split word by word across the remaining R0–R3 and the
+  stack exactly as a ≤16-byte aggregate is (an 8-aligned aggregate starting on
+  an even register, §2.4). The callee's copy is those words.
+- **aarch64**: as a **single pointer** to the argument value, in the next free
+  GP register or one stack word; the pointer shall be aligned to at least the
+  argument type's `AlignOf`. The pointee is owned by the caller for the
+  duration of the call; by-value semantics are preserved by the **callee
+  copying** the pointee into its own frame at entry. This is the internal
+  deviation §2.1(1). At a C boundary the pointee shall be a **private per-call
+  temporary**, because a platform-C callee performs no entry copy and may
+  mutate the pointee in place — internal calls tolerate shared storage only
+  because the internal callee copies at entry.
 
 ## 2.6 Single-result returns
 

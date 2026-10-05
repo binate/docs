@@ -31,7 +31,7 @@ deliberate deviation (§4.4 _Status_, §4.7).
 | managed-slice `@[]T` | its 4-word struct `{ data, len, backing, backingLen }` |
 | interface value | `struct { void* data; void* vtable; }` |
 | function value | `struct { void* vtable; void* data; }` — the **reverse** field order |
-| struct / array by value | per the platform C ABI, with the ≤16-byte by-value cutoff (§7.13.11) |
+| struct / array by value | per the platform C ABI (§7.13.11; the same as internally, §2.5) |
 | multiple results | the platform C ABI for a struct with the result fields — see below |
 
 A **multi-result** function's C form is the platform struct return of its
@@ -52,13 +52,10 @@ applies to a callback reached through `__c_entry` (§4.5), not only to a
 
 `abi.cabi.ccall` — A `__c_call` targets the **verbatim, unmangled** C symbol
 (plus the object-format prefix, §5.6) and classifies its arguments under the
-platform C convention. In particular, a by-value aggregate **larger than
-16 bytes** — internally a single pointer (§2.5) — re-adapts per target:
-on x86-64 it is laid out by value on the outgoing stack (SysV MEMORY,
-consuming no GP register); on arm32 it is passed by value split across
-R0–R3 and the stack (AAPCS); on aarch64 the internal pointer form already
-**is** the platform convention and nothing changes. A variadic `__c_call` is
-a true C-variadic call (§2.8, including its no-default-promotions rule).
+platform C convention. A by-value aggregate argument travels exactly as it
+does to a Binate callee (§2.5), which is the platform convention; on aarch64
+a >16-byte one points at a private per-call temporary. A variadic `__c_call`
+is a true C-variadic call (§2.8, including its no-default-promotions rule).
 
 The declared result may be **any type with a defined C-ABI layout**, or
 `"void"` (language spec `pkg.ccall`): an aggregate result is returned per
@@ -78,12 +75,10 @@ a plain alias (LLVM) or label (native) of the mangled definition; where they
 differ, the name leads through a per-function **adapting entry** — a C-ABI
 thunk on the LLVM backend, an adapter trampoline on the native backends —
 that re-marshals the divergent pieces and forwards to the mangled
-definition: narrow GP register parameters are re-extended (§2.3), a
->16-byte by-value parameter arriving per the platform convention (by value
-in memory/registers on x86-64/arm32) is re-materialized as the internal
-pointer-to-copy form (§2.5; the aarch64 conventions coincide), and a
-multi-result return is adapted per §4.2. Internal callers enter at the
-mangled symbol and pay none of this.
+definition: narrow GP register parameters are re-extended (§2.3), and a
+multi-result return is adapted per §4.2. By-value aggregate parameters need
+no adaptation: the internal convention passes them as the platform does
+(§2.5). Internal callers enter at the mangled symbol and pay none of this.
 
 > _Note._ One declaration-parity nuance: a plain-**alias** export's narrow scalar
 > parameters are declared without extension attributes on the LLVM backend
@@ -101,9 +96,8 @@ thunk when it does — the SAME set of f's on **every** backend, so a
 mixed-producer program hands out one pointer value for f
 (`pkg.centry.identity`): the weak `__centry.` copies each referencing
 translation unit emits coalesce to one address program-wide. A thunk is used
-when f has a **narrow GP register parameter**, a **>16-byte by-value aggregate
-parameter** whose C form diverges from the internal single pointer (§2.5), or
-a **divergent multi-value return** (§4.2); it performs the §4.4 adaptation
+when f has a **narrow GP register parameter** or a **divergent multi-value
+return** (§4.2); it performs the §4.4 adaptation
 then enters the mangled definition. On the LLVM backend a
 narrow-register-parameter thunk is a pure **forwarder** — the LLVM calling
 convention already re-extends narrow arguments through the mangled

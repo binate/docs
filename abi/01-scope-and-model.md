@@ -47,7 +47,7 @@ conventions, and every call site uses exactly one of them:
 
 1. The **internal convention** (Ch.2) — direct calls between Binate
    functions. It is the platform C convention (§1.5) plus enumerated,
-   deliberate Binate-internal deviations (large-aggregate passing,
+   deliberate Binate-internal deviations (aarch64 large-aggregate ownership,
    multi-return). C code never observes this layer.
 2. The **C-boundary convention** (Ch.4) — the true, unmodified platform C ABI,
    used exactly where C is on the other side: `__c_call` call-outs, and entry
@@ -86,7 +86,7 @@ convention**, which Ch.2 then parameterizes:
 
 The word size `W` is the language spec's `TargetInfo.PointerSize`
 (§7.13.1 `type.layout.target-info`); all layout inputs to this spec —
-`SizeOf`, `AlignOf`, field offsets, the ≤16-byte by-value cutoff
+`SizeOf`, `AlignOf`, field offsets, by-value aggregate passing
 (§7.13.11 `type.layout.byval-cutoff`) — are the language spec's, computed
 once and consumed identically by every producer.
 
