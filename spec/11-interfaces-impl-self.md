@@ -333,19 +333,22 @@ query, not an implicit one.
 and names a target — either a **nameable** type with a mandatory recovery kind, or
 a **slice** type (`iface.assert.kind`, `iface.assert.slice`; a func / array /
 struct / `Self` target is a compile error). The **dynamic type** of `x` is the concrete named type recorded when `x`
-was constructed (§11.4): the boxed value's type with its `*`/`@`/outer-`readonly`
-stripped and aliases peeled, but **named-distinct wrappers preserved** (a boxed
-`Celsius` records `Celsius`, not `float64`; §7.3). A target matches as follows:
+was constructed (§11.4): the boxed value's type with its `*`/`@` and any handle
+`readonly` stripped and aliases peeled, but **named-distinct wrappers preserved** (a
+boxed `Celsius` records `Celsius`, not `float64`; §7.3) — together with whether the
+boxed **object** is `readonly` (`iface.assert.readonly`). A target matches as follows:
 - **Concrete target** `T`: succeeds iff `x`'s dynamic type is **exactly** `T` —
   nominal type identity, not assignability (a stored `Celsius` matches `.(Celsius)`
   and **not** `.(float64)`). Each generic instantiation is a distinct type with its
   own identity (`List[int]` ≠ `List[float]`; §12). The match is on the base type,
-  independent of the recovery kind and of any `readonly`.
+  independent of the recovery kind; on a box of a `readonly` object, a target that
+  would drop the object's `readonly` misses (`iface.assert.readonly`).
 - **Interface target** `J`: succeeds iff `x`'s dynamic type **satisfies** `J` — it
   has a visible `impl … : J`, **or** an `impl` for any (transitive) **descendant**
   of `J`, since a descendant impl transitively satisfies its ancestors
-  (`iface.impl.nominal`, `iface.extend.transitive`). Recovers a `*J`/`@J`. `any` is
-  satisfied by every present `x`.
+  (`iface.impl.nominal`, `iface.extend.transitive`) — on a box of a `readonly`
+  object, only an impl a `readonly` object may reach (`iface.assert.readonly`).
+  Recovers a `*J`/`@J`. `any` is satisfied by every present `x`.
 
 The two syntactic forms differ only in how a **miss** is handled:
 - As an **expression**, `x.(K T)` yields the recovered value; a miss is a
@@ -379,8 +382,34 @@ out field-wise, acquiring any managed fields (Axiom 3, §18.3 `mem.copy`); a val
 recovery from a **typed-nil** box (`iface.assert.absent`) would dereference a nil
 pointer, so use a `*T`/`@T` recovery plus `present` to inspect a possibly-nil box.
 On the recovered handle, **element-level** `readonly` may be **added** but not
-**dropped** (a one-way capability, §7.11 `type.readonly.lattice-element`); an
-outer/handle `readonly` is freely choosable.
+**dropped** (a one-way capability, §7.11 `type.readonly.lattice-element`) — for the
+boxed object itself, by `iface.assert.readonly`; an outer/handle `readonly` is
+freely choosable.
+
+`iface.assert.readonly` — A box records whether its **object** — what its data
+word points at — is `readonly`: it is when the pointer it was constructed from has
+a `readonly` pointee (after aliases are peeled), as for `&c` or the implicit borrow
+(`iface.construct.value-borrow`) of a `readonly` variable `c`, a `*readonly T` or
+`@readonly T` source, or `box(c)` of a `readonly` value (an `@readonly T`). A
+recovery may **add** the object's `readonly` but never **drop** it (§7.11
+`type.readonly.lattice-element`):
+- a concrete target with a mutable pointee, `.(*T)` / `.(@T)`, **misses** on a box
+  of a `readonly` `T` object; `.(*readonly T)`, `.(@readonly T)` and the value copy
+  `.(T)` match a box of a `readonly` or a mutable `T` object;
+- an interface target `.(*J)` / `.(@J)` matches a box of a `readonly` object only
+  if a `readonly` object of its dynamic type may be widened to `J` statically
+  (§11.3): the impl of `J`, or of a descendant of `J`, binds a read-only receiver
+  (`*readonly T`, `@readonly T` or `readonly T`; §10.5 `func.method.object-const`).
+  An impl over a mutable receiver does not qualify, even when the methods `J` needs
+  only read. The recovered interface value is still a box of the `readonly` object,
+  as is any upcast of it (§11.6), so a later `.(*T)` from it misses too.
+
+A type-switch case (`iface.typeswitch`) matches by the same rule, and the miss
+message of the expression form (§17.5) names the dynamic type `readonly <T>`. Only
+a **named** dynamic type has this record: a name-less box keeps its element
+`readonly` in its structural identity (`iface.assert.slice`), and a named type over
+a `readonly` type (`type RI readonly int8`) is read-only at its own outermost level
+(§7.11 `type.readonly.named`), so a recovered `*RI` refuses writes already.
 
 `iface.assert.slice` — A **slice** type is admitted as an assertion /
 type-switch target — `x.(*[]char)`, `case @[]readonly char:` — even though a slice

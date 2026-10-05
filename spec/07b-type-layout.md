@@ -309,6 +309,11 @@ stdlib readers (`pkg/builtins/reflect`, `pkg/stdx/fmt`) match them — so, like 
 `9` pointer, `10` interface, `11` function. (A bare `char`/`uint8` field is `uint`
 — a number, like Go `byte`; a `char`-slice is `string` — text.)
 
+A box of a `readonly` object of a named type `T` (§11.12 `iface.assert.readonly`)
+has `T`'s **readonly variant** as its dynamic type, a type of its own here: its
+record has `T`'s contents under the name `readonly <T>`, and its vtables are
+`T`'s under the variant's identity.
+
 There is **exactly one** `TypeInfo` per type **program-wide** (not per module) so
 that the **result** of an identity comparison **agrees across compiled and
 interpreted execution** — the record is part of the cross-mode agreement contract
@@ -345,7 +350,10 @@ table cannot be built. Instead **each `impl T : I` site** emits a satisfaction
 entry for `I` **and every transitive ancestor of `I`** (computable there from `I`'s
 extension declaration, §11.6), mapping `(T, K)` to the corresponding sub-vtable
 `vtable(T, K)`; entries are `weak_odr`-deduplicated exactly like the `(T, I)`
-vtables they reference. An **interface** assertion `x.(K J)` looks up
+vtables they reference. An impl that binds a read-only receiver (`*readonly T`,
+`@readonly T` or `readonly T`) emits the same entries for `T`'s readonly variant
+(§7.13.14), mapping to the variant's vtables; no other impl does (§11.12
+`iface.assert.readonly`). An **interface** assertion `x.(K J)` looks up
 `(dynamic-type, J)` in this registry and, on a hit, forms `{data, vtable(T, J)}`
 (§11.12 `iface.rtti`). The registry's search structure is **informative** (Annex B);
 normative is that its lookup **result agrees across modes** (§2.4) and covers
