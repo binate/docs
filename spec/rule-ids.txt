@@ -215,10 +215,12 @@ func.variadic.pack	positive	10-functions-methods-function-values.md
 func.variadic.spread	constraint	10-functions-methods-function-values.md
 gen.constraint	positive	12-generics-and-enumerations.md
 gen.crosspkg.body	positive	12-generics-and-enumerations.md
+gen.decl.definition	constraint	12-generics-and-enumerations.md
 gen.enum.bitflags	positive	12-generics-and-enumerations.md
 gen.enum.no-first-class	positive	12-generics-and-enumerations.md
 gen.impl.generic-recv	constraint	12-generics-and-enumerations.md
 gen.instantiate	positive	12-generics-and-enumerations.md
+gen.instantiate.alias	positive	12-generics-and-enumerations.md
 gen.instantiate.disambiguation	positive	12-generics-and-enumerations.md
 gen.instantiate.type	positive	12-generics-and-enumerations.md
 gen.method.generic-recv	constraint	12-generics-and-enumerations.md

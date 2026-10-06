@@ -414,18 +414,30 @@ the end of the statement, and a raw pointer into it used after that is a use
 after free (§18.7 `mem.raw-uaf`). A literal whose storage is **addressed** within
 a local `var` / `:=` initializer instead **lives as long as the new binding** —
 it is released when the binding's scope exits (§18.4 `mem.scope-exit`) — whether
-its address is taken by `&` (of the literal, or of a field or element of it), by
+its address is taken by `&` (of the literal, or of a field or element of it — an
+element of a managed slice whose backing the literal owns included, see
+`expr.composite.addr-store`), by
 the implicit `&` of a pointer-receiver method call or method value (§10.5), by
 sub-slicing an array literal, or by an implicit value-borrow into a raw interface
 (§11.4 `iface.construct.value-borrow`). So `var q *P = &P{name: mk()}` and
-`h := P{…}.Name` stay valid as long as `q` and `h`. Only the release point moves:
+`h := P{…}.Name` stay valid as long as `q` and `h`. One addressed within a `defer`
+statement's operands likewise lives until the deferred call has run: it is
+released with the function's exit releases, after the pending deferred calls
+(§14.13 `stmt.defer`) — so `defer show(&P{…})`, `defer show(id(&P{…}))` and, for a
+pointer-receiver `Show`, `defer P{…}.Show()` see the literal intact. Only the
+release point moves:
 no reference-count operation is added.
 
 `expr.composite.addr-store` _(Constraint)_ — An **assignment** (to a variable,
-field or element) or a **`return`** may not store the address of a composite
-literal, which would dangle at the end of the statement. A value **holds an
+field or element), a **`return`**, or the initializer of a named **package-level
+`var`** (§17 `prog.init.vars`) may not store the address of a composite literal,
+which would dangle at the end of the statement. A value **holds an
 address into** a literal `L` when it is: `&X`, where `X` designates `L`'s storage
-— `L`, a field or element of it, or a dereference `*p` (or a field or element
+— `L`, a field or element of it, an element of a managed slice whose backing `L`
+owns (`L` itself a managed-slice literal, whose one reference owns its backing;
+a sub-slice of a slice `L` owns; or a slice held in a field or element of `L`
+whose initializer is a managed slice owned so, its reference being held in `L`'s
+storage), or a dereference `*p` (or a field or element
 reached through `p`) where `p` holds an address into `L`; a sub-slice of an array
 whose storage is `L`'s, or of a slice that holds an address into `L`; a `cast`,
 `unsafe_cast` or `bit_cast` of such a value; a pointer-receiver method value whose
@@ -437,8 +449,8 @@ index that is not constant, any element's). The stored value may neither hold an
 address into a literal nor contain one: as an element of a stored composite
 literal, the operand of a conversion or of `box`, the receiver a value-receiver
 method value copies, or the initializer a field or element read comes from.
-`q = &P{…}`, `return &P{…}`, `s.h = P{…}.Name` and `q = S{p: &P{…}}.p` are
-rejected. An address passed to a call is not stored by this rule; one the call
+`q = &P{…}`, `return &P{…}`, `s.h = P{…}.Name`, `q = S{p: &P{…}}.p` and, at
+package level, `var g = &P{…}` are rejected. An address passed to a call is not stored by this rule; one the call
 hands back is valid only while the literal is.
 > _Open / known defects (composite literals)._ Several composite-literal features
 > in the design are not correctly implemented and are flagged here pending fixes:

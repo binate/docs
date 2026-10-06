@@ -214,7 +214,9 @@ executes**; the **call executes at function exit**. The evaluated values are
 retained with the **function's lifetime**: they behave as anonymous
 function-scope locals, released with the function's exit releases (§18.4)
 **after all pending deferred calls have run** — *not* as statement temporaries
-(§18.4 `mem.temporary`, §9.7). The deferred call **borrows** them as the
+(§18.4 `mem.temporary`, §9.7) — and so is a composite literal addressed in them
+(`defer show(&P{…})`, a pointer-receiver call on a literal; §13
+`expr.composite.lifetime`). The deferred call **borrows** them as the
 caller's references under the ordinary call contract (§18.5 `mem.param` — the
 caller-side reference is unaffected by the call). Where an operand undergoes a
 **managed→raw** conversion at the defer site (§8.4), the **pre-conversion

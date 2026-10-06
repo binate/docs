@@ -185,7 +185,9 @@ MethodDecl    = "func" Receiver identifier Signature Block ;
 
 Receiver      = "(" identifier ReceiverType ")" ;
 (* A receiver type is one of T, *T, *readonly T, @T, @readonly T (an optional
-   `*`/`@` and optional `readonly` over a named base), and must reduce to a named
+   `*`/`@` and optional `readonly` over a named base), whose `*`/`@` handle may
+   itself be `readonly` (`readonly *T`: the receiver is unassignable; the method's
+   kind is unchanged, §10.4), and must reduce to a named
    type declared in the same package (or, only in pkg/builtins/lang, a universe
    primitive).  If the base type is GENERIC, the receiver BINDS its type
    parameters as fresh names — `*Cursor[T]`, `(m HashMap[K, V])` — an identifier
@@ -197,7 +199,7 @@ Receiver      = "(" identifier ReceiverType ")" ;
    declaration and the count must match the type's arity; the method (or impl)
    introduces NO type parameters of its own (no method-level `[…]`; there is no
    `[TypeParams]` slot on MethodDecl).  Details: §12.1. *)
-ReceiverType  = [ "*" | "@" ] [ "readonly" ] ReceiverBase ;
+ReceiverType  = [ [ "readonly" ] ( "*" | "@" ) ] [ "readonly" ] ReceiverBase ;
 ReceiverBase  = QualifiedName [ "[" identifier { "," identifier } "]" ] ;
 
 Signature     = "(" [ ParameterList ] ")" [ Result ] ;

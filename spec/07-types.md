@@ -561,14 +561,15 @@ the full body in one `.bn` (opaque export); or a full definition only in a `.bn`
 (package-private). A full definition in **both** the `.bni` and a `.bn`, or two
 full definitions across `.bn` files, is rejected ("duplicate type definition";
 the `.bni`/`.bn` case reports "declared in full in both the .bni and a .bn").
-Generics are included. A repeated forward declaration is idempotent.
+Generics are included; a generic type has no forward declaration (§12
+`gen.decl.definition`). A repeated forward declaration is idempotent.
 
 `type.opaque.builtin-rejection` _(Constraint)_ — `make`, `make_slice`, `sizeof`,
 and `alignof` on an opaque type are rejected (its layout is unknown), alongside
 the field-access restriction above; the gate peels named-distinct, alias, and
 `readonly` wrappers, so a distinct type over an opaque type is rejected too. See
-§15.2 (`builtin.opaque-gate`). Opaque export is for non-generic types only in
-this version.
+§15.2 (`builtin.opaque-gate`). Opaque export is for non-generic types only (§12
+`gen.decl.definition`).
 
 ## 7.13 Type Layout and Representation
 

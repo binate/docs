@@ -56,11 +56,16 @@ not-immediately-invoked function literal) forms no edge, so it is neither ordere
 nor diagnosed.
 
 `prog.init.vars` — Initialization runs each package-level `var x T = e` as the
-assignment `x = e`, in the order above. A `var` declared without an initializer
+assignment `x = e`, in the order above. The assignment's temporaries end with it
+(§18.4 `mem.temporary`) while `x` lives on, so the initializer is a **storing**
+position, checked as an assignment is: it may not borrow a temporary into a raw
+interface (§11.4 `iface.construct.value-borrow`) or store the address of a
+composite literal (§13 `expr.composite.addr-store`). A `var` declared without an initializer
 is zero-initialized (§9.2) and does no work at init time. A **blank** (`_`) global
 binds no storage, so no value is ever stored — but a blank *with* an initializer
 (`var _ = e`) still **evaluates** `e` at init time (for its effects, and its reads
-still order it after the vars it depends on). **Constants** are not part of
+still order it after the vars it depends on); storing nothing, it is not a storing
+position, and a temporary it borrows is released when it has run. **Constants** are not part of
 initialization: a `const` has no storage and each use is replaced by its value
 at compile time (§9.1), so it is never runtime-initialized.
 

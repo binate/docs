@@ -123,9 +123,24 @@ is a named managed-slice of `int`. The underlying type may name the instantiatio
 itself through an indirection (`type Tree[T any] @[]Tree[T]`), but not by value
 (`type.named.value-acyclic`).
 
-> _Open._ Whether an **alias** declaration (`type L[T any] = Box[T]`) or a
-> declaration with **no** underlying type (an opaque or forward `type L[T any]`)
-> may take type parameters is undecided.
+`gen.instantiate.alias` — A generic **alias** declaration `type L[P₁, …] = U`
+declares no type: an instantiation `L[A₁, …]` **is** `U` with each type parameter
+replaced by its type argument — identical to that type written out, with its
+methods and impls. For `type L[T any] = Box[T]`, `L[int]` is `Box[int]`; the
+target may fix or reorder the parameters (`type IntMap[V any] = Map[int, V]`) or
+be any type (`type Sl[T any] = @[]T`, or a struct literal). An alias that reaches
+itself with no defined type in between (`type R[T any] = @[]R[T]`) is an invalid
+recursive alias. A generic alias is not a method or `impl` receiver
+(`func.method.receiver-base`): a receiver binds the parameters of the generic type
+it names, which an alias's target may fix (`gen.no-conditional-impls`).
+
+`gen.decl.definition` _(Constraint)_ — A generic type declaration has an
+underlying type: one with none (`type L[T any]`, an opaque or forward
+declaration) is rejected — in a `.bni`, a `.bn`, or at the REPL prompt — since a
+use instantiates a generic type from its definition, which an importer of an
+opaque type never has. A package hides an instantiation's layout behind a
+**non-generic** opaque type instead: `type H` in the `.bni`, defined in a `.bn` as
+a distinct type over the instantiation, `type H L[int]` (§7.12).
 
 `gen.instantiate.disambiguation` — The form `name[…]` is disambiguated between a
 type-argument list and an index expression by what `name` resolves to: if it
@@ -217,8 +232,9 @@ fact that depends on a type argument:
   so `cast(T, func(x int) int { return x + k })` is a raw closure kept in the frame
   where `T` is a `*func` and a managed closure where it is a `@func`.
 
-The check of a generic declaration against its type parameters' constraints
-decides every other rule once, for all its instantiations, and **defers** the
+The check of a generic declaration against its type parameters' constraints — made
+at the declaration, whether or not the program instantiates it — decides every
+other rule once, for all its instantiations, and **defers** the
 dependent constructs: each is checked for every instantiation the program names
 (`gen.mono.instances`), with the type parameters bound to the type arguments, and
 a violation is a compile-time error. In that check:

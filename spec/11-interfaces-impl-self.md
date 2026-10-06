@@ -140,15 +140,17 @@ applies only to a genuinely value-typed source; a `*T`/`@T` source is unchanged
   **any** position an explicit `&x` is permitted. A composite literal, or a field
   or element of one, is addressable and borrows the same way — so, like its
   explicit `&`, it is rejected in a storing position (§13
-  `expr.composite.addr-store`), and in a `var` / `:=` initializer the literal lives
-  as long as the binding (§13 `expr.composite.lifetime`).
+  `expr.composite.addr-store`), and in a local `var` / `:=` initializer the literal
+  lives as long as the binding (§13 `expr.composite.lifetime`).
 - A **non-addressable** source (a literal, an expression, or a call result) is
   **materialized into a temporary** and borrowed. Because a temporary is released
   at the **end of its statement** (§18.4 `mem.temporary`), this is permitted
   **only** where the borrow cannot outlive it: an **argument** position, or a
-  **`var`/`:=` initializer** (the temporary co-scopes with the new binding). In a
-  position that stores into a **pre-existing** location outliving the statement — an
-  **assignment**, a **field or element store**, or a **`return`** — it is a
+  **local `var`/`:=` initializer**, alone or in a `var ( … )` group (the temporary
+  co-scopes with the new binding). In a position that stores into a location
+  outliving the statement — an **assignment**, a **field or element store**, a
+  **`return`**, or the initializer of a named **package-level `var`** (which runs as
+  an assignment in the init function, §17 `prog.init.vars`) — it is a
   **compile error** (a stack temporary would dangle at the statement's end); such a
   store must name a longer-lived source, or `box(t)` for a heap copy.
 

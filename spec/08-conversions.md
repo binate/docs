@@ -167,9 +167,12 @@ conversions, the named↔underlying scalar crossing, constant typing
   below its range (including `-Inf`) yields its `MIN` (`0` for unsigned), and `NaN`
   yields `0` (`conv.cast.float-int-saturation` below; catalogued in §21.7).
 - **`bool` → numeric:** a `bool` converts to any integer or floating-point type,
-  yielding `0` or `1` — a defined, total widening. The **reverse** (`numeric →
-  bool`) is **not** a `cast`: a value outside `{0, 1}` is not a valid `bool`, so
-  that direction is unverifiable and requires `unsafe_cast` (§8.7).
+  yielding `0` or `1` — a defined, total widening. The **reverse** is **not** a
+  `cast`: an integer outside `{0, 1}` is not a valid `bool`, so `integer → bool`
+  is unverifiable and requires `unsafe_cast` (§8.7). A float does not convert to
+  `bool` at all — it shares no representation with `bool` (`1.0` is not the byte
+  1), so neither `cast` nor `unsafe_cast` accepts it — and is tested by the
+  comparison `f != 0.0`.
 - **Named ↔ underlying:** a named type converts to and from its underlying, and
   between two named types with the same underlying (`Celsius` ↔ `float64`, or two
   structs sharing one layout); §8.2 requires a `cast` here. This holds for **any**
@@ -361,9 +364,10 @@ risk). The additional conversions `unsafe_cast` permits over `cast` are:
   `iface.assert`), which verifies the dynamic type and panics on a miss;
   `unsafe_cast` performs no check and is **undefined** if the dynamic type does not
   match (Ch.21).
-- **Invariant-breaking scalar directions** — a leaf conversion that is defined but
-  **not** invariant-preserving, e.g. `int8 → bool` (an `int8` outside `{0, 1}` is
-  not a valid `bool`; §8.5 leaf rule). `unsafe_cast(bool, i)` **asserts** that `i`
+- **The invariant-breaking scalar direction** `integer → bool` — a leaf conversion
+  that is defined but **not** invariant-preserving, e.g. `int8 → bool` (an `int8`
+  outside `{0, 1}` is not a valid `bool`; §8.5 leaf rule). A float operand is not
+  one: `unsafe_cast(bool, f)` is a compile-time **error** (§8.5). `unsafe_cast(bool, i)` **asserts** that `i`
   is `0` or `1`, as `*T → @T` asserts a header: using a `bool` object whose byte is
   anything else — however it got there (a scalar `unsafe_cast`, a container
   retype, `bit_cast`, raw memory) — is **undefined** (Ch.21). A **constant**

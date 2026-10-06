@@ -252,6 +252,14 @@ read-only-ness (`func.method.object-const`) — it is the value-receiver form th
 is callable on a **read-only object**. A plain `(r T)` is a mutable copy and,
 like `*T`/`@T`, counts as a mutating receiver for that purpose.
 
+A pointer receiver's **handle** may itself be read-only — `(r readonly *T)`,
+`(r readonly @T)`, `(r readonly *readonly T)`, `(r readonly @readonly T)`. That is
+the receiver parameter's own property, as for any parameter (§7.11): `r` cannot be
+reassigned inside the method. Nothing else changes — the method's kind is the
+table's row for the type under the handle's `readonly`, so it is called and
+dispatched as that kind is, and a `readonly *T` method writes through `r` to the
+object.
+
 `func.method.receiver-base` _(Constraint)_ — A method's receiver base must be a
 **named type declared in the same package** as the method. Aliases, predeclared
 / builtin types, anonymous types, and types imported from other packages may not
@@ -294,7 +302,7 @@ value receiver `(r T)` is a mutable copy and does not qualify (§10.4). Adding
 object-`readonly` is allowed; dropping it is rejected.
 
 `func.method.impl-receiver` — An `impl T : Iface` (and its `*T`/`@T`/`readonly`
-variants) states that the receiver shape satisfies the interface; the impl's
+variants, a read-only handle included: `impl readonly *T : Iface`) states that the receiver shape satisfies the interface; the impl's
 receiver kind is validated against each method's declared receiver kind by the
 same safe-direction smoothing (Ch.11).
 
