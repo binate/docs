@@ -347,6 +347,8 @@ newline (or end of input) immediately follows a token of one of these kinds:
 - an identifier;
 - an integer, floating-point, string, or character literal;
 - one of the keywords `true`, `false`, `nil`, `break`, `continue`, `return`;
+- the keyword `Self`, which ends a line as a type name does (an interface
+  method's result, Ch.11);
 - one of `++`, `--`, `)`, `]`, `}`.
 
 After any other token — including binary operators, the opening delimiters

@@ -418,9 +418,12 @@ its address is taken by `&` (of the literal, or of a field or element of it — 
 element of a managed slice whose backing the literal owns included, see
 `expr.composite.addr-store`), by
 the implicit `&` of a pointer-receiver method call or method value (§10.5), by
-sub-slicing an array literal, or by an implicit value-borrow into a raw interface
-(§11.4 `iface.construct.value-borrow`). So `var q *P = &P{name: mk()}` and
-`h := P{…}.Name` stay valid as long as `q` and `h`. One addressed within a `defer`
+sub-slicing an array literal, by an implicit value-borrow into a raw interface
+(§11.4 `iface.construct.value-borrow`), or by a raw-slice view of a managed slice
+whose backing the literal owns — its managed → raw conversion, implicit or by
+`cast` / `unsafe_cast` (§8.4). So `var q *P = &P{name: mk()}`,
+`var r *[]int = @[]int{1, 2}` and
+`h := P{…}.Name` stay valid as long as `q`, `r` and `h`. One addressed within a `defer`
 statement's operands likewise lives until the deferred call has run: it is
 released with the function's exit releases, after the pending deferred calls
 (§14.13 `stmt.defer`) — so `defer show(&P{…})`, `defer show(id(&P{…}))` and, for a
@@ -442,7 +445,9 @@ reached through `p`) where `p` holds an address into `L`; a sub-slice of an arra
 whose storage is `L`'s, or of a slice that holds an address into `L`; a `cast`,
 `unsafe_cast` or `bit_cast` of such a value; a pointer-receiver method value whose
 receiver is `L`'s storage or holds an address into it; an implicit value-borrow
-of `L`'s storage into a raw interface (§11.4); or a field or element read out of a
+of `L`'s storage into a raw interface (§11.4); a raw-slice view of a managed slice
+whose backing `L` owns (as above; the managed → raw conversion, implicit or by
+`cast` / `unsafe_cast`); or a field or element read out of a
 composite literal — directly, through a pointer holding an address into it, or
 out of a slice literal — whose initializer holds an address into `L` (for an
 index that is not constant, any element's). The stored value may neither hold an

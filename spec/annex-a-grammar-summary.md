@@ -102,9 +102,9 @@ block_comment = "/*" { (* any character *) } "*/" ;
 (* --- Automatic semicolon insertion (ASI) --- *)
 (* A ";" is inserted after the final token of a line when that token is: an
    identifier or predeclared name; an int/float/char/string literal; "true",
-   "false", or "nil"; "break", "continue", or "return"; "++" or "--"; or one of
-   ")", "]", "}".  Consequently a multi-line argument, element, or parameter
-   list requires a trailing comma after its last entry.  (Same rule as Go.) *)
+   "false", or "nil"; "break", "continue", or "return"; "Self"; "++" or "--";
+   or one of ")", "]", "}".  Consequently a multi-line argument, element, or
+   parameter list requires a trailing comma after its last entry. *)
 ```
 
 ## A.2 Source file structure

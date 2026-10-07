@@ -120,10 +120,13 @@ so it must be **constructed** explicitly, not cast (`*[]T → @[]T` is under-det
 
 > _Provisional._ This borrow is currently permitted in **all** assignment
 > contexts, including storing the borrowed raw value into a longer-lived
-> location (a field, a returned value) where it can outlive the managed source.
-> A proposal would **restrict** the implicit borrow to genuine borrowing
-> positions (such as argument passing) and require an explicit `cast` to store a
-> raw borrow, so a dangling raw pointer cannot arise implicitly. The rule is
+> location (a field, a returned value) where it can outlive the managed source —
+> except a raw-slice view of a managed-slice composite literal, which is part of
+> the literal and is stored only where its address may be (§13
+> `expr.composite.addr-store`). A proposal would **restrict** the implicit borrow
+> to genuine borrowing positions (such as argument passing) and require an
+> explicit `cast` to store a raw borrow, so a dangling raw pointer cannot arise
+> implicitly. The rule is
 > marked Provisional pending that decision (`proposal-restrict-implicit-raw-conversion`).
 
 ## 8.5 `cast` — explicit safe value conversion
