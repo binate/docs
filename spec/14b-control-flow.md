@@ -304,6 +304,10 @@ iff it is one of:
   no `break` targets the switch (one nested in an `if` or block counts; one a
   nested loop or switch consumes does not).
 
+An empty statement (`stmt.empty`, §14.2) is a statement like any other: a block
+whose last statement is empty — a `return` followed by a stray `;` before the
+`}`, as in `return 1;;` — does not terminate.
+
 Because the analysis is syntactic, some functions a reader sees as exhaustive are
 still rejected — e.g. an `if`/`else if` chain with no final `else`, a `switch`
 without `default`, or a `for cond { … }` whose condition is constant-true. Write
