@@ -130,8 +130,8 @@ target's, or that violates a type's invariants, is undefined (Ch.21).
 `cast` (`cast ⊆ unsafe_cast`), yielding `T` (§8.7 `conv.unsafe-cast`). It accepts
 everything `cast` does, plus the *unverifiable* conversions `cast` rejects: drop
 element-level `readonly`, raw pointer → managed pointer (`*T → @T`), unchecked
-interface **narrowing** (contrast the checked `x.(T)`), and invariant-breaking
-scalar directions. For the conversions it shares with `cast` it behaves exactly
+interface **narrowing** to a concrete type (contrast the checked `x.(T)`, which can
+also recover a narrower interface), and invariant-breaking scalar directions. For the conversions it shares with `cast` it behaves exactly
 like `cast` (including any `RefInc`); its additional conversions are
 reference-count-neutral reinterpretations whose correctness the programmer
 guarantees (a false assertion is undefined, Ch.21).

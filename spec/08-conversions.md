@@ -1,6 +1,6 @@
 # 8. Conversions
 
-> **Status:** normative · **Maturity:** mostly Stable; two implementation gaps flagged (§8.5 aggregate retype, §8.7 `unsafe_cast` between interface values)  
+> **Status:** normative · **Maturity:** mostly Stable  
 > **Rule-ID prefix:** `conv`
 
 A **conversion** changes the type of a value. Binate has a small **closed set
@@ -205,7 +205,8 @@ correct alternative:
 
 - **`unsafe_cast`** (§8.7) — an *unverifiable* conversion: drop element-level
   `readonly`, raw pointer → managed pointer (`*T → @T`), unchecked interface
-  **narrowing**, or an invariant-breaking scalar direction (e.g. `int8 → bool`).
+  **narrowing** to a concrete type, or an invariant-breaking scalar direction (e.g.
+  `int8 → bool`).
 - **`bit_cast`** (§8.6) — a pure same-size **bit reinterpret** (e.g.
   `@[]int32 → @[]float32`, a value-changing element conversion that is not a cast).
 - **a type assertion `x.(T)`** (§11.12 `iface.assert`) — a *checked* interface
@@ -361,12 +362,19 @@ risk). The additional conversions `unsafe_cast` permits over `cast` are:
   explicit raw→managed escape the implicit set forbids (§8.4). (The slice and
   function-value reverses `*[]T → @[]T` / `*func → @func` are **not** included —
   they are under-determined constructions, not reinterpretations; §8.4.)
-- **Unchecked interface narrowing** — `@I → @T` / `*I → *T` (a super-interface or
-  concrete recovery) that extracts the interface value's data word **without** the
+- **Unchecked interface narrowing to a concrete type** — `@I → @T` / `*I → *T`,
+  with `T` a concrete (non-interface) type: the interface value's data word is a
+  pointer to the dynamic object, and the conversion extracts it **without** the
   runtime type check. Contrast the **checked** type assertion `x.(T)` (§11.12
   `iface.assert`), which verifies the dynamic type and panics on a miss;
-  `unsafe_cast` performs no check and is **undefined** if the dynamic type does not
-  match (Ch.21).
+  `unsafe_cast` performs no check and is **undefined** if the dynamic type is not
+  `T` (Ch.21). Recovering a narrower or an unrelated **interface** from an
+  interface value (`@I → @J`, `*I → *J`, `@I → *J`) is **not** an `unsafe_cast`
+  conversion: the result's vtable is the dynamic type's table for `J` (§7.13.8),
+  which the source value does not carry and only the runtime lookup of the checked
+  assertion `x.(J)` finds. It is a compile-time error, including where it arises
+  only in an instantiation — a type parameter as the source or target instantiated
+  to an interface value (§8.9 `conv.typeparam`).
 - **The invariant-breaking scalar direction** `integer → bool` — a leaf conversion
   that is defined but **not** invariant-preserving, e.g. `int8 → bool` (an `int8`
   outside `{0, 1}` is not a valid `bool`; §8.5 leaf rule). A float operand is not
