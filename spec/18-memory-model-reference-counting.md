@@ -185,8 +185,9 @@ naming:
   expiring temporary's). Whether the implementation realizes this as a **move**
   (transfer with no acquire) or via the slow path (acquire the return value, then
   release the temporary as it expires) is the optimization choice of §18.6 and is
-  not observable — for the common `@T`/`@[]T` kinds the conforming slow path
-  acquires and balances; only `@func`/`@Iface` fresh returns are currently moved.
+  not observable; the implementation moves every fresh return — a `make`, `box`
+  or `make_slice` result, a literal's managed copy, or a call result, of every
+  managed kind and of a struct or array with managed fields.
 
 `mem.param` — For the duration of a function body, the callee **owns** a reference
 to each managed parameter, which it releases at scope exit (unless the parameter
