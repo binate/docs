@@ -362,13 +362,18 @@ risk). The additional conversions `unsafe_cast` permits over `cast` are:
   explicit raw→managed escape the implicit set forbids (§8.4). (The slice and
   function-value reverses `*[]T → @[]T` / `*func → @func` are **not** included —
   they are under-determined constructions, not reinterpretations; §8.4.)
-- **Unchecked interface narrowing to a concrete type** — `@I → @T` / `*I → *T`,
-  with `T` a concrete (non-interface) type: the interface value's data word is a
-  pointer to the dynamic object, and the conversion extracts it **without** the
-  runtime type check. Contrast the **checked** type assertion `x.(T)` (§11.12
-  `iface.assert`), which verifies the dynamic type and panics on a miss;
-  `unsafe_cast` performs no check and is **undefined** if the dynamic type is not
-  `T` (Ch.21). Recovering a narrower or an unrelated **interface** from an
+- **Unchecked interface narrowing to a concrete type** — from an interface value
+  `x` (`@I` / `*I`), `unsafe_cast` recovers what the **checked** type assertion
+  `x.(K T)` would (§11.12 `iface.assert`), **without** its runtime type check: a
+  target the assertion can name — a pointer to, or a value of, a named concrete
+  type, or a `*[]T` / `@[]T` slice — in a recovery kind its kind table allows
+  (`iface.assert.kind`: `@I → @T` / `*T` / `T`, `*I → *T` / `T`), and also
+  `*I → @T`, the narrowing composed with `*T → @T`'s management-header assertion
+  (above). A `*T` / `@T` result is the interface value's data word; a value `T` is
+  loaded through it. A target the assertion cannot name — an array, an anonymous
+  struct, a function type, or a pointer to one of those — is a compile-time error.
+  The assertion verifies the dynamic type and panics on a miss; `unsafe_cast`
+  performs no check and is **undefined** if the dynamic type is not `T` (Ch.21). Recovering a narrower or an unrelated **interface** from an
   interface value (`@I → @J`, `*I → *J`, `@I → *J`) is **not** an `unsafe_cast`
   conversion: the result's vtable is the dynamic type's table for `J` (§7.13.8),
   which the source value does not carry and only the runtime lookup of the checked
@@ -389,7 +394,9 @@ For the conversions it **shares** with `cast`, `unsafe_cast` behaves exactly lik
 `cast` — including the value construction and any `RefInc` (a managed interface-value
 construction, an aggregate retype; §8.5). The **additional** conversions above are
 reference-count-**neutral** reinterpretations of a pointer or data word (no `RefInc`
-/ `RefDec`); the programmer is responsible for their reference-count correctness. In
+/ `RefDec`) — for a value narrowing, a load through the data word, which a binding
+then copies as it copies any loaded value; the programmer is responsible for their
+reference-count correctness. In
 particular `unsafe_cast(@T, p)` and `bit_cast(@T, p)` are operationally identical for
 a pointer `p` — a bare pointer-word reinterpret — differing only in stated intent
 ("logically a `@T`, unchecked" vs "reinterpret the pointer bits").
