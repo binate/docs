@@ -218,10 +218,15 @@ function-scope locals, released with the function's exit releases (§18.4)
 (`defer show(&P{…})`, a pointer-receiver call on a literal; §13
 `expr.composite.lifetime`). The deferred call **borrows** them as the
 caller's references under the ordinary call contract (§18.5 `mem.param` — the
-caller-side reference is unaffected by the call). Where an operand undergoes a
-**managed→raw** conversion at the defer site (§8.4), the **pre-conversion
-managed value** is what is retained, and the borrow is delivered at call time —
-preserving the argument-borrow liveness guarantee. A raw operand value *not*
+caller-side reference is unaffected by the call). Where an operand's managed
+value is borrowed as a **raw** one at the defer site — a **managed→raw**
+conversion (§8.4: `@T` → `*T`, `@[]T` → `*[]T`, `@func` → `*func`), or a raw
+interface value `*I` / `*any` constructed from a `@T` (§11.4
+`iface.construct.managed`) or from a managed interface value — for a fixed
+argument, a packed variadic element (§10.3 `func.variadic.pack`) or a method's
+receiver, the **pre-conversion managed value** is what is retained, and the
+borrow is delivered at call time — preserving the argument-borrow liveness
+guarantee. A raw operand value *not*
 backed by a retained managed value is an ordinary borrow whose referent's
 liveness at call time is the programmer's responsibility (§18.7 `mem.raw-uaf`).
 The call's results, if any, are **discarded**; a discarded **managed** result is
