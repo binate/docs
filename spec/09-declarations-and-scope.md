@@ -169,7 +169,9 @@ named `_`: a method exists to be called by name, or to fill a method set.
   `make`/`len` are reserved, not shadowable; and `iota` is recognized only inside
   a grouped const block, not a universe binding; §9.1.)
 - **package** — the names declared at the top level of a package, visible
-  throughout the package (and, if in the `.bni`, exported; Ch.16).
+  throughout the package's `.bn` files; a name the `.bni` declares is visible in
+  the `.bni` too and is exported, while one only a `.bn` declares is not visible
+  in the `.bni` (§16.4 `pkg.export`, §16.5 `pkg.bni.self-contained`).
 - **block** — names declared inside a function body or a nested block (§9.5).
 
 `decl.scope.package-decls` — At **package scope** the permitted declarations are:

@@ -88,8 +88,9 @@ warnings).
 visible to importers **iff it is declared in the package's `.bni`**. There are no
 per-symbol visibility keywords (no `pub`), and — unlike Go — **identifier
 capitalization carries no visibility meaning**. A symbol declared only in a `.bn`
-is **package-private**: usable within its own package, but a cross-package
-reference to it is a compile error ("undefined").
+is **package-private**: usable within its own package's `.bn` files (not in its
+`.bni`, `pkg.bni.self-contained`), but a cross-package reference to it
+is a compile error ("undefined").
 
 > _Note._ Capitalizing exported names (and lower-casing private ones) is the
 > recommended **style**, but it is a convention only — the compiler determines
@@ -111,8 +112,10 @@ meaning at the boundary:
 - **`const`** — A `const` is declared in **exactly one** of the `.bni` (→
   exported) or the `.bn` (→ package-private), **never both**: there is **no
   extern `const`** (a constant has no storage to link — it resolves at each use
-  site). A `.bni` `const` carries its full initializer expression, which may
-  reference sibling constants of the same package.
+  site). A `.bni` `const` carries its full initializer expression, which
+  resolves against the `.bni` alone (`pkg.bni.self-contained`): it may name the
+  `.bni`'s other constants and the exported constants of packages the `.bni`
+  imports, but not a constant only the `.bn` declares.
 - **`var`** — A `.bni` `var X T` (with **no initializer**) is an **extern**
   declaration: the storage lives in the package's `.bn`, which must define `X`
   with an **identical** type (including any `readonly` modifier). (So `var` *can*
@@ -131,6 +134,32 @@ meaning at the boundary:
 `.bni` declaration. A return-type or extern-var-type mismatch between the two is a
 compile error (an importer reads the type from the `.bni`, so a divergent `.bn`
 would be misread).
+
+`pkg.bni.self-contained` _(Constraint)_ —
+A package can ship as its interface plus a compiled library (§16.5.1
+`pkg.bni.generic`), so its `.bni` resolves names without the package's `.bn`
+files: seen from the `.bni`, the package scope (§9.6 `decl.scope.levels`) holds
+only the names the `.bni` itself declares. An identifier resolved in scope
+anywhere in a `.bni` declaration — a type, a function or method signature, a
+constant's initializer, an `impl` or a generic body — therefore denotes a name
+the declaration binds itself (a type parameter, receiver, parameter, result or
+local; §9.5), a name the `.bni` declares (not a member an `expose` re-exports,
+§16.5.2 `pkg.expose.surface`), a package the `.bni` itself imports (§16.3
+`pkg.import`), `iota` in a grouped `const` block (§9.1 `decl.const.iota`), or a
+predeclared name (`term.predeclared-name`). A name only a `.bn` declares is
+package-private (§16.4 `pkg.export`) and is not in scope in the `.bni`, although
+the `.bni` and the `.bn` belong to the same package: a use of it there is
+undefined (a message of the form `undefined: <name>`) or, if the name is also
+predeclared, denotes the predeclared entity. _Unenforced:_ when the `.bn` also
+defines a generic function or a generic type's method that the `.bni` defines,
+the current compiler checks only the `.bn`'s copy, so the `.bni`'s copy is not
+held to this rule.
+
+> _Note._ This rule governs names resolved in scope: identifiers, and the
+> package in a package-qualified selector `pkg.name` (§13.1 `expr.primary`). It
+> does not govern which field or method a selector `x.name` reaches (§13.8
+> `expr.member`), nor what a type the `.bni` declares opaque permits there
+> (§7.12).
 
 ### 16.5.1 Generic bodies travel in the `.bni`
 
@@ -181,8 +210,9 @@ and type identity already key on the resolved target package, Ch.11.)
 
 `pkg.expose.surface` — `expose` extends **only A's exported surface**; it does
 **not** bring P's names into A's own scope. It is **not** an import, and Binate
-has no dot-import — references are always qualified (§16.3). If A's
-implementation needs to *use* P, it writes an ordinary `import "P"` separately.
+has no dot-import — references are always qualified (§16.3). If A's `.bni` or
+implementation needs to *use* P, it writes an ordinary `import "P"` separately
+(`pkg.bni.self-contained`).
 An exposed package's names therefore can never collide with A's package-private
 (`.bn`-only) names.
 
