@@ -124,7 +124,8 @@ meaning at the boundary:
   implementation should reject it).
 - **`func`** — A non-generic function is **signature-only** in the `.bni` (its
   body lives in the `.bn`). A **generic** function carries its full **source-text
-  body** in the `.bni` (§16.5.1).
+  body** in the `.bni` (§16.5.1), and is not defined again in the `.bn`
+  (`pkg.bni.generic.once`).
 - **`interface`** — declared in the `.bni` as part of the surface. An **`impl`**
   may also appear in a `.bni`, but a type's `impl` is commonly supplied by a `.bn`
   (often in a *different* package from the interface — the impl-split pattern,
@@ -150,10 +151,7 @@ predeclared name (`term.predeclared-name`). A name only a `.bn` declares is
 package-private (§16.4 `pkg.export`) and is not in scope in the `.bni`, although
 the `.bni` and the `.bn` belong to the same package: a use of it there is
 undefined (a message of the form `undefined: <name>`) or, if the name is also
-predeclared, denotes the predeclared entity. _Unenforced:_ when the `.bn` also
-defines a generic function or a generic type's method that the `.bni` defines,
-the current compiler checks only the `.bn`'s copy, so the `.bni`'s copy is not
-held to this rule.
+predeclared, denotes the predeclared entity.
 
 > _Note._ This rule governs names resolved in scope: identifiers, and the
 > package in a package-qualified selector `pkg.name` (§13.1 `expr.primary`). It
@@ -170,6 +168,12 @@ from that source-text body (Ch.12) — the "template in the header" model. This 
 the **one exception to binary-only distribution**: a package can otherwise ship
 as interface + compiled library with no source, but a package exporting a generic
 must ship that generic's body in its `.bni`.
+
+`pkg.bni.generic.once` _(Constraint)_ — A generic function, or a method of a
+generic type, whose definition the `.bni` carries is not defined again in the
+`.bn`: a second definition of the same name (for a method, on the same receiver
+base type) is a compile error (a message of the form `generic function <name> is
+defined in both the .bni and the .bn`).
 
 ### 16.5.2 Whole-package re-export (`expose`)
 
