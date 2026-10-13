@@ -423,13 +423,8 @@ sub-slicing an array literal, by an implicit value-borrow into a raw interface
 whose backing the literal owns — its managed → raw conversion, implicit or by
 `cast` / `unsafe_cast` (§8.4). So `var q *P = &P{name: mk()}`,
 `var r *[]int = @[]int{1, 2}` and
-`h := P{…}.Name` stay valid as long as `q`, `r` and `h`. One addressed within a `defer`
-statement's operands likewise lives until the deferred call has run: it is
-released with the function's exit releases, after the pending deferred calls
-(§14.13 `stmt.defer`) — so `defer show(&P{…})`, `defer show(id(&P{…}))` and, for a
-pointer-receiver `Show`, `defer P{…}.Show()` see the literal intact. Only the
-release point moves:
-no reference-count operation is added.
+`h := P{…}.Name` stay valid as long as `q`, `r` and `h`. Only the release point
+moves: no reference-count operation is added.
 
 `expr.composite.addr-store` _(Constraint)_ — An **assignment** (to a variable,
 field or element), a **`return`**, or the initializer of a named **package-level

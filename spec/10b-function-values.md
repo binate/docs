@@ -113,8 +113,8 @@ replaced or the record is destroyed (`func.closure.allocation`).
 `func.closure.allocation` — A capturing **`*func`** closure — a function literal,
 or a method value (§10.11) — keeps its closure record in the **frame** of the
 innermost function or function literal whose body contains it: one frame per call
-of that function or literal. The record lives until the frame ends, after that
-frame's deferred calls have run (§14.13 `stmt.defer.exit`), however deeply nested
+of that function or literal. The record lives until the frame ends, after the
+body's deferred blocks have run (§14.13 `stmt.defer.exit`), however deeply nested
 the block in which the closure is evaluated. There is **one record per closure
 site per frame**, where the site is the literal or method-value selector as
 written: evaluating the same site again in that frame re-snapshots into that

@@ -516,8 +516,10 @@ check (§14.10 `stmt.switch.no-fallthrough`). Because interface cases can **over
 when none matches and also catches an **unset** scrutinee (`iface.assert.absent`).
 An optional `v :=` binds the recovered value **per case**: in a single-target case
 `v` has that case's type and kind; in a **multi-target** case (`case @A, @B:`) or
-the `default`, `v` keeps the scrutinee's interface type (as in Go). Without a
-binder the switch is a pure dispatch. There is **no `case nil`**.
+the `default`, `v` keeps the scrutinee's interface type (as in Go). The binder
+belongs to its case clause's body (§14.10 `stmt.switch.case`): it is released when
+that body exits, after the body's deferred blocks (§14.13). Without a binder the
+switch is a pure dispatch. There is **no `case nil`**.
 
 `iface.rtti` — Every interface value can recover its dynamic type at run time
 through a per-type **`TypeInfo`** record reached from the vtable — the `TypeInfo`

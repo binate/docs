@@ -127,7 +127,7 @@ target-pinned promise. None is observable in the result of a conforming program.
 | Item | Home |
 |------|------|
 | The order in which an expression's operands are evaluated where it is not pinned — e.g. the two operands of an arithmetic, bitwise or comparison operator. Pinned: index and sub-slice operands (§13.9 `expr.index.eval-order`), a call's callee and arguments (§10.3 `func.call.eval-order`), the short-circuit operators (§13.7 `expr.logical`), every assignment (§14.4 `stmt.assign.eval-order`) | §13.1 |
-| The order in which a scope's managed locals are released at scope exit (not observable — deferred calls, §14.13, run **before** the function-exit releases, so no user code runs between the releases; the impl uses declaration order) | §18.4 `mem.scope-exit` |
+| The order in which a scope's managed locals are released at scope exit (not observable — a block's deferred blocks, §14.13, run **before** its releases, so no user code runs between them; the impl uses declaration order within a scope) | §18.4 `mem.scope-exit` |
 | Whether a **move** is applied — only **intermediate** refcounts (as read by reflection) may differ; *when* an allocation is freed is identical | §18.6 `mem.move.optimization`; §18.5 `mem.return` |
 | The observable **form** of a defined abort whose form is mode/target-dependent — nil-interface dispatch faults silently in compiled native code but diagnoses-and-exits under the VM (the *fact* of the abort is defined) | §19.5 `exec.divergence`; §17.5; §11.11 `iface.dispatch.nil` |
 | The **contents** of inter-field **padding** bytes over a value's lifetime (distinct from allocation, where a fresh payload is **zero-initialized** — §18.2, §15.2) | §7.13.3; §18.2 `mem.header` |

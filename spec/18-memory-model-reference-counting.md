@@ -144,26 +144,24 @@ result used as a temporary) is an unnamed local of that statement's implicit
 scope; it is **released at the end of the statement** (§9.7). A discarded managed
 call result is therefore released, not leaked. A composite literal's storage is
 likewise a statement temporary, except where §13 `expr.composite.lifetime` keeps
-an addressed one alive with a `var` / `:=` binding, or until a deferred call has
-run. **Exception:** a defer
-statement's evaluated callee, receiver, and argument values are **not**
-statement temporaries — they behave as anonymous function-scope locals,
-released with the function's exit releases after all pending deferred calls
-have run (§14.13 `stmt.defer`); the defer statement's *other* temporaries still
-release at the end of the statement.
+an addressed one alive with a `var` / `:=` binding. A deferred block's statements
+have temporaries of their own, released at the end of each statement, as any
+statement's are (§14.13 `stmt.defer`).
 
 `mem.scope-exit` — A managed local is released when its **block** scope exits
-(§9.5). On a normal exit, each managed local declared in the block is released; on
-an exit via `return`/`break`/`continue`, the terminating construct performs the
-equivalent release (the `return` path releases all live managed locals as it
-unwinds, §18.5). A managed local created and dropped inside a loop body is thus
-balanced each iteration.
+(§9.5), after the deferred blocks scheduled on the block have run (§14.13
+`stmt.defer.exit`). On a normal exit, each managed local declared in the block is
+released; on an exit via `return`/`break`/`continue`, each block the construct
+leaves exits in turn, innermost first — its deferred blocks, then its releases
+(§14.13 `stmt.defer.exit`; the `return` path, §18.5). A managed local created and
+dropped inside a loop body is thus balanced each iteration.
 
 > _Note._ The order in which a scope's managed locals are released is not
-> observable: deferred calls (§14.13) are sequenced **before** the function-exit
-> releases, and a destructor's only effect is to release further references
-> (§18.2) — so no user code runs between the releases, and their order does not
-> affect the result. The implementation releases them in declaration order.
+> observable: a block's deferred blocks (§14.13) run **before** its releases, and a
+> destructor's only effect is to release further references (§18.2) — so no user
+> code runs between one block's releases, and their order does not affect the
+> result. (An enclosing block's deferred blocks run between the inner and the outer
+> block's releases, `stmt.defer.exit`.)
 
 ## 18.5 Ownership transfer
 

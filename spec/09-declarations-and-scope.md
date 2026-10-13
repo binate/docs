@@ -129,8 +129,10 @@ signature matching and function-value assignability; §7.11). Element-level
 ## 9.5 Blocks and lexical scope
 
 `decl.scope.block` — A **block** is a (possibly empty) sequence of declarations
-and statements in braces; function bodies and the bodies of `if`, `for`, and
-`switch` are blocks (Ch.14). The scope of a name declared in a block extends
+and statements in braces; function bodies, the bodies of `if` and `for`, and each
+`switch` case clause's body are blocks (Ch.14); the variables a `for` statement's
+header declares are scoped to that statement (§14.9 `stmt.for.scope`). The scope of
+a name declared in a block extends
 from the declaration to the end of the innermost enclosing block.
 
 `decl.scope.shadow` — A declaration in an inner block may **shadow** a name from
@@ -188,9 +190,7 @@ only; a function-local `type` declaration is a parse error (§7.3).
 for the **temporaries** produced while evaluating it. A temporary managed value
 created during a statement lives until the end of that statement, at which point
 it is released (its destructor runs; Ch.18). This statement boundary is the unit
-of temporary lifetime. The one exception is a defer statement's evaluated
-operand values, which take the enclosing **function's** lifetime (§14.13
-`stmt.defer`; §18.4).
+of temporary lifetime.
 
 > _Note._ The full reference-counting semantics of temporaries — including that
 > a raw borrow of a temporary's backing must not outlive the statement (a

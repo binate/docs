@@ -30,7 +30,7 @@ rarely contains an explicit `;`.
 ```
 Statement     = BlockDecl | SimpleStmt | ReturnStmt | BreakStmt
               | ContinueStmt | DeferStmt | Block | IfStmt | ForStmt
-              | SwitchStmt ;              (* DeferStmt — §14.13; Draft *)
+              | SwitchStmt ;              (* DeferStmt — §14.13 *)
 BlockDecl     = VarDecl | ConstDecl ;                      (* §14.7 *)
 SimpleStmt    = EmptyStmt | ExpressionStmt | Assignment
               | ShortVarDecl | IncDecStmt ;
@@ -51,8 +51,9 @@ Block = "{" { Statement ";" } "}" ;
 A block introduces a **new lexical scope** (`decl.scope.block`, §9.5); names
 declared in it are visible from their declaration to the end of the block, and
 may shadow names from enclosing scopes. The trailing `;` before `}` is optional
-(and normally ASI-supplied). On exit, a block releases the managed locals it
-declared, in the reference-counting model of §18.
+(and normally ASI-supplied). On exit, a block runs the deferred blocks scheduled
+on it (§14.13) and then releases the managed locals it declared, in the
+reference-counting model of §18.
 
 `stmt.no-local-type` _(Constraint)_ — A `type` declaration is package-level only;
 writing one inside a function body is a parse error (§7.3, §9.6). Hence

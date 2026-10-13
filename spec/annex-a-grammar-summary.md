@@ -343,7 +343,7 @@ compound_assign_op = "+=" | "-=" | "*=" | "/=" | "%="
 IncDecStmt    = Expression ( "++" | "--" ) ;
 
 ReturnStmt    = "return" [ ExpressionList ] ;
-DeferStmt     = "defer" Expression ;   (* operand must be a call — §14.13 *)
+DeferStmt     = "defer" ( Block | Expression ) ;   (* Expression: the transitional call shorthand — §14.13 *)
 BreakStmt     = "break" ;
 ContinueStmt  = "continue" ;
 
