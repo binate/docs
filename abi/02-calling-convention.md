@@ -236,8 +236,10 @@ the platform's small-composite rule:
 
 - Each non-float field fills `ceil(SizeOf/W)` consecutive GP **return**
   registers in field order (no even-pair bump on arm32; a 64-bit field takes
-  a consecutive pair). Each float-scalar field fills the next float return
-  register. The two cursors are independent. Zero-size fields consume
+  a consecutive pair). A struct or array field is a non-float field even when
+  every member is a float: an HFA field takes GP words, although a lone HFA
+  result returns in float registers (§2.6). Each float-scalar field fills the
+  next float return register. The two cursors are independent. Zero-size fields consume
   nothing. Sub-word fields are stored back at their natural size at the
   tuple's field offset, so neighbors sharing a word are not clobbered.
 - The tuple goes **sret** (same mechanics as §2.6) exactly when either file
