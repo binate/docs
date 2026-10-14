@@ -90,7 +90,10 @@ per-symbol visibility keywords (no `pub`), and — unlike Go — **identifier
 capitalization carries no visibility meaning**. A symbol declared only in a `.bn`
 is **package-private**: usable within its own package's `.bn` files (not in its
 `.bni`, `pkg.bni.self-contained`), but a cross-package reference to it
-is a compile error ("undefined").
+is a compile error ("undefined"). This holds for methods too: a method only a
+`.bn` declares is package-private even on a type the `.bni` exports — another
+package cannot call it, take it as a method value, or bind it in an `impl` —
+and only an `impl` in that `.bn` may bind it.
 
 > _Note._ Capitalizing exported names (and lower-casing private ones) is the
 > recommended **style**, but it is a convention only — the compiler determines
@@ -153,11 +156,14 @@ the `.bni` and the `.bn` belong to the same package: a use of it there is
 undefined (a message of the form `undefined: <name>`) or, if the name is also
 predeclared, denotes the predeclared entity.
 
-> _Note._ This rule governs names resolved in scope: identifiers, and the
-> package in a package-qualified selector `pkg.name` (§13.1 `expr.primary`). It
-> does not govern which field or method a selector `x.name` reaches (§13.8
-> `expr.member`), nor what a type the `.bni` declares opaque permits there
-> (§7.12).
+A selector `x.name` in a `.bni` declaration (§13.8 `expr.member`) reaches what it
+reaches from another package: only a method the `.bni` declares (§16.4
+`pkg.export`), and no field of a type the `.bni` declares opaque; nor may the
+`.bni` form a value of, or take the size of, such a type (§7.12). Likewise an
+`impl` in the `.bni` binds only methods the `.bni` declares. A `.bni`'s generic
+bodies are monomorphized in its importers (§16.5.1), and its `impl`s are checked
+by importers that read only the `.bni`, so they see the package exactly as an
+importer does.
 
 ### 16.5.1 Generic bodies travel in the `.bni`
 
@@ -173,7 +179,8 @@ must ship that generic's body in its `.bni`.
 generic type, whose definition the `.bni` carries is not defined again in the
 `.bn`: a second definition of the same name (for a method, on the same receiver
 base type) is a compile error (a message of the form `generic function <name> is
-defined in both the .bni and the .bn`).
+defined in both the .bni and the .bn`). One that only the `.bn` defines is
+package-private (§16.4 `pkg.export`).
 
 ### 16.5.2 Whole-package re-export (`expose`)
 

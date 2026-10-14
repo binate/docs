@@ -550,7 +550,8 @@ error.)
 
 `type.opaque.field-rejection` — Direct field access on a value of opaque type is
 **rejected** ("cannot access field on this type"), even where the field exists in
-the defining package — the cross-package encapsulation guarantee. (A
+the defining package — the cross-package encapsulation guarantee — and in that
+package's own `.bni`, which importers read (§16.5 `pkg.bni.self-contained`). (A
 named-distinct type with a *concrete* underlying struct is peeled and its fields
 *are* reachable; §7.3. The distinction is whether the underlying is visible.)
 
