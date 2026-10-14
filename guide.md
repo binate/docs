@@ -472,13 +472,11 @@ var v Vec[@[]char]
 - **`defer { … }`** — not Go's `defer f(x)`: the block is required, nothing in it
   is evaluated at the defer statement, and it runs when the **enclosing block**
   exits (fall-through, `break`, `continue` or `return`), reading the variables as
-  they are then; LIFO within a block, innermost block first. (During a transition
-  the Go spelling `defer f(x)` is still accepted, but it means `defer { f(x) }` —
-  `x` is read at the exit, not at the defer.) A defer in an `if` branch runs when
-  that branch's block ends; a cleanup that must wait for the function's exit goes
-  at function level, with the condition inside it. A defer in a loop body runs
-  every iteration. Deferred blocks **never run on a panic** (aborts don't unwind;
-  no `recover`).
+  they are then; LIFO within a block, innermost block first. A defer in an `if`
+  branch runs when that branch's block ends; a cleanup that must wait for the
+  function's exit goes at function level, with the condition inside it. A defer
+  in a loop body runs every iteration. Deferred blocks **never run on a panic**
+  (aborts don't unwind; no `recover`).
 
 ## 12. Expressions and arithmetic: defined, strict
 

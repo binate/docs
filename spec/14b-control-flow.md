@@ -223,7 +223,7 @@ statement is directly a statement of: a function or function-literal body, a
 body, or another deferred block.
 
 ```
-DeferStmt = "defer" ( Block | Expression ) ;
+DeferStmt = "defer" Block ;
 ```
 
 Executing a defer statement evaluates **nothing**: the deferred block is ordinary
@@ -247,16 +247,8 @@ never a terminating statement (§14.14), even when its block ends in `panic(…)
 > also sets the construct apart from Go's `defer f(x)`, which evaluates `f` and `x`
 > at the defer statement.
 
-> _Transitional._ The shorthand `defer <call>` (the `Expression` form) is still
-> accepted and stands for `defer { <call> }`: its arguments are read when the block
-> runs, not at the defer statement. Its operand must be a call (`stmt.defer.call`).
-> It will be removed.
-
-`stmt.defer.call` _(Constraint)_ — The operand of the shorthand `defer <call>`
-shall be a **call**: a function call, a method call, or a function-value call
-(including a call of the predeclared `panic`). A non-call expression, or a
-builtin-operation keyword form (`make(…)`, `cast(…)`, …, §15.1 — special call
-shapes, not calls), is rejected.
+> _Note._ The block is required: `defer f()`, without one, is a syntax error;
+> `defer { f() }` is the defer statement it means.
 
 `stmt.defer.block` _(Constraint)_ — A deferred block shall not contain a `return`
 statement, nor a `break` or `continue` that would transfer control out of the
