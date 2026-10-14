@@ -274,7 +274,9 @@ to it. An interactive interpreter checks an instantiation when an input names it
 
 `gen.satisfy` _(Constraint)_ — A type argument `T` satisfies its constraint
 interface `I` iff a matching **`impl T : I`** is **visible** at the instantiation
-site (nominal and explicit — no duck typing; §11.3). Satisfaction consults `I`'s
+site (nominal and explicit — no duck typing; §11.3), as at an interface-value
+construction site (§11.8 `iface.construct.visible-impl`: an `impl` only a
+package's `.bn` declares is visible only there). Satisfaction consults `I`'s
 **full** method set, including methods inherited from extended interfaces (§11.6).
 The method-shape match was verified when the `impl` was declared; instantiation
 only confirms a visible `impl` exists. A missing `impl` is an instantiation error

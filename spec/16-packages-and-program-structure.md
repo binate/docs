@@ -93,7 +93,11 @@ is **package-private**: usable within its own package's `.bn` files (not in its
 is a compile error ("undefined"). This holds for methods too: a method only a
 `.bn` declares is package-private even on a type the `.bni` exports — another
 package cannot call it, take it as a method value, or bind it in an `impl` —
-and only an `impl` in that `.bn` may bind it.
+and only an `impl` in that `.bn` may bind it. So does an `impl` only a `.bn`
+declares: it makes its receiver satisfy its interfaces — to construct an
+interface value (§11.8 `iface.construct.visible-impl`) or to satisfy a
+constraint (§12.4 `gen.satisfy`) — only in that package's `.bn` files, not in
+another package or in the package's own `.bni`.
 
 > _Note._ Capitalizing exported names (and lower-casing private ones) is the
 > recommended **style**, but it is a convention only — the compiler determines
@@ -130,9 +134,9 @@ meaning at the boundary:
   body** in the `.bni` (§16.5.1), and is not defined again in the `.bn`
   (`pkg.bni.generic.once`).
 - **`interface`** — declared in the `.bni` as part of the surface. An **`impl`**
-  may also appear in a `.bni`, but a type's `impl` is commonly supplied by a `.bn`
-  (often in a *different* package from the interface — the impl-split pattern,
-  Ch.11).
+  may also appear in a `.bni`, where it is part of the surface; one only a `.bn`
+  declares is package-private (`pkg.export`). Either may be in a *different*
+  package from the interface (the impl-split pattern, Ch.11).
 
 `pkg.bni.consistency` _(Constraint)_ — The `.bn` definition must **match** its
 `.bni` declaration. A return-type or extern-var-type mismatch between the two is a
@@ -160,10 +164,11 @@ A selector `x.name` in a `.bni` declaration (§13.8 `expr.member`) reaches what 
 reaches from another package: only a method the `.bni` declares (§16.4
 `pkg.export`), and no field of a type the `.bni` declares opaque; nor may the
 `.bni` form a value of, or take the size of, such a type (§7.12). Likewise an
-`impl` in the `.bni` binds only methods the `.bni` declares. A `.bni`'s generic
-bodies are monomorphized in its importers (§16.5.1), and its `impl`s are checked
-by importers that read only the `.bni`, so they see the package exactly as an
-importer does.
+`impl` in the `.bni` binds only methods the `.bni` declares, and an `impl` only
+the `.bn` declares makes no type satisfy an interface there (§16.4
+`pkg.export`). A `.bni`'s generic bodies are monomorphized in its importers
+(§16.5.1), and its `impl`s are checked by importers that read only the `.bni`,
+so they see the package exactly as an importer does.
 
 ### 16.5.1 Generic bodies travel in the `.bni`
 

@@ -235,7 +235,10 @@ must have been declared in `R`'s defining package.
 
 `iface.construct.visible-impl` _(Constraint)_ — At each interface-value
 construction site the checker requires a **visible** matching `impl` (in the
-current package or transitively imported); otherwise it is a compile error.
+current package or transitively imported); otherwise it is a compile error. An
+`impl` only a package's `.bn` declares is package-private (§16.4 `pkg.export`):
+it is visible only in that package's `.bn` files, not in another package or in
+the package's own `.bni` (§16.5 `pkg.bni.self-contained`).
 
 ## 11.9 The `Self` type
 
