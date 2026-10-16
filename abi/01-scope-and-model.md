@@ -82,7 +82,7 @@ convention**, which Ch.2 then parameterizes:
 | aarch64 linux (ELF) | AAPCS64 | 8 | |
 | aarch64 darwin (Mach-O) | Apple arm64 (DarwinPCS) | 8 | differs from AAPCS64 only in variadic placement and natural-size narrow stack args (§2.4, §2.8) |
 | arm32 baremetal (ELF) | AAPCS (EABI), soft-float | 4 | strict alignment; AEABI helper calls (§2.10) |
-| arm32 linux (ELF) | AAPCS-VFP, hard-float | 4 | VFP argument bank (§2.9); deliberate HFA divergence (§4.7) |
+| arm32 linux (ELF) | AAPCS-VFP, hard-float | 4 | VFP argument bank, HFAs included (§2.9) |
 
 The word size `W` is the language spec's `TargetInfo.PointerSize`
 (§7.13.1 `type.layout.target-info`); all layout inputs to this spec —

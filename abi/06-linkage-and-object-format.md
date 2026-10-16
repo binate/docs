@@ -88,7 +88,7 @@ off the symbol type), and arm32 objects carry the ARM mapping symbols
   target cannot be preempted); one with an addend, and every other
   PC-relative reference, is `PC32`. A shared-object target would need the
   preemptible-symbol rules and is out of scope.
-- **C globals** (`__c_global`, §4.8): on PIE links the address is loaded
+- **C globals** (`__c_global`, §4.7): on PIE links the address is loaded
   GOT-indirect (x86-64 `GOTPCREL`; aarch64 ADRP+LDR GOT pair); on the
   native arm32 backend's non-PIE links it is materialized with a MOVW/MOVT
   absolute pair and **no GOT**.

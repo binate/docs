@@ -15,8 +15,8 @@ unmodified platform C convention** (§1.5) applies. Where the internal
 convention deviates from it (§2.1), the boundary adapts: outbound `__c_call`
 sites reclassify per the platform rules (§4.3), and inbound C-visible entries
 normalize before control reaches internal code (§4.4–4.6). C code never
-observes the internal deviations — subject to the recorded gaps and the one
-deliberate deviation (§4.4 _Status_, §4.7).
+observes the internal deviations — subject to the recorded gaps (§4.4
+_Status_).
 
 ## 4.2 The C type mapping
 
@@ -60,10 +60,8 @@ is a true C-variadic call (§2.8, including its no-default-promotions rule).
 The declared result may be **any type with a defined C-ABI layout**, or
 `"void"` (language spec `pkg.ccall`): an aggregate result is returned per
 the platform C ABI — a hidden sret buffer above the byval cutoff
-(§7.13.11), register-coerced below it. Opaque-by-value types are rejected,
-and on **arm32 hard-float** a homogeneous-float aggregate return is
-rejected (the platform returns it in VFP registers, which the internal
-convention does not use — §4.7; use a pointer out-parameter there).
+(§7.13.11), register-coerced below it, an HFA in the float registers on
+aarch64 and arm32 hard-float (§2.6). Opaque-by-value types are rejected.
 
 ## 4.4 Inbound: `#[c_export]`
 
@@ -123,18 +121,7 @@ declares and emits the extension attributes; the native backends pass
 canonical full words). Variadic-tail arguments are instead governed by the
 no-promotions rule (§2.8): the programmer passes pre-promoted values.
 
-## 4.7 Known deliberate deviation: arm32 hard-float HFAs
-
-`abi.cabi.hfa-arm32` — On arm32-linux (AAPCS-VFP), a homogeneous
-float-aggregate struct/array is **not** passed or returned in the VFP bank as
-the platform C ABI specifies; it uses the soft-style path (GP-coerced
-argument, size-based sret return) on both the native and LLVM sides.
-Binate↔Binate calls are self-consistent, but a C boundary crossing such a
-type on arm32-linux mis-matches a conforming C peer. This is a deliberate,
-recorded deferral (C-interop fidelity only); until it is lifted, do not pass
-HFA types across the arm32-linux C boundary by value.
-
-## 4.8 `__c_global`
+## 4.7 `__c_global`
 
 `abi.cabi.cglobal` — `__c_global("sym", T)` is an **address materialization,
 not a call**: the verbatim symbol becomes an undefined **data** external

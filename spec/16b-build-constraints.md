@@ -184,11 +184,6 @@ void-returning C function. An aggregate is returned per the platform C ABI: a
 hidden **sret** buffer above the size cutoff (§7.13.11), **register-coerced** below
 it (matching Binate's own aggregate-return convention, which is pinned to the C
 cutoff). The only type that **cannot** be returned is an **opaque-by-value** type.
-One exception: on **arm32 hard-float**, a homogeneous-float *aggregate* return
-(a struct/array of 1–4 same-type floats) is rejected — a hard-float C callee
-returns it in VFP registers (S0…/D0…), which Binate's internal arm32 return
-convention does not yet match; return such a value through a pointer out-parameter
-there (a bare `float`/`double` scalar return is fine — it rides S0/D0 correctly).
 `__c_call` is **compiled-mode only**; the bytecode VM does not perform FFI.
 
 `pkg.cglobal` — Reading or writing a **C global variable** is done through the

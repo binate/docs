@@ -24,14 +24,10 @@ deviations, each chosen to match what the LLVM backend emits (§1.2):
    register-count rule that exceeds the platform C ABI (§2.7) — C has no
    multi-return, so this layer is Binate-defined;
 3. sub-word scalars travel in **canonical extended form** with a two-sided
-   defensive discipline (§2.3), stronger than the platform ABIs require;
-4. on arm32-linux the base convention's (AAPCS-VFP) **HFA** argument/return
-   rules are deliberately **not** applied — float-containing aggregates ride
-   the soft-style path (§2.5, §4.7).
+   defensive discipline (§2.3), stronger than the platform ABIs require.
 
-C code is insulated from deviations (1)–(3) by the C-boundary re-adaptation
-(Ch.4, subject to its recorded gaps); deviation (4) is C-observable and
-recorded as such (§4.7).
+C code is insulated from these deviations by the C-boundary re-adaptation
+(Ch.4, subject to its recorded gaps).
 
 ## 2.2 Type classes
 
@@ -166,8 +162,13 @@ platform's boundary behavior:
 - **aarch64 HFA**: an ABI-named struct or array (§2.2) folding to 1–4
   same-width float members is passed in consecutive D registers, all-or-nothing (on overflow
   the whole aggregate goes to the stack and the float file closes). An HFA is
-  exempt from the >16-byte rule below. (arm32 hard-float deliberately does
-  **not** apply the HFA rule — §4.7.)
+  exempt from the >16-byte rule below.
+- **arm32 hard-float HFA**: an ABI-named struct or array folding to 1–4
+  same-width float members is one candidate of the VFP back-fill allocator
+  (§2.9) — consecutive S registers for `float32` members, D registers for
+  `float64` — never split (on overflow the whole aggregate goes to the stack
+  and the bank closes), and takes no GP register. It is exempt from the
+  >16-byte rule below. In a variadic call it is an ordinary aggregate (§2.8).
 
 `abi.cc.agg.large` — A by-value aggregate **larger than 16 bytes** (notably
 the 32-byte managed-slice on 64-bit targets, and any large struct) is passed as
@@ -202,8 +203,10 @@ sret (below) returns packed by value: bytes 0..W−1 in the first GP return
 register, bytes W..2W−1 in the second (x86-64: RAX then RDX; aarch64: X0 then
 X1; arm32: R0, ≤4 bytes only). On x86-64, an aggregate with SSE eightbytes
 returns by eightbyte class (SSE eightbytes in XMM0/XMM1, INTEGER in RAX/RDX,
-independent cursors). On aarch64, an HFA result returns in D0..D3 regardless
-of size and is never sret.
+independent cursors). An HFA result (§2.5) returns in D0..D3 on aarch64 and in
+S0..S3 / D0..D3 on arm32 hard-float, regardless of size, and is never sret —
+except from an arm32 variadic call, which returns it like any other aggregate
+(§2.8).
 
 `abi.cc.return.sret` — A single **aggregate-kind** result larger than
 **16 bytes** (64-bit targets) or **4 bytes** (ILP32) is returned through a
@@ -274,8 +277,10 @@ C-variadic call, with the platform rules:
 - **aarch64 darwin**: every variadic argument, floats included, goes to the
   stack in 8-byte slots; **aarch64 linux** passes variadic arguments exactly
   like fixed ones.
-- **arm32 hard-float**: variadic floats use the base (soft) standard — GP
-  registers/stack, never the VFP bank.
+- **arm32 hard-float**: a variadic call uses the base (soft) standard for
+  every argument — the fixed ones too — and for the result: floats and HFAs
+  ride GP registers/stack, never the VFP bank, and a float or HFA result
+  returns in R0 / R0:R1 (an HFA over 4 bytes through sret).
 
 No C **default argument promotions** are performed on a variadic tail: each
 argument crosses at its own declared type. A variadic-tail argument shall
@@ -291,9 +296,13 @@ the AAPCS co-processor-register-candidate rule, **not** a monotonic cursor: a
 `float32` takes the lowest free single S slot (back-filling holes left by
 `float64` even-alignment), a `float64` the lowest free even S pair; the first
 float argument that spills to the stack closes the bank for all later float
-arguments. A single float result returns in S0/D0; float multi-return fields
-use D0–D3 via the same allocator. Float-containing aggregates deliberately do
-**not** use the VFP bank (§4.7).
+arguments. A homogeneous float aggregate (§2.5) is one candidate of the same
+allocator: `n` `float32` members take the lowest run of `n` free S slots, `n`
+`float64` members the lowest run of `n` free D registers (an even S base); when
+no run fits, the whole aggregate goes to the stack and closes the bank. A
+single float result returns in S0/D0, an HFA result in S0..S3 / D0..D3; float
+multi-return fields use D0–D3 via the same allocator (an HFA field takes GP
+words, §2.7). Any other float-containing aggregate is a GP aggregate.
 
 ## 2.10 arm32 AEABI helper calls
 
