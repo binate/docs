@@ -253,8 +253,10 @@ for the anonymous type. Anonymous types may not be method receivers (§7.3).
 ## 7.5 Arrays
 
 `type.array.form` — An array type is `[N]T`, with length `N` and element type
-`T`. The length `N` shall be a compile-time-constant non-negative integer (a
-negative or non-constant length is rejected). Bare `[]T` is not an array — it is
+`T`. The length `N` shall be a compile-time-constant non-negative integer that fits
+the target's `int` (`len` of an array is an `int`, §15.4; a negative, non-constant,
+or larger length is rejected), and the array's size is bounded too (§7.13.1
+`type.layout.max-size`). Bare `[]T` is not an array — it is
 rejected; raw slices are written `*[]T` (§7.6).
 
 `type.array.value` — Arrays are value types: copied on assignment and parameter

@@ -97,6 +97,7 @@ magnitudes are **parameterized** by `TargetInfo`.
 | **Symbol decoration** / name mangling (observable in consequence; the scheme is informative) | impl-defined | §16.6 `pkg.identity`; Annex B |
 | **Byte order** (endianness) of multi-byte scalars (currently little-endian; `TargetInfo` has no endianness field yet) | impl-defined (modes must agree) | §7.13.12 `type.layout.byte-order` |
 | Maximum **length of a chain of generic instantiations**, each named from the previous one (an implementation limit, `conf.implementation.limits`; at least 128) | impl-defined (modes must agree) | §12.3 `gen.mono.instances` |
+| Maximum **combined size** of a function's results, and of the values a function literal captures, each kept in one record (an implementation limit, `conf.implementation.limits`; at least `2^(8W−1) − 1` bytes, the largest type, §7.13.1 `type.layout.max-size`) | impl-defined (modes must agree) | §10 `func.return.count`; §10.10 `func.closure.capture` |
 
 `behavior.impl-defined.endianness` — The **byte order** (endianness) of
 multi-byte scalars is **implementation-defined**: an implementation **shall** fix

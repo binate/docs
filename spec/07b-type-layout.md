@@ -46,6 +46,15 @@ TargetInfo {
 defined once over this description (the single authoritative layout used by every
 backend, the bytecode interpreter, and the runtime). Below, `W` denotes `PointerSize` (the word size; `IntSize == W`).
 
+`type.layout.max-size` — A type's size shall not exceed the maximum value of the
+target's `int`, `2^(8W−1) − 1` bytes (`2^31 − 1` on a 32-bit target, `2^63 − 1` on
+a 64-bit one): offsets and lengths within an object are `int` values, and `len` of
+a byte array is its size (C implementations bound an object by `PTRDIFF_MAX` for the
+same reason). A program that forms a larger type — a declared type, a variable's,
+field's, element's or pointee's type, or a `sizeof` / `alignof` operand — is
+rejected (compile-time error). The bound is target-parameterized: a type may be
+valid for a 64-bit target and too large for a 32-bit one.
+
 ## 7.13.2 Scalars
 
 `type.layout.scalar` — Scalar sizes (bytes): `bool` = 1; `int`/`uint` = `W`
