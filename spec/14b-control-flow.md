@@ -145,6 +145,10 @@ matches. Switch **exhaustiveness is not checked**, there is **no duplicate-case
 check**, and `default` is not required (except as it bears on the
 terminating-statement analysis, §14.14).
 
+`stmt.switch.default.single` _(Constraint)_ — A switch has **at most one**
+`default` clause; a second is rejected, in an expression switch and in a type
+switch alike.
+
 `stmt.switch.tagless-bool` _(Constraint)_ — The case expressions of a **tagless**
 switch must be **boolean** — each case expression is itself the condition (the
 `switch true` form), so `switch { case 3: … }` is rejected (`3` is not a boolean
@@ -168,8 +172,9 @@ TypeCaseClause = ( "case" TypeList | "default" ) ":" { Statement ";" } ;
 Each `case` lists **types** (each with a `*`/`@`/value recovery kind), not
 expressions; a concrete-type case matches by exact dynamic-type identity and an
 interface-type case by explicit `impl`. There is **no fallthrough**
-(`stmt.switch.no-fallthrough`) and the first match wins; `default` runs when no
-case matches and also catches an **unset** scrutinee. There is **no `case nil`**
+(`stmt.switch.no-fallthrough`) and the first match wins; `default` — at most one
+(`stmt.switch.default.single`) — runs when no case matches and also catches an
+**unset** scrutinee. There is **no `case nil`**
 — interface values are not nil-comparable (test with `present`, §15.5). The
 optional `v :=` binds the recovered value **per case**. The scrutinee and target
 rules, the recovery-kind legality, and the typed-nil / unset semantics are

@@ -517,7 +517,8 @@ the scrutinee (a `*I` switch admits no `@T` case). A concrete-type case matches 
 exact dynamic-type identity (a slice case by structural identity); an
 interface-type case matches by satisfaction — the same criteria as `iface.assert`.
 The **first** matching case runs; there is **no fallthrough** and no duplicate-case
-check (§14.10 `stmt.switch.no-fallthrough`). Because interface cases can **overlap**
+check (§14.10 `stmt.switch.no-fallthrough`), and at most one `default` clause
+(§14.10 `stmt.switch.default.single`). Because interface cases can **overlap**
 (a type may satisfy several) and the first match wins, order cases
 **most-specific first**; no reachability diagnostic is performed. `default` runs
 when none matches and also catches an **unset** scrutinee (`iface.assert.absent`).
