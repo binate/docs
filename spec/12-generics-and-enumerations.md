@@ -219,8 +219,10 @@ fact that depends on a type argument:
   `bit_cast` requires (§8.6);
 - a use of a type in which a type parameter occurs that requires its layout — a
   by-value variable, field, parameter or result, `make` or `make_slice` — which the
-  opaque-type gate restricts (§7.12 `type.opaque.builtin-rejection`, §15.2
-  `builtin.opaque-gate`);
+  opaque-type gate restricts (§7.12 `type.opaque.by-value`,
+  `type.opaque.builtin-rejection`, §15.2 `builtin.opaque-gate`), and a pointer or
+  function value type in which one occurs, which the rules on forming a type
+  restrict (§7.12 `type.opaque.pointer-to-embedding`, `type.opaque.signature`);
 - the validity of a `cast`, `bit_cast` or `unsafe_cast` whose source or target type
   is one in which a type parameter occurs (§8.9 `conv.typeparam`), and of a type
   assertion or type-switch case whose target names a type parameter (§11.12

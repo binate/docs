@@ -574,6 +574,39 @@ the field-access restriction above; the gate peels named-distinct, alias, and
 §15.2 (`builtin.opaque-gate`). Opaque export is for non-generic types only (§12
 `gen.decl.definition`).
 
+`type.opaque.by-value` _(Constraint)_ — A type is **opaque** where its layout is
+not available: a pure forward declaration, or an opaque export seen from outside
+its package's `.bn` (from another package, or through the package's own `.bni`).
+No value of an opaque type can be formed there, so a type that holds one **by
+value** — the opaque type itself, or an array, a slice or a struct whose element
+or field does, at any depth — is rejected wherever such a value would be needed
+or such a type is declared: a variable, a field, an element, a parameter, a
+result, a type definition or alias, a composite literal, a dereference, an index
+read, a `cast` or `unsafe_cast` target. (A slice needs its element's size to be
+indexed.) A distinct type over an opaque type (`type H Foo`) is itself opaque,
+not rejected. An opaque type is held through `*Foo` or `@Foo`
+(`type.opaque.handles`).
+
+`type.opaque.pointer-to-embedding` _(Constraint)_ — A pointer or handle to a type
+that holds an opaque type by value without being opaque itself (`*([2]Foo)`,
+`@struct { f Foo }`) is rejected where it is written — as a type, as a part of
+one (an element, a field, a pointee) at any depth, or as a builtin's type
+operand: no value of its pointee can exist. `*Foo` and `@Foo`, whose pointee is
+the opaque type itself, stay first-class. A generic instance's structure is
+judged as its generic declares it: only a type with no definition anywhere
+counts as opaque in it.
+
+`type.opaque.signature` _(Constraint)_ — A function signature is held to these
+rules wherever it is written, as a function declaration's is: a parameter or
+result of a function value type (`*func(Foo) int`, `@func() [2]Foo`,
+`*func(*([2]Foo))`) — at any depth of a type, or as a builtin's type operand —
+or of an interface method, that a declaration's would be rejected for, is
+rejected there. A generic declaration is judged per instance (§12
+`gen.mono.check`). In a generic instance's structure and in the signatures in
+its body, only a type with no definition anywhere counts as opaque; an
+instantiated interface's methods, and the other rules in an instance's body, are
+judged as code written where its generic is.
+
 ## 7.13 Type Layout and Representation
 
 The memory layout of every type — sizes, alignment, field offsets, and the
