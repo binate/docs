@@ -82,8 +82,11 @@ boundary rules:
 - `make_slice(T, 0)` produces the **no-backing** empty slice — the canonical
   `{nil, 0, nil, 0}` (the length-0 ⟹ no-backing invariant, §7.7); `present` of it
   is false (§15.5).
-- A **negative** `n` is a defined **runtime trap** ("runtime error: make_slice
-  with negative length"), not a silently nil-backed negative-length slice (§17).
+- An **out-of-range** `n` — negative, too large for the target's `int`, or of more
+  elements than fit an `int` of bytes (the elements' total size does not fit the
+  target's `int`, §7.13.1 `type.layout.max-size`) — is a defined **runtime trap**
+  ("runtime error: make_slice length out of range"), not a slice of a wrapped length
+  or a nil-backed negative-length slice (§17).
 
 `builtin.box` — `box(v)` allocates a fresh managed copy of the value `v` and
 returns `@T`, where `T` is the default type of `v` (an untyped literal is

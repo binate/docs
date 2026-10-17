@@ -200,7 +200,7 @@ code (§17.4, §21.4). The set (normative home §17.5 `prog.panic`):
 | Integer division / remainder by **zero** | §13.4 `expr.arith.divzero` |
 | Signed **`MIN / -1`** overflow | §13.4 `expr.arith.minover` |
 | **Negative** shift count (runtime) | §13.5 `expr.shift.negative` |
-| `make_slice` with a **negative** length | §15.2 `builtin.make-slice` |
+| `make_slice` with a length **out of range** (negative, past the target's `int`, or a byte size past it) | §15.2 `builtin.make-slice` |
 | Dispatch through a **nil interface value** — defined abort; observable *form* is mode/target-dependent (§21.5) | §11.11 `iface.dispatch.nil` |
 | `panic(msg)` — defined abort; **currently realized inconsistently** (§21.9) | §15.7 `builtin.panic` |
 
