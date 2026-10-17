@@ -55,7 +55,12 @@ statement followed by `;` is the C-style form; an identifier list followed by
 `in` is the range form; otherwise the clause is a while-style condition. In the
 C-style and while-style forms the condition, when present, must be **`bool`**
 (`stmt.for.cond`); the init and post slots are simple statements (§14.1) and may
-be empty.
+be empty (the post not a short variable declaration: `stmt.for.post`).
+
+`stmt.for.post` _(Constraint)_ — A C-style loop's post statement shall not be a
+short variable declaration (`for i := 0; i < n; q := i { … }` is rejected): a variable
+it declared would exist only from the second iteration on, after the body that would
+use it had run once.
 
 `stmt.for.scope` — A `for` statement is a scope of its own (§9.5): a variable its
 C-style init statement declares is one variable for the whole loop, visible in the
