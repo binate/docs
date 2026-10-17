@@ -337,8 +337,8 @@ query, not an implicit one.
 (`*I`/`@I`, including `*any`/`@any`; asserting a non-interface value is an error)
 and names a target — either a **nameable** type with a mandatory recovery kind, or
 a **slice** type (`iface.assert.kind`, `iface.assert.slice`; a func / array /
-struct / `Self` target is a compile error). The **dynamic type** of `x` is the concrete named type recorded when `x`
-was constructed (§11.4): the boxed value's type with its `*`/`@` and any handle
+struct / `Self` target is a compile error). The **dynamic type** of `x` is the type recorded when `x`
+was constructed (§11.4) — a named type, or a structural one for a name-less box (§7.13.14): the boxed value's type with its `*`/`@` and any handle
 `readonly` stripped and aliases peeled, but **named-distinct wrappers preserved** (a
 boxed `Celsius` records `Celsius`, not `float64`; §7.3) — together with whether the
 boxed **object** is `readonly` (`iface.assert.readonly`). A target matches as follows:

@@ -336,16 +336,21 @@ its contents and the cross-mode agreement of every assertion result. Interface
 
 > _Note (name-less types; Provisional — implemented,
 > `proposal-slice-type-identity`)._ A type with **no nominal identity** — a slice,
-> or any other unnamed composite (unnamed struct / array / function type) — can
+> any other unnamed composite (unnamed struct / array / function type), a pointer, or
+> an interface value (the pointee of `&g` for `g @Getter`) — can
 > still be **boxed** into `any` (`conv.assignable` case 7), so it too needs a
 > well-formed any-block, and boxing one produces a **valid** `TypeInfo` (not a
 > half-built box). **Slices** carry a **distinct structural** `TypeInfo` per slice
 > spelling — keyed on `{ managed | raw, element-readonly?, element-type }`, so
 > `@[]char` and `*[]int` compare unequal — the identity behind the slice assertion
-> targets of §11.12 `iface.assert.slice`. The **other** unnamed composites
-> (struct / array / function) carry an opaque record: no assertion target can name
-> them (§11.12 `iface.assert`), so a concrete assertion over such a box is a
-> **guaranteed miss** that falls to `default`, never a crash. The record **layout
+> targets of §11.12 `iface.assert.slice`. The **other** name-less types (struct /
+> array / function, pointer, interface value) carry an opaque record: no assertion
+> target can name them (§11.12 `iface.assert`), so a concrete assertion over such a
+> box is a **guaranteed miss** that falls to `default`, never a crash — and an
+> interface target misses an interface-value dynamic type too (`.(*Getter)` names the
+> interface, not the boxed `*Getter` value; only `*any` / `@any` matches). A named
+> wrapper recovers one (`type GetterRef *Getter`, boxed by its address, asserted
+> `.(*GetterRef)`). The record **layout
 > is unchanged** in every case: a slice's `name` field is its structural spelling,
 > its destructor the slice's element-drop.
 
