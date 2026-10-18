@@ -1,6 +1,6 @@
 # 12. Generics and Enumerations
 
-> **Status:** mixed · **Maturity:** language rules Stable (v1 scope), including methods and impls on generic types (§12.1 `gen.method.generic-recv` / `gen.impl.generic-recv`); `gen.satisfy` partly unenforced — see the §12.4 gap (a generic alias's own constraint, at some declaration sites)  
+> **Status:** mixed · **Maturity:** language rules Stable (v1 scope), including methods and impls on generic types (§12.1 `gen.method.generic-recv` / `gen.impl.generic-recv`)  
 > **Rule-ID prefix:** `gen`
 
 This chapter covers **generics** — type-parameterized functions, structs, and
@@ -276,13 +276,6 @@ package's `.bn` declares is visible only there). Satisfaction consults `I`'s
 The method-shape match was verified when the `impl` was declared; instantiation
 only confirms a visible `impl` exists. A missing `impl` is an instantiation error
 naming the missing satisfaction. (A `[T any]` parameter always satisfies; §12.1.)
-
-> _Open / known gap (MAJOR)._ The checker does not check a generic **alias**'s own
-> constraint, where it is stricter than its target's (`type O[T Orderable] = Box[T]`
-> over an unconstrained `Box`), at some declaration sites — for example a
-> non-generic interface's method signature: with `W` having no `impl W : Orderable`,
-> `interface I { m(o O[W]) }` is wrongly accepted, although `var o O[W]` in a
-> function body is rejected.
 
 > _Example._ `func sort[T Orderable](xs *[]T) { … xs[i].Compare(xs[j]) … }`
 > instantiated at `T = int` works because `pkg/builtins/lang` provides
