@@ -81,10 +81,10 @@ method-shape match (`iface.impl.coverage`) is verified **abstractly** at the `im
 declaration with the binders held abstract, exactly as for a non-generic impl;
 the constraints of the instantiations in its interface list are satisfied through
 the type's parameters' constraints, checked once at the `impl` declaration (§12.3
-`gen.mono.check`), while the type argument's satisfaction of the type's own
-constraints (`gen.satisfy`, §12.4) and the concrete `(Cursor[int],
-Iterator[int])` vtable are resolved **per monomorphized instantiation**. A
-**conditional** impl (an extra constraint beyond the type's own) and a
+`gen.mono.check`); an instantiation `Cursor[A]` is checked against the type's own
+constraints where it is written (`gen.satisfy`, §12.4), and the concrete
+`(Cursor[int], Iterator[int])` vtable is resolved per monomorphized instantiation.
+A **conditional** impl (an extra constraint beyond the type's own) and a
 **specific-instantiation** impl (concrete receiver arguments) are **both**
 disallowed (`gen.no-conditional-impls`, §12.4): the parameterized form is the
 single mechanism, so no impl-overlap can arise.
@@ -182,7 +182,11 @@ for a generic function, in its signature and body; for a generic struct, in its
 fields, in the signature and body of **every** method declared on it (whether or
 not the program calls it), and in each parameterized `impl` of it
 (`gen.impl.generic-recv`); for a generic interface, in its method signatures and
-the interfaces it extends. The set of instantiations a program names **shall be
+the interfaces it extends. Neither way names an instantiation whose type arguments
+contain `Self` (`Box[Self]` in an interface method signature): `Self` stands for
+each implementing type, whose own instantiation (`Box[P]`) its implementing method
+names (§11.9 `iface.self.constraint`). The set of instantiations a program
+names **shall be
 finite**: if an instantiation the program names names, directly or through other
 generics, instantiations of its own generic with ever-growing type arguments
 (`func f[T any]() { f[@T]() }`, `type L[T any] struct { next @L[@T] }`), the set
@@ -247,10 +251,10 @@ a violation is a compile-time error. In that check:
   type arguments are those at that root — the instantiation written in the program
   that the chain of instantiations started from; a type written in a generic's own
   declaration is judged where it is written;
-- an instantiation whose type arguments are built from the enclosing
-  declaration's type parameters satisfies its constraints through those
-  parameters' constraints (`gen.satisfy` is not re-established per
-  instantiation).
+- whether a type argument built from the declaration's type parameters (`g[T]`,
+  `g[W[T]]`, `g[*T]`) satisfies its constraint is not re-established: it was
+  decided at the declaration (§12.4 `gen.satisfy`), so `g[*T]` for a constrained
+  `g` is rejected there even if the generic is never instantiated.
 
 An instantiation named through several chains is checked for each. A generic of
 which the program names no instantiation is **not** checked for its dependent
@@ -276,15 +280,30 @@ to it. An interactive interpreter checks an instantiation when an input names it
 
 ## 12.4 Constraint satisfaction
 
-`gen.satisfy` _(Constraint)_ — A type argument `T` satisfies its constraint
-interface `I` iff a matching **`impl T : I`** is **visible** at the instantiation
-site (nominal and explicit — no duck typing; §11.3), as at an interface-value
-construction site (§11.8 `iface.construct.visible-impl`: an `impl` only a
-package's `.bn` declares is visible only there). Satisfaction consults `I`'s
-**full** method set, including methods inherited from extended interfaces (§11.6).
-The method-shape match was verified when the `impl` was declared; instantiation
-only confirms a visible `impl` exists. A missing `impl` is an instantiation error
-naming the missing satisfaction. (A `[T any]` parameter always satisfies; §12.1.)
+`gen.satisfy` _(Constraint)_ — A type argument `A` satisfies its constraint
+interface `I` (with the instantiation's type arguments substituted into `I`) iff it
+is:
+- a type with a matching **`impl A : I`**, or an `impl A : J` for a `J` that
+  extends `I` (§11.6 `iface.extend.transitive`), that is **visible** at the
+  instantiation site — nominal and explicit, no duck typing (§11.3) — as at an
+  interface-value construction site (§11.8 `iface.construct.visible-impl`: an
+  `impl` only a package's `.bn` declares is visible only there). A parameterized
+  `impl W[K] : J` (§12.1 `gen.impl.generic-recv`) is such an impl for every
+  `W[A₁, …]`, its binders bound to `W`'s type arguments; it is the only kind of
+  impl that can match a type built from type parameters or `Self`;
+- a type parameter of the enclosing generic declaration whose constraint is `I` or
+  extends `I`; or
+- `Self`, in an interface method signature, as §11.9 `iface.self.constraint`
+  provides.
+
+Satisfaction consults `I`'s **full** method set, including methods inherited from
+extended interfaces (§11.6). Every type argument satisfies `any` (§12.1). An
+`impl`'s coverage of `I`'s methods was verified where the `impl` was declared
+(§11.3 `iface.impl.coverage`); satisfaction only confirms the relation. A type
+argument that does not satisfy its constraint is a compile-time error naming the
+constraint it misses. Where the type argument is built from type parameters or
+`Self`, the error is reported at the declaration that writes it, whether or not
+that declaration is instantiated (§12.3).
 
 > _Example._ `func sort[T Orderable](xs *[]T) { … xs[i].Compare(xs[j]) … }`
 > instantiated at `T = int` works because `pkg/builtins/lang` provides

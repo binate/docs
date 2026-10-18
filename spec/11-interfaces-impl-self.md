@@ -266,6 +266,23 @@ substitute `Self` (§12). An interface value of such an interface may still be
 held, stored, and passed; only the `Self`-using method cannot be dispatched
 through it.
 
+`iface.self.constraint` _(Constraint)_ — Where `Self` itself is a type argument in
+a method signature of an interface `I` (`*Box[Self]`, for `type Box[T C]`), it
+satisfies the constraint `C` iff `I` is `C` or extends `C`, directly or
+transitively (§11.6) — as a type parameter whose constraint is `I` would (§12.4
+`gen.satisfy`). This is decided once, at the declaration of the interface that
+declares the method, and holds in every interface that inherits it. For a generic
+interface it is decided with the interface's type parameters abstract: in
+`interface G[U any] : Eq[U] { Put(b *B[Self]) int }`, with `interface Eq[T any]`
+and `type B[T Eq[int]]`, `Self` does not satisfy `Eq[int]`, not even for
+`G[int]`. A type built from `Self` is judged by `gen.satisfy` like any other:
+`W[Self]` satisfies `C` through a parameterized `impl W[K] : C`, and `*Self`
+satisfies no constraint but `any`.
+
+> _Note._ An implementing method spells each such instantiation with the type
+> `Self` stands for (`*Box[P]`; §11.3 `iface.impl.coverage`), and that
+> instantiation is checked where the method is declared, like any other (§12.4).
+
 ## 11.10 The primitive-impl carve-out and canonical interfaces
 
 `iface.canonical.carveout` — Exactly one package, **`pkg/builtins/lang`** (§20.1),
