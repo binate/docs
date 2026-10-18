@@ -612,11 +612,14 @@ declaration, a type parameter in them standing for no opaque type (§12
 interface, a use of a generic alias (whose target is as if written there) and a
 signature in a generic instance's structure judge only the parts that come from
 their type arguments, as where the call, the instance or the use is written
-(`type.opaque.pointer-to-embedding`). In an instance's body, the signatures and
-the structure of the instances it writes
-are judged as its generic declares them, where only a type with no definition
-anywhere counts as opaque, and the other rules as in code written where its
-generic is.
+(`type.opaque.pointer-to-embedding`). A method of a generic type is a generic
+declaration too: each instance of the type compiles its methods, whose
+signatures judge only the parts that come from the type arguments, as the
+instance's body does. In an instance's body, a type counts as opaque only if it
+is opaque both where its generic is written and where the instance is
+instantiated: an opaque export that a type argument carries is not opaque there
+when the instance is instantiated in that export's package's `.bn`, directly or
+through another instance so instantiated.
 
 ## 7.13 Type Layout and Representation
 
