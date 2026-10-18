@@ -595,19 +595,25 @@ operand: no value of its pointee can exist. `*Foo` and `@Foo`, whose pointee is
 the opaque type itself, stay first-class. A part of a generic instance's
 structure is judged where it is written: its generic's own parts — including the
 arguments of the instances its definition writes, except a type parameter in
-them, which stands for this use's argument — as the generic declares them, where
-only a type with no definition anywhere counts as opaque, and the parts that
-come from its type arguments as where the instance is written.
+them, which stands for this use's argument — at the generic's declaration,
+whether or not it is instantiated (§12 `gen.mono.check`), and the parts that
+come from its type arguments as where the instance is written. The type
+arguments are themselves types written there, held to this rule whether or not
+the instance uses them.
 
 `type.opaque.signature` _(Constraint)_ — A function signature is held to these
 rules wherever it is written, as a function declaration's is: a parameter or
 result of a function value type (`*func(Foo) int`, `@func() [2]Foo`,
 `*func(*([2]Foo))`) — at any depth of a type, or as a builtin's type operand —
 or of an interface method, that a declaration's would be rejected for, is
-rejected there. A generic declaration is judged per instance (§12
-`gen.mono.check`). In a generic instance's structure, a signature is judged as
-the instance's other parts are (`type.opaque.pointer-to-embedding`). In an
-instance's body, the signatures and the structure of the instances it writes
+rejected there. A generic declaration's own signatures are judged at the
+declaration, a type parameter in them standing for no opaque type (§12
+`gen.mono.check`); a call of a generic function, an instance of a generic
+interface, a use of a generic alias (whose target is as if written there) and a
+signature in a generic instance's structure judge only the parts that come from
+their type arguments, as where the call, the instance or the use is written
+(`type.opaque.pointer-to-embedding`). In an instance's body, the signatures and
+the structure of the instances it writes
 are judged as its generic declares them, where only a type with no definition
 anywhere counts as opaque, and the other rules as in code written where its
 generic is.
