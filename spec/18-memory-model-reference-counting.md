@@ -154,7 +154,11 @@ statement's are (§14.13 `stmt.defer`).
 released; on an exit via `return`/`break`/`continue`, each block the construct
 leaves exits in turn, innermost first — its deferred blocks, then its releases
 (§14.13 `stmt.defer.exit`; the `return` path, §18.5). A managed local created and
-dropped inside a loop body is thus balanced each iteration.
+dropped inside a loop body is thus balanced each iteration. The **storage** of every
+local declared in a block — managed or not — likewise ends when that execution of
+the block exits: a loop body's locals are new storage each iteration, and a raw
+pointer that still points at a local after its block has exited is **dangling**
+(dereferencing it is undefined, §21.6 `behavior.undefined`).
 
 > _Note._ The order in which a scope's managed locals are released is not
 > observable: a block's deferred blocks (§14.13) run **before** its releases, and a
