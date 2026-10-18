@@ -1,6 +1,6 @@
 # 12. Generics and Enumerations
 
-> **Status:** mixed · **Maturity:** language rules Stable (v1 scope); methods + impls on generic types (§12.1 `gen.method.generic-recv` / `gen.impl.generic-recv`) Draft — specified, not yet implemented; one v1-restriction unenforced — see the §12.4 gap (constraint satisfaction unchecked for generic struct/interface instantiation)  
+> **Status:** mixed · **Maturity:** language rules Stable (v1 scope), including methods and impls on generic types (§12.1 `gen.method.generic-recv` / `gen.impl.generic-recv`); `gen.satisfy` partly unenforced — see the §12.4 gap (a generic alias's own constraint, at some declaration sites)  
 > **Rule-ID prefix:** `gen`
 
 This chapter covers **generics** — type-parameterized functions, structs, and
@@ -94,13 +94,6 @@ single mechanism, so no impl-overlap can arise.
 > non-receiver position, which the interface's *own* type parameter (`Iterator`'s
 > `T`) does not trigger — post-monomorphization `Iterator[int]`'s methods are
 > concrete, so a `*Iterator[int]` value dispatches normally.
-
-> _Draft; not yet implemented._ Methods on generic types
-> (`gen.method.generic-recv`) and parameterized-receiver impls
-> (`gen.impl.generic-recv`) are **specified ahead of implementation** (design
-> settled — the **Draft** tier, `conventions.md`). Until they land, a generic type
-> can carry no methods and thus satisfy no interface, so a generic interface (e.g.
-> `Iterator[T]`) is declarable but **not yet implementable** (Annex C).
 
 > _Note._ A generic-*method* declaration (a method with its own `[…]`) is
 > **diagnosed at the declaration** — rejected with "methods cannot have type
@@ -284,14 +277,12 @@ The method-shape match was verified when the `impl` was declared; instantiation
 only confirms a visible `impl` exists. A missing `impl` is an instantiation error
 naming the missing satisfaction. (A `[T any]` parameter always satisfies; §12.1.)
 
-> _Open / known gap._ The checker currently enforces constraint satisfaction only
-> at **generic-function** instantiation. Generic **struct** and **interface**
-> instantiations do not check the type-parameter constraint, so an unsatisfying
-> type argument (e.g. `Box[NoOrder]` for `type Box[T Orderable]`, where `NoOrder`
-> has no `impl`) is wrongly accepted (`gen.satisfy.struct-iface-unchecked`;
-> Annex C). **`gen.impl.generic-recv` (§12.1) makes this gap
-> load-bearing:** a parameterized impl's per-instantiation satisfaction relies on
-> the instantiation-time constraint check being performed.
+> _Open / known gap (MAJOR)._ The checker does not check a generic **alias**'s own
+> constraint, where it is stricter than its target's (`type O[T Orderable] = Box[T]`
+> over an unconstrained `Box`), at some declaration sites — for example a
+> non-generic interface's method signature: with `W` having no `impl W : Orderable`,
+> `interface I { m(o O[W]) }` is wrongly accepted, although `var o O[W]` in a
+> function body is rejected.
 
 > _Example._ `func sort[T Orderable](xs *[]T) { … xs[i].Compare(xs[j]) … }`
 > instantiated at `T = int` works because `pkg/builtins/lang` provides

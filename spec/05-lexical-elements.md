@@ -152,17 +152,16 @@ argument. Their semantics are defined in Ch.15 (and cross-referenced from
 Ch.8).
 
 ```
-make   make_slice   box    cast   bit_cast   len
-unsafe_index   unsafe_div   unsafe_rem   sizeof   alignof
-present   same
+make   make_slice   box    cast   bit_cast   unsafe_cast   len
+unsafe_index   unsafe_div   unsafe_rem   unsafe_shl   unsafe_shr
+sizeof   alignof   present   same
 ```
 
 Four further reserved builtin spellings exist for low-level operations:
 `_func_handle` (a function-value–handle operation used by the runtime and
 tooling; §15.8), `__c_call` (the C-call escape hatch; §16.9), `__c_global`
 (C-global-variable access, §16.9), and `__c_entry` (a C-callable function
-pointer; §16.9 — Draft, ratified, not yet implemented). The legacy spelling `_raw_func_addr` is a **deprecated alias** for
-`_func_handle` and is slated for removal.
+pointer; §16.9).
 
 > _Note._ Because these are reserved, identifiers such as `make`, `len`,
 > `cast`, and `present` cannot name user variables, functions, or fields.

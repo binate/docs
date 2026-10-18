@@ -494,7 +494,7 @@ BuiltinCall   = "make" "(" Type ")"
               | "_func_handle" "(" Expression ")"
               | "__c_call" "(" string_literal "," CCallRet { "," CCallArg } ")"
               | "__c_global" "(" string_literal "," Type ")"    (* address of a C global as *T — §16.9 *)
-              | "__c_entry" "(" Expression ")" ;               (* C-callable function pointer as *uint8 — §16.9; Draft *)
+              | "__c_entry" "(" Expression ")" ;               (* C-callable function pointer as *uint8 — §16.9 *)
 CCallRet      = Type | string_literal ; (* the C return type, OR the string literal "void" for a void-returning C function *)
 CCallArg      = Expression | "..." ;    (* "..." marks the C varargs boundary *)
 
