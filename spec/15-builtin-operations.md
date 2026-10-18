@@ -228,7 +228,8 @@ any other arity is rejected ("panic takes exactly one argument"), and a
 only to a `...T` variadic parameter, which `panic` does not have). Used as a
 **value**, `panic` decays like any function name (§10.9 `func.ref.decay`) to a
 function value that aborts exactly as a direct call does; a call through that
-value is an ordinary indirect call, not a control-flow terminator (§14.14).
+value is an ordinary indirect call, not a control-flow terminator (§14.14). The
+internal `_func_handle(panic)` (§15.8) likewise takes that function's handle.
 
 > _Note._ There is **no predeclared `print`/`println`** — the identifiers are
 > ordinary undeclared names. Console and formatted output belong to the `fmt`

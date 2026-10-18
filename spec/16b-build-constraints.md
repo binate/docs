@@ -299,7 +299,9 @@ non-generic, top-level function** — a local identifier or a package-qualified 
 public or, within the declaring package, package-private (`pkg.cexport.eligible`). A
 method, a function *value*, a function literal, or a generic function is rejected — a C
 function pointer carries no context slot, so a capturing value cannot become one (pass
-context through the C API's `void* user_data` parameter, as C code does). `f`'s
+context through the C API's `void* user_data` parameter, as C code does). The
+predeclared `panic` (§15.7) is rejected too: it is the runtime's abort, not a function
+the program declares. `f`'s
 signature must satisfy `pkg.cexport.signature`.
 
 `pkg.centry.identity` — Every evaluation of `__c_entry(f)` for the same `f` in a
