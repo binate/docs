@@ -142,7 +142,8 @@ applies only to a genuinely value-typed source; a `*T`/`@T` source is unchanged
   explicit `&`, it is rejected in a storing position (§13
   `expr.composite.addr-store`), and in a local `var` / `:=` initializer the literal
   lives as long as the binding (§13 `expr.composite.lifetime`).
-- A **non-addressable** source (a literal, an expression, or a call result) is
+- A **non-addressable** source (a literal, an expression, a call result, or a
+  function name — §10.9 `func.ref.decay`) is
   **materialized into a temporary** and borrowed. Because a temporary is released
   at the **end of its statement** (§18.4 `mem.temporary`), this is permitted
   **only** where the borrow cannot outlive it: an **argument** position, or a

@@ -62,7 +62,16 @@ function-value kind, which this nominal rule rejects).
 value of matching signature, assignable to a `*func` or `@func` destination —
 including a **named** function-value type (`var f Fn = add`). The destination's
 alias/named/`readonly` wrappers are peeled for the match; parameter names are
-ignored.
+ignored. A reference with no function-value destination — a raw interface value
+such as a `*any` parameter, or `box`'s operand — decays to its default, the managed
+`@func(…)` (`func.lit.inferred-default`), and that value is the source: `take(add)`
+for `take(x *any)` borrows it as a non-addressable value (§11.4
+`iface.construct.value-borrow`; a named function's value carries a null data word,
+so the temporary allocates nothing), and `box(add)` boxes it as an `@(@func(…))`,
+from which an `@any` is built. The dynamic type is the name-less function-value
+type, which no assertion target names (§7.13.14); a named function-value type
+recovers one (`var f Fn = add`, borrowed as `&f`, asserted `.(*Fn)`). A method
+expression (§10.11) is already a `*func` value and is borrowed or boxed as that.
 
 `func.lit.noncapturing` — A function literal `func(P…) R { … }` in expression
 position evaluates to a function value. A **non-capturing** literal (one that
