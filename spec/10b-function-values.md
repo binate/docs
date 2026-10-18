@@ -58,8 +58,8 @@ function-value kind, which this nominal rule rejects).
 
 ## 10.9 Non-capturing function literals and function references
 
-`func.ref.decay` — A reference to a named top-level function decays to a function
-value of matching signature, assignable to a `*func` or `@func` destination —
+`func.ref.decay` — A reference to a named top-level function — or to the
+predeclared `panic` (§15.7) — decays to a function value of matching signature, assignable to a `*func` or `@func` destination —
 including a **named** function-value type (`var f Fn = add`). The destination's
 alias/named/`readonly` wrappers are peeled for the match; parameter names are
 ignored. A reference with no function-value destination — a raw interface value

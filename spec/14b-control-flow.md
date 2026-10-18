@@ -315,7 +315,9 @@ return". The analysis is **syntactic** (not value-aware); a statement terminates
 iff it is one of:
 
 - a `return` statement;
-- a call to the built-in `panic(…)` as an expression statement;
+- an expression statement that calls `panic(…)` directly — the identifier
+  denoting the predeclared function (§15.7), not a binding that shadows it nor a
+  function value holding it;
 - a block whose **last** statement terminates;
 - an `if` with an `else` where **both** branches terminate (an `if` with no
   `else` never terminates);

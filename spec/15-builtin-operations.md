@@ -10,7 +10,8 @@ function. There are two kinds:
   syntax, several of which take a **type** as an argument (which an ordinary call
   cannot supply). Being keywords, they are **reserved** and cannot be shadowed.
 - One **predeclared function** — `panic` (§15.7) — an ordinary universe-scope
-  identifier (checked specially), and therefore *can* be shadowed.
+  function, usable as a value, whose **direct call** is checked specially; being
+  an identifier, it *can* be shadowed.
 
 Several built-ins are specified in full elsewhere and only summarized here:
 `cast`/`bit_cast` conversion semantics in Ch.8, `sizeof`/`alignof` layout in
@@ -216,12 +217,18 @@ only an alias.)
 ## 15.7 Predeclared function: `panic`
 
 `builtin.predeclared` — `panic` is the **one predeclared function** in the
-universe scope. It is not a keyword-builtin: it lexes as an ordinary identifier
-and may be **shadowed** by an in-scope binding. It has a **fixed**
+universe scope, of type `func(msg *[]readonly char)`. It is not a keyword-builtin:
+it lexes as an ordinary identifier and may be **shadowed** by an in-scope binding
+— a parameter, a local, or a package-level declaration — and a call through a
+shadowing binding is an ordinary call. A **direct call** — one whose callee is
+the identifier `panic` denoting the predeclared function — has a **fixed**
 single-parameter signature (`builtin.panic`) and yields no value; a call with
 any other arity is rejected ("panic takes exactly one argument"), and a
 **spread** argument `expr...` (§10.3) is likewise rejected (a spread applies
-only to a `...T` variadic parameter, which `panic` does not have).
+only to a `...T` variadic parameter, which `panic` does not have). Used as a
+**value**, `panic` decays like any function name (§10.9 `func.ref.decay`) to a
+function value that aborts exactly as a direct call does; a call through that
+value is an ordinary indirect call, not a control-flow terminator (§14.14).
 
 > _Note._ There is **no predeclared `print`/`println`** — the identifiers are
 > ordinary undeclared names. Console and formatted output belong to the `fmt`
@@ -231,7 +238,8 @@ only to a `...T` variadic parameter, which `panic` does not have).
 > at run time (§11.12, §20.3).
 
 `builtin.panic` — `panic(msg *[]readonly char)` takes a **single** argument — the
-diagnostic message, a read-only raw char slice (a string literal passes directly,
+diagnostic message, a read-only raw char slice, checked as an ordinary argument
+of that type (a string literal passes directly,
 borrowing its static storage, so no allocation happens on the abort path) — and
 **aborts the program unrecoverably** with that message, a non-recoverable abort in
 the same family as the defined runtime traps (Ch.21). It is **not** variadic and

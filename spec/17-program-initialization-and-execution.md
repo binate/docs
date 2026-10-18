@@ -229,8 +229,8 @@ zero divisor is a compile error, §13.4), so the runtime panic applies only to
 non-constant operands.
 
 `prog.panic.no-recover` — There is no `recover`; a panic is the program's last
-action. A `panic(msg)` expression statement is also a control-flow terminator for
-the missing-return analysis (§14.14).
+action. A direct `panic(msg)` call statement is also a control-flow terminator
+for the missing-return analysis (§14.14).
 
 > _Open (dual-mode gap in dispatch)._ One member of the set is realized
 > inconsistently across the execution modes — flagged so the dual-mode contract

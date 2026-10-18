@@ -202,7 +202,7 @@ code (§17.4, §21.4). The set (normative home §17.5 `prog.panic`):
 | **Negative** shift count (runtime) | §13.5 `expr.shift.negative` |
 | `make_slice` with a length **out of range** (negative, past the target's `int`, or a byte size past it) | §15.2 `builtin.make-slice` |
 | Dispatch through a **nil interface value** — defined abort; observable *form* is mode/target-dependent (§21.5) | §11.11 `iface.dispatch.nil` |
-| `panic(msg)` — defined abort; **currently realized inconsistently** (§21.9) | §15.7 `builtin.panic` |
+| `panic(msg)` — defined abort | §15.7 `builtin.panic` |
 
 A panic-triggering operand that is a **compile-time constant** is rejected at
 compile time instead of producing a runtime panic (§17.5, §13.4).
@@ -216,10 +216,6 @@ non-conformances — with per-mode xfail status — lives in **Annex C**. These 
 unspecified/undefined latitude. The principal current items (each
 defined-in-intent, defective-in-realization) include:
 
-- **`panic(msg)` realized inconsistently** across modes — the bytecode VM treats
-  it as a **no-op** (no abort, no message; control falls through) and the compiled
-  backend **aborts but discards the message**; the intended behavior is to abort
-  **with** the message in both modes (§15.7, §17.5, §19.5; `builtin.panic.vm-noop`).
 - **Taking the address of a literal** (`&5`) is **not diagnosed** — a
   *missing-diagnostic* defect, since a literal has no storage and the construct is
   **intended to be rejected** (§13.8 `expr.unary.addr-literal`). It is a

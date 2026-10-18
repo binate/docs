@@ -67,7 +67,8 @@ wrong count is an error.
 
 `func.return.missing` _(Constraint)_ — A function with at least one result must
 **terminate on every control-flow path** (otherwise "missing return"). A
-statement terminates if it is a `return`, a `panic(…)` call, an `if`/`else`
+statement terminates if it is a `return`, a direct call of the predeclared
+`panic(…)` (§14.14), an `if`/`else`
 where both branches terminate, an infinite `for {}` with no `break`, a `switch`
 with a `default` where every case terminates with no top-level `break`, or a
 block whose last statement terminates. (Labels are unsupported, so any `break`
