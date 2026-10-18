@@ -1,6 +1,6 @@
 # 12. Generics and Enumerations
 
-> **Status:** mixed · **Maturity:** language rules Stable (v1 scope), including methods and impls on generic types (§12.1 `gen.method.generic-recv` / `gen.impl.generic-recv`)  
+> **Status:** mixed · **Maturity:** language rules Stable (v1 scope; except §12.1 `gen.impl.generic-recv`, impls on generic types, Provisional — implemented, design may still change), including methods on generic types (§12.1 `gen.method.generic-recv`)  
 > **Rule-ID prefix:** `gen`
 
 This chapter covers **generics** — type-parameterized functions, structs, and
@@ -88,6 +88,15 @@ Iterator[int])` vtable are resolved **per monomorphized instantiation**. A
 **specific-instantiation** impl (concrete receiver arguments) are **both**
 disallowed (`gen.no-conditional-impls`, §12.4): the parameterized form is the
 single mechanism, so no impl-overlap can arise.
+
+> _Provisional — implemented; the design may still change._ Which type an impl on
+> a **pointer** receiver makes satisfy the interface — and so which type arguments
+> such an impl lets satisfy a constraint (§12.4 `gen.satisfy`) — is not settled.
+> `gen.impl.generic-recv` states that `impl *Cursor[T] : Iterator[T]` makes
+> `Cursor[T]` satisfy `Iterator[T]`, whereas §11.3 `iface.impl.form` states that
+> `impl R : I` asserts that the receiver shape `R` itself (here `*Cursor[T]`)
+> satisfies `I`; the question is open for generic and non-generic receivers
+> alike.
 
 > _Note (object-safety)._ A parameterized impl of a generic interface stays
 > **object-safe**: `iface.self.object-safety` (§11.9) forbids only `Self` in a

@@ -1,6 +1,6 @@
 # 10. Functions, Methods, and Function Values
 
-> **Status:** mixed · **Maturity:** Stable (functions/methods); function values (§10.8–§10.12) core Stable; tail-return / destructure *through* a function value Provisional (§10.2)  
+> **Status:** mixed · **Maturity:** Stable (functions/methods); function values (§10.8–§10.12) core Stable; tail-return / destructure *through* a function value or an interface-method call Provisional (§10.2)  
 > **Rule-ID prefix:** `func`
 
 This chapter covers function and method declarations (§10.1), returns and

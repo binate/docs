@@ -1,6 +1,6 @@
 # 11. Interfaces, impl, and Self
 
-> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice` and §11.4 `iface.construct.value-borrow`, both Provisional — implemented, design may still change); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3) and the 32-bit-ARM platform gap (§11.11) remain)  
+> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice`, §11.4 `iface.construct.value-borrow` and the receiver shape an impl on a pointer receiver makes satisfy its interfaces, §11.3 `iface.impl.form`, all Provisional — implemented, design may still change); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3) and the 32-bit-ARM platform gap (§11.11) remain)  
 > **Rule-ID prefix:** `iface`
 
 Binate interfaces are **nominal**: a type satisfies an interface only through an
@@ -58,7 +58,13 @@ satisfies each listed interface. `R` may be any of the five receiver shapes
 **named** type (or, in `pkg/builtins/lang`, a universe primitive; §11.10). For a
 **generic** type, `R` **binds** the type's parameters and the interface list may
 reference them — a **parameterized-receiver impl** (`impl *Cursor[T] :
-Iterator[T]`; §12.1 `gen.impl.generic-recv`).
+Iterator[T]`; §12.1 `gen.impl.generic-recv`, Provisional).
+
+> _Provisional — implemented; the design may still change._ Which type an impl on a
+> **pointer** receiver makes satisfy the interface — the receiver shape `R` itself,
+> as stated here, or the named type under it — is not settled, for generic and
+> non-generic receivers alike (§12.1 `gen.impl.generic-recv`); with it, which type
+> arguments such an impl lets satisfy a constraint (§12.4 `gen.satisfy`).
 
 `iface.impl.nominal` _(Constraint)_ — Satisfaction is **nominal and explicit**: a
 type satisfies an interface **only** if a matching `impl` is declared. Having all
