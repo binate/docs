@@ -195,11 +195,19 @@ declaration, whether or not the program names an instantiation of it, if followi
 fields alone — its own, with its type parameters abstract, then those of each
 generic-struct instantiation named there, and so on — reaches instantiations with
 ever-growing type arguments (`L` above, or `type E[T any] struct { e E[[1]T] }`):
-none of its instantiations could be named. An implementation may bound the length
-of a chain of instantiations, each named from the previous one and starting from
-one written in the program (which counts as one); the bound is
-implementation-defined and at least 128 (§21.4), and a longer chain is a
-compile-time error (§2.2 `conf.implementation.limits`).
+none of its instantiations could be named. So is a generic interface whose parents
+alone — its own, then those of each generic-interface instantiation they name, and
+so on — reach instantiations with ever-growing type arguments
+(`interface A[T any] : B[Opt[T]]` with `interface B[T any] : A[T]`). An
+implementation may bound the length of a chain of instantiations, each named from
+the previous one and starting from one written in the program (which counts as
+one); the bound is implementation-defined and at least 128 (§21.4), and a longer
+chain is a compile-time error (§2.2 `conf.implementation.limits`). It may likewise
+bound the number of instantiations one instantiation names, directly or not,
+through fields, methods' signatures and interfaces alone — an array length that
+depends on a type parameter can make that set grow without any type argument
+growing in shape, as `next *N[[sizeof(T) + 1]uint8]` does; that bound is
+implementation-defined and at least 4096 (§21.4).
 
 > _Note._ Every method of a named generic-struct instantiation is included because
 > a method on `Box[T]` is promised for every `T` its constraint admits (there are
