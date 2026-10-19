@@ -148,6 +148,9 @@ wrapper is peeled). A string literal — whose natural type is the array
 `[N]readonly char` (§6.6) — is accepted, yielding its decoded byte length. The
 result is a **signed `int`**. For an array or string literal the value is a
 compile-time constant; for a slice it is a run-time read of the length word.
+The length of an array is its type's, and an array operand is **not evaluated**:
+`len(f())`, for an `f` returning an array, does not call `f`, and `len(*p)` does
+not dereference `p` — no storage the operand names is needed.
 `len(s) == 0` is the sanctioned emptiness test for slices, which are not
 comparable to `nil` (§13).
 
