@@ -27,6 +27,11 @@ the same name — except that any number of them may be the **blank identifier**
 (`func two[_ any, _ any]() int`); `_` is not in scope as a type in the
 declaration.
 
+`gen.typeparams.scope` — A type parameter is in scope throughout the declaration
+it parameterizes, its whole type-parameter list included: every constraint in the
+list may name every parameter of it, a later one too (`type W[T Eq[U], U any]`),
+and a parameter shadows a type of the same name declared outside the declaration.
+
 `gen.constraint` — A type parameter's **constraint** is a **single named
 interface** or the bare universal `any` (§11.5). There is **no `+` operator** to
 combine constraints: to require that a type argument satisfy several interfaces,
@@ -37,6 +42,13 @@ surface grammar accepts any `Type` in the constraint position; the restriction t
 `any` or a named interface is enforced by the **type-checker**, which rejects any
 other form with a diagnostic (`ConstraintName` is not a distinct grammar
 production).
+
+`gen.constraint.self` _(Constraint)_ — A type parameter's constraint may not name
+that type parameter itself (`func f[T Eq[T]](x T)`, `type S[T Eq[T]] …`), even
+where a type of that name is declared outside (`gen.typeparams.scope`). An
+interface whose methods take or return the type that satisfies it writes that
+type `Self` (§11.9 `iface.self`): with `interface Eq { Same(o Self) bool }`, a
+`[T Eq]` parameter's `x.Same(y)` takes a `y` of type `T`.
 
 `gen.no-generic-methods` _(Constraint)_ — A method may not declare **its own**
 type parameters — there is no `[…]` after the method name (unlike a free
