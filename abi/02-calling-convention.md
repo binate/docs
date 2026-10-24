@@ -117,7 +117,8 @@ Target-specific argument rules:
 
 - **arm32 even-pair rule** (AAPCS stage C.3): an 8-byte-aligned *argument*
   (`int64`, `uint64`, soft-float `float64`, or an 8-aligned aggregate) starts
-  on an **even** core register, skipping an odd one; a 64-bit scalar occupies
+  on an **even** core register, skipping an odd one (a zero-size one occupies
+  nothing and skips nothing); a 64-bit scalar occupies
   a lo/hi little-endian pair (R0:R1 or R2:R3) or an 8-aligned 8-byte stack
   slot. The even rule applies to **arguments only** — multi-return packing
   uses consecutive registers (§2.7).

@@ -34,6 +34,11 @@ _Status_).
 | struct / array by value | per the platform C ABI (§7.13.11; the same as internally, §2.5) |
 | multiple results | the platform C ABI for a struct with the result fields — see below |
 
+A **zero-size** struct or array (`struct{}`, `[0]T`; an empty record is a GNU
+extension in C) crosses as nothing — no register and no stack slot — as clang
+places it. GCC on arm32 differs: it pads an 8-aligned empty record to an even
+core register, so such an argument does not match GCC-compiled C.
+
 A **multi-result** function's C form is the platform struct return of its
 packed result tuple. The **internal** convention (§2.7) is not that — its
 register form and its sret trigger (register-count, not size) both differ —
