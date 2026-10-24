@@ -56,7 +56,10 @@ the stack, per Ch.2's GP rules. Per argument type:
 - an **aggregate** of any size travels as **one pointer slot** — the address
   of the argument value; the shim loads it and re-marshals to the underlying
   function's direct-call convention. (This includes ≤16-byte aggregates that
-  a direct call would pass by value in registers.)
+  a direct call would pass by value in registers.) A **zero-size** aggregate
+  takes its pointer slot too, though nothing is read through it — unlike a
+  zero-size result (§3.2), and unlike a direct call (§2.2), where it occupies
+  nothing; the shim's direct call then passes it in no register.
 - a **float scalar** travels as its bit image in an integer slot
   (`float32` → 32-bit image, `float64` → 64-bit image); no float register is
   used on this seam. A float scalar **result** of the scalar shape returns in
