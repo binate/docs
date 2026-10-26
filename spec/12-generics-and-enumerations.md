@@ -211,10 +211,15 @@ none of its instantiations could be named. So is a generic interface whose paren
 alone — its own, then those of each generic-interface instantiation they name, and
 so on — reach instantiations with ever-growing type arguments
 (`interface A[T any] : B[Opt[T]]` with `interface B[T any] : A[T]`). An
-implementation may bound the length of a chain of instantiations, each named from
-the previous one and starting from one written in the program (which counts as
-one); the bound is implementation-defined and at least 128 (§21.4), and a longer
-chain is a compile-time error (§2.2 `conf.implementation.limits`). It may likewise
+implementation may bound, for each instantiation the program names, the length of
+the shortest chain of instantiations reaching it, each named from the previous one
+and starting from one written in the program (which counts as one) — whichever
+chain names it first; the bound is implementation-defined and at least 128
+(§21.4), and an instantiation whose shortest chain is longer is a compile-time
+error (§2.2 `conf.implementation.limits`). An implementation that reaches an
+instantiation through a longer chain may stop looking for a shorter one once it
+has checked a further number of instantiations without finding one; that number
+is implementation-defined and at least 256 (§21.4). It may likewise
 bound the number of instantiations one instantiation names, directly or not,
 through fields, methods' signatures and interfaces alone — an array length that
 depends on a type parameter can make that set grow without any type argument
