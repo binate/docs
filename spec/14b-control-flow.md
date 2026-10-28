@@ -126,7 +126,11 @@ CaseClause = ( "case" ExpressionList | "default" ) ":" { Statement ";" } ;
 
 `stmt.switch.tag` — The switch **tag is optional**. With a tag, each case
 expression must be **assignable to the tag's type** (`ct.AssignableTo(tag)`), and
-the first case whose value equals the tag is selected. A **tagless** `switch { … }`
+the first case whose value equals the tag is selected. An **untyped** tag takes its
+**default type** (§6.2 `const.default`), as the initializer of `x := tag` does: an
+integer constant tag's value must fit `int` (`const.default.int-width`), and a
+`nil` tag, which has no default type, is rejected; an untyped case expression then
+takes the tag's type. A **tagless** `switch { … }`
 is the condition-less form (equivalent to Go's `switch true`): its cases are
 boolean conditions and the first true one is selected; it is the idiomatic
 replacement for a long `if`/`else if` chain.
