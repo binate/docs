@@ -73,6 +73,29 @@ declared in the **same** block scope is an error ("redeclared in this scope").
 **package** scope, two top-level declarations with the same name — of any kind —
 are likewise an error.
 
+`decl.var.type-acyclic` _(Constraint)_ — A package-level variable's type may not
+depend on the variable itself. Its type is its declared type, or else its
+initializer's. An initializer that spells its type at its head has that type
+before its operands are checked: a function literal (a function value of its
+signature), a composite literal of a written type (not `[...]T`), a `cast` or
+`bit_cast` (its target type), and a call of a function of the package or of an
+imported one, of a generic function's instance, of a method of a package
+variable, or of a function literal written where it is called (the function's
+one result; for a method, the variable's type is needed). Any other
+initializer's type depends on the type of each variable it names outside the
+array lengths in it, a function literal's body included. A type depends on each
+variable whose type the value of an array length within it needs: `len(v)`
+needs v's type, while `len(pick(func() int { return len(v) }))` needs only
+pick's result's. A variable whose type depends on itself, directly or through
+other variables, is an error ("variable type cycle"): `var v [len(v)]int`;
+`var u = [len(u)]int{}`; `var a [len(b)]int` with `var b [len(a)]int`;
+`var b = [len(a)]int{}` with `var a = b`; `var a = len([len(b)]int{})` with
+`var b = h(a).arr` (b's initializer spells no type at its head, so b's type
+depends on a's, whatever h's parameter). Not a cycle: `var b = [len(a)]int{}`
+with `var a = h(b)`, for `func h(x [4]int) [3]int` — a's type is h's result,
+`[3]int`, so b is a `[3]int`, which h's parameter then rejects. A cycle made
+only of reads of values is §17.2 `prog.init.var-cycle`'s.
+
 ## 9.3 Short variable declarations
 
 `decl.shortvar` — Inside a function, `:=` declares one or more variables with
