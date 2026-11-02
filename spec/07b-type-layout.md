@@ -238,10 +238,9 @@ must observe.
 
 `type.layout.transparent` — `readonly T`, an alias of `T`, and a named-distinct
 type over `T` are **layout-identical** to `T`: same size, alignment, and field
-offsets. `SizeOf` and `AlignOf` peel all three wrappers; `FieldOffset` peels only
-aliases, so a caller passing a `readonly`- or named-wrapped struct type must strip
-it to the concrete struct first. They introduce no representation change (§7.3,
-§7.11).
+offsets. `SizeOf`, `AlignOf`, `FieldOffset`, and the struct-layout computation
+see through all three wrappers, in any order and to any depth, and give the same
+results as for `T`. The wrappers introduce no representation change (§7.3, §7.11).
 
 ## 7.13.11 Aggregate parameter passing
 
