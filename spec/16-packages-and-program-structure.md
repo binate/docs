@@ -82,6 +82,15 @@ intentional, so it is exempt from the `unused-import` **lint** (`bnlint`) — th
 compiler itself never diagnoses an unused import (Binate emits no compiler
 warnings).
 
+`pkg.import.once` _(Constraint)_ — A source file imports a package **at most once**:
+two of its imports with the same path are an error, whatever names they bind — the
+same name twice, two different names, or the blank identifier `_` for either or
+both. The rule is per file: the files of a package, its `.bni` among them, may each
+import the same package, each under a name of its own. An import its build
+constraint drops does not count (§16.8 `pkg.build.gate`), so imports of one
+package gated to disjoint conditions coexist, as declarations do
+(`pkg.build.variants`).
+
 ## 16.4 The exported surface and visibility
 
 `pkg.export` — A package's **exported surface is its `.bni`**: a symbol is
