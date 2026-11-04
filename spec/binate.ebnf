@@ -562,10 +562,13 @@ TypeParamDecl = identifier Type ;   (* type-parameter name + interface constrain
        pointer-to-slice require parentheses.
 
    D4. Composite literals in control-flow conditions:
-       In an if/for/switch condition a bare composite literal (a QualifiedName or
-       slice/array head followed by "{") is disallowed (its "{" is ambiguous with
-       the block body); parenthesize it as (Point{…}).  (The parenthesized
-       escape is the intended rule but is currently defective; §13.11.)
+       In an if/for/switch condition a bare composite literal (a TypeName
+       followed by "{", outside every "(", "[" and "{" of the condition) is
+       disallowed (its "{" is ambiguous with the block body); parenthesize it as
+       (Point{…}).  Inside a bracket -- an argument, an index, an array length,
+       a literal's elements, a function literal's body -- it is allowed, as is
+       an ArrayLiteral, ManagedSliceLiteral or RawSliceLiteral anywhere: its
+       type is not an expression, so its "{" cannot begin the block (§13.11).
 
    D5. Generic instantiation vs indexing/slicing (expression context):
        "[" … ":" … "]" → slice (the colon is unambiguous).  "[" Type "," … "]" →

@@ -479,9 +479,12 @@ prose here and the design notes govern). The expression-relevant ones:
   by the trailing token (`:=`, `=`, a compound assignment, `++`/`--`, or none →
   expression statement; §14).
 - **D4** — in the condition of `if`/`for`/`switch`, a bare composite literal
-  `Type{…}` is **not** recognized (the `{` begins the block); the value must be
-  produced another way — e.g. by **parenthesizing** it
-  (`expr.disambiguation.d4-paren`).
+  `Type{…}` — one whose type is a type name (`T{…}`, `pkg.T{…}`, `T[A]{…}`), at
+  the condition's top nesting level — is **not** recognized (the `{` begins the
+  block); the value must be produced another way — e.g. by **parenthesizing** it
+  (`expr.disambiguation.d4-paren`). An array, slice or managed-slice literal
+  (`[2]int{…}`, `*[]T{…}`, `@[]T{…}`) is recognized there: its type is not an
+  expression, so the `{` after it cannot begin the block.
 - **D5** — a postfix `[…]` is a slice when it contains `:`, a generic
   instantiation when it has multiple type arguments or its head is a generic
   function, and otherwise an index (resolved during type-checking; §12.2).
@@ -489,6 +492,9 @@ prose here and the design notes govern). The expression-relevant ones:
   a complete operand they are binary (resolved by precedence; §13.2).
 
 `expr.disambiguation.d4-paren` — A composite literal **may** be used in a
-control-flow condition by **parenthesizing** it: `(Point{…})` (e.g.
-`if (Point{…}).x == 9 { … }`). Entering parentheses clears the D4
-composite-literal suppression.
+control-flow condition inside any bracket: by **parenthesizing** it,
+`(Point{…})` (e.g. `if (Point{…}).x == 9 { … }`), or as a call's or builtin
+call's argument (`if len(Point{…}.items) > 0 { … }`), in an index's brackets or
+an array length, among another composite literal's elements, or in a function
+literal's body. Entering any `(`, `[` or `{` clears the D4 composite-literal
+suppression, and leaving it restores the suppression.

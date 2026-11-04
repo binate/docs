@@ -9,10 +9,10 @@ This continues [Ch.14 Statements](14-statements.md) with the control-flow forms:
 analysis (§14.14), and the deliberate absences (§14.15).
 
 A condition or tag in `if`, `for`, or `switch` is parsed with **composite
-literals suppressed**, so a bare composite literal there is a syntax error; wrap
-it in parentheses (`if (Point{1, 2}) == p { … }`). This is disambiguation rule
-**D4** (§13.11) — the same rule as Go. (See `expr.disambiguation.d4-paren`, §13:
-the documented parenthesized escape is itself currently defective.)
+literals suppressed**, so a bare composite literal there — one whose type is a
+type name, outside every bracket — is a syntax error; wrap it in parentheses
+(`if (Point{1, 2}) == p { … }`). This is disambiguation rule **D4** (§13.11) —
+the same rule as Go (see `expr.disambiguation.d4-paren`, §13).
 
 ## 14.8 If statements
 
