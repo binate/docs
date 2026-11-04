@@ -98,6 +98,24 @@ reference is released, not at some later collection point.
 > `type.layout.slice-managed.backing`) — releases as a no-op and is never freed
 > (any managed elements it holds must themselves be immortal).
 
+> _Note._ Destruction recurses: when a destructor's release of a managed field or
+> element brings that value's count to 0, that allocation's destructor runs inside
+> the first one. So releasing the last reference to a long chain nests one
+> destruction per link — it is the chain's length (a tree's depth) that counts, not
+> the number of values — and, like any recursion that deep, can exhaust the stack. A
+> program that builds very long chains releases them a link at a time, each while
+> the rest of the chain is still referenced, so that each release stops at its link.
+> For a list of `@Node` values linked through `next`, assigning the head its
+> successor does that, since the store acquires the successor before it releases the
+> old head (§18.3 `mem.assign.copy-then-destroy`):
+> ```
+> for head != nil {
+>     head = head.next
+> }
+> ```
+> A deep tree is released the same way, holding the subtrees still to release in a
+> list of their own.
+
 `mem.immortal` — An **immortal** value carries a sentinel count (a deeply-negative
 refcount) marking it as outliving **every reference** to it: acquire and release
 both short-circuit on that count (no increment, no decrement, no free), so it is
