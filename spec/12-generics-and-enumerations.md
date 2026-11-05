@@ -1,6 +1,6 @@
 # 12. Generics and Enumerations
 
-> **Status:** mixed · **Maturity:** language rules Stable (v1 scope; except §12.1 `gen.impl.generic-recv`, impls on generic types, Provisional — implemented, design may still change), including methods on generic types (§12.1 `gen.method.generic-recv`)  
+> **Status:** mixed · **Maturity:** language rules Stable (v1 scope), including methods on generic types (§12.1 `gen.method.generic-recv`)  
 > **Rule-ID prefix:** `gen`
 
 This chapter covers **generics** — type-parameterized functions, structs, and
@@ -87,7 +87,7 @@ vtable slot and dispatches like any method.
 `gen.impl.generic-recv` _(Constraint)_ — An `impl` may have a **parameterized
 receiver** that binds the type's parameters (binder names, not type arguments,
 per `gen.method.generic-recv`), and its interface list may reference them:
-`impl *Cursor[T] : Iterator[T]` asserts that `Cursor[T]`
+`impl *Cursor[T] : Iterator[T]` asserts that `*Cursor[T]`
 satisfies `Iterator[T]` for **every** `T` (§11.3 `iface.impl.form`). The
 method-shape match (`iface.impl.coverage`) is verified **abstractly** at the `impl`
 declaration with the binders held abstract, exactly as for a non-generic impl;
@@ -95,20 +95,11 @@ the constraints of the instantiations in its interface list are satisfied throug
 the type's parameters' constraints, checked once at the `impl` declaration (§12.3
 `gen.mono.check`); an instantiation `Cursor[A]` is checked against the type's own
 constraints where it is written (`gen.satisfy`, §12.4), and the concrete
-`(Cursor[int], Iterator[int])` vtable is resolved per monomorphized instantiation.
+`(*Cursor[int], Iterator[int])` vtable is resolved per monomorphized instantiation.
 A **conditional** impl (an extra constraint beyond the type's own) and a
 **specific-instantiation** impl (concrete receiver arguments) are **both**
 disallowed (`gen.no-conditional-impls`, §12.4): the parameterized form is the
 single mechanism, so no impl-overlap can arise.
-
-> _Provisional — implemented; the design may still change._ Which type an impl on
-> a **pointer** receiver makes satisfy the interface — and so which type arguments
-> such an impl lets satisfy a constraint (§12.4 `gen.satisfy`) — is not settled.
-> `gen.impl.generic-recv` states that `impl *Cursor[T] : Iterator[T]` makes
-> `Cursor[T]` satisfy `Iterator[T]`, whereas §11.3 `iface.impl.form` states that
-> `impl R : I` asserts that the receiver shape `R` itself (here `*Cursor[T]`)
-> satisfies `I`; the question is open for generic and non-generic receivers
-> alike.
 
 > _Note (object-safety)._ A parameterized impl of a generic interface stays
 > **object-safe**: `iface.self.object-safety` (§11.9) forbids only `Self` in a
@@ -196,8 +187,9 @@ not the program calls it), and in each parameterized `impl` of it
 (`gen.impl.generic-recv`); for a generic interface, in its method signatures and
 the interfaces it extends. Neither way names an instantiation whose type arguments
 contain `Self` (`Box[Self]` in an interface method signature): `Self` stands for
-each implementing type, whose own instantiation (`Box[P]`) its implementing method
-names (§11.9 `iface.self.constraint`). The set of instantiations a program
+each implementing type, whose own instantiation (`Box[P]` for `impl P : I`,
+`Box[*P]` for `impl *P : I`) its implementing method names (§11.9
+`iface.self.constraint`). The set of instantiations a program
 names **shall be
 finite**: if an instantiation the program names names, directly or through other
 generics, instantiations of its own generic with ever-growing type arguments
@@ -312,10 +304,14 @@ is:
   extends `I` (§11.6 `iface.extend.transitive`), that is **visible** at the
   instantiation site — nominal and explicit, no duck typing (§11.3) — as at an
   interface-value construction site (§11.8 `iface.construct.visible-impl`: an
-  `impl` only a package's `.bn` declares is visible only there). A parameterized
-  `impl W[K] : J` (§12.1 `gen.impl.generic-recv`) is such an impl for every
-  `W[A₁, …]`, its binders bound to `W`'s type arguments; it is the only kind of
-  impl that can match a type built from type parameters or `Self`;
+  `impl` only a package's `.bn` declares is visible only there). The impl's
+  receiver is `A` itself, with no receiver smoothing and with `readonly`
+  significant below the outermost level: `impl *P : I` makes `*P` satisfy `I`, not
+  `P`, `@P` or `*readonly P`. A parameterized impl whose receiver is `W[K]` or a
+  receiver shape of it (`*W[K]`, `@W[K]`, `*readonly W[K]`, …; §12.1
+  `gen.impl.generic-recv`) is such an impl for the same shape of every `W[A₁, …]`,
+  its binders bound to `W`'s type arguments; it is the only kind of impl that can
+  match a type built from type parameters or `Self`;
 - a type parameter of the enclosing generic declaration whose constraint is `I` or
   extends `I`; or
 - `Self`, in an interface method signature, as §11.9 `iface.self.constraint`

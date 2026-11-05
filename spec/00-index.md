@@ -50,8 +50,8 @@ every term they need is defined.
 | 9 | [Declarations and Scope](09-declarations-and-scope.md) | normative | Stable | `decl` |
 | 10 | [Functions, Methods, and Function Values](10-functions-methods-function-values.md) | mixed | Stable (functions/methods, variadics + spread §10.3); tail-return / destructure through a function value or an interface-method call Provisional (§10.2) | `func` |
 | 10.8 | [Function Values, Closures, Method Values](10b-function-values.md) | mixed | core Stable; a few interactions Provisional | `func` |
-| 11 | [Interfaces, impl, and Self](11-interfaces-impl-self.md) | mixed | language rules Stable (§11.4 `iface.construct.value-borrow`, §11.12 `iface.assert.slice`, §11.3 pointer-receiver impl shape Provisional); conformance mixed (CRITICAL dispatch defects resolved; alias-receiver §11.3, arm32 §11.11); type assertions + type switches §11.12 implemented | `iface` |
-| 12 | [Generics and Enumerations](12-generics-and-enumerations.md) | mixed | language rules Stable (v1 scope), including methods on generic types §12.1; impls on generic types §12.1 Provisional | `gen` |
+| 11 | [Interfaces, impl, and Self](11-interfaces-impl-self.md) | mixed | language rules Stable (§11.4 `iface.construct.value-borrow`, §11.12 `iface.assert.slice` Provisional); conformance mixed (CRITICAL dispatch defects resolved; alias-receiver §11.3, arm32 §11.11); type assertions + type switches §11.12 implemented | `iface` |
+| 12 | [Generics and Enumerations](12-generics-and-enumerations.md) | mixed | language rules Stable (v1 scope), including methods on generic types and impls on them §12.1 | `gen` |
 | 13 | [Expressions](13-expressions.md) | normative | Stable (composite-literal defects flagged); type-assertion expr §13.8 implemented (§11.12) | `expr` |
 | 14 | [Statements](14-statements.md) | mixed | language rules Stable; 1 MAJOR impl defect flagged (inc/dec on non-ident lvalue) | `stmt` |
 | 14.8 | [Control-flow statements](14b-control-flow.md) | mixed | language rules Stable; a few open semantic items; type-switch stmt §14.10 implemented (§11.12); defer §14.13 implemented | `stmt` |

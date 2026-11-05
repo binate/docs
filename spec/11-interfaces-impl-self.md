@@ -1,6 +1,6 @@
 # 11. Interfaces, impl, and Self
 
-> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice`, §11.4 `iface.construct.value-borrow` and the receiver shape an impl on a pointer receiver makes satisfy its interfaces, §11.3 `iface.impl.form`, all Provisional — implemented, design may still change); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3) and the 32-bit-ARM platform gap (§11.11) remain)  
+> **Status:** mixed · **Maturity:** language rules Stable (except §11.12 `iface.assert.slice` and §11.4 `iface.construct.value-borrow`, both Provisional — implemented, design may still change); implementation-conformance mixed (the CRITICAL dispatch defects are resolved; a MAJOR alias-receiver hold (§11.3) and the 32-bit-ARM platform gap (§11.11) remain)  
 > **Rule-ID prefix:** `iface`
 
 Binate interfaces are **nominal**: a type satisfies an interface only through an
@@ -53,18 +53,15 @@ interface value (`@(*Iface)`, etc.) follows ordinary pointer rules.
 single receiver type `R`, a colon, and a non-empty comma-separated interface
 list. It has **no body** and declares no methods (methods are declared
 separately, Go-style); it is a relational assertion that the receiver shape `R`
-satisfies each listed interface. `R` may be any of the five receiver shapes
+itself satisfies each listed interface: as a type argument, `impl *P : I` makes
+`*P` satisfy `I`, not `P` or `@P` (§12.4 `gen.satisfy`), while an interface value
+is constructed through it from a `P` or `@P` source by receiver smoothing (§11.4).
+`R` may be any of the five receiver shapes
 (`T`, `*T`, `*readonly T`, `@T`, `@readonly T`; §10.4) and must reduce to a
 **named** type (or, in `pkg/builtins/lang`, a universe primitive; §11.10). For a
 **generic** type, `R` **binds** the type's parameters and the interface list may
 reference them — a **parameterized-receiver impl** (`impl *Cursor[T] :
-Iterator[T]`; §12.1 `gen.impl.generic-recv`, Provisional).
-
-> _Provisional — implemented; the design may still change._ Which type an impl on a
-> **pointer** receiver makes satisfy the interface — the receiver shape `R` itself,
-> as stated here, or the named type under it — is not settled, for generic and
-> non-generic receivers alike (§12.1 `gen.impl.generic-recv`); with it, which type
-> arguments such an impl lets satisfy a constraint (§12.4 `gen.satisfy`).
+Iterator[T]`; §12.1 `gen.impl.generic-recv`).
 
 `iface.impl.nominal` _(Constraint)_ — Satisfaction is **nominal and explicit**: a
 type satisfies an interface **only** if a matching `impl` is declared. Having all
@@ -76,11 +73,20 @@ type must provide a method of the same name for **every** method in `I`'s full
 method set (its own methods plus all inherited from extended parents; §11.6).
 The provided method matches iff, after dropping its leading receiver, the
 non-receiver parameter and result counts are equal, each type is **identical**
-to the interface method's corresponding type with `Self` substituted by `R`'s
-named type (§11.9), and both agree on whether the final non-receiver parameter is
-**variadic** (§10.3 `func.variadic.identity`). The impl method's declared receiver kind must be reachable
-from `R`'s declared receiver kind by the same safe-direction smoothing as a
-method call (§10.5).
+to the interface method's corresponding type with `Self` substituted by the type
+it stands for in the impl (§11.9 `iface.self`), and both agree on whether the
+final non-receiver parameter is **variadic** (§10.3 `func.variadic.identity`). The
+impl method's declared receiver kind must be reachable from `R`'s declared
+receiver kind by the same safe-direction smoothing as a method call (§10.5),
+except that an impl on a **value** receiver (`T`, `readonly T`) cannot use a
+method with a raw-pointer receiver (`*T`, `*readonly T`): the impl has no value
+whose address a call could take. Such a type writes `impl *T : I`.
+
+> _Note._ Since `Self` is the receiver type, a method satisfies a `Self`-using
+> interface for one receiver shape: `Compare(o P)` serves `impl P : Comparable`,
+> `Compare(o *P)` serves `impl *P : Comparable`, and one type cannot have both
+> impls. A method returning a `Self` value (`Clone() Self`) belongs on `impl P`:
+> on `impl *P` it returns a `*P`.
 
 > _Open / known gap (MAJOR)._ An `impl` whose receiver is a **type alias** (e.g.
 > `type AB = *Box; impl AB : Getter`) is **rejected** ("impl receiver must be (a
@@ -253,9 +259,11 @@ the package's own `.bni` (§16.5 `pkg.bni.self-contained`).
 implementing type. It is valid **only** there (in parameter and result types,
 including inside composite types such as `*Self`, `@[]Self`, `(Self, Self)`) — not
 in the receiver position, not in an extension parent list, and nowhere outside an
-interface declaration. At impl time every `Self` is substituted by the
-implementing named type, and the impl method's signature must match after
-substitution (§11.3).
+interface declaration. In an `impl R : I`, `Self` stands for the receiver type
+`R` with only an outer `readonly` dropped — `P` for `impl P : I` and for `impl
+readonly P : I`, `*P` for `impl *P : I`, `*readonly P` for `impl *readonly P : I`,
+`@P` for `impl @P : I` — and the impl method's signature must match with every
+`Self` substituted by it (§11.3 `iface.impl.coverage`).
 
 `iface.self.object-safety` _(Constraint)_ — A method whose interface signature
 mentions `Self` in any non-receiver position is **object-unsafe**: it **cannot be
@@ -280,8 +288,9 @@ and `type B[T Eq[int]]`, `Self` does not satisfy `Eq[int]`, not even for
 satisfies no constraint but `any`.
 
 > _Note._ An implementing method spells each such instantiation with the type
-> `Self` stands for (`*Box[P]`; §11.3 `iface.impl.coverage`), and that
-> instantiation is checked where the method is declared, like any other (§12.4).
+> `Self` stands for (`*Box[P]` for `impl P : I`, `*Box[*P]` for `impl *P : I`;
+> §11.3 `iface.impl.coverage`), and that instantiation is checked where the method
+> is declared, like any other (§12.4).
 
 ## 11.10 The primitive-impl carve-out and canonical interfaces
 

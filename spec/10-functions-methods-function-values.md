@@ -305,7 +305,8 @@ object-`readonly` is allowed; dropping it is rejected.
 `func.method.impl-receiver` — An `impl T : Iface` (and its `*T`/`@T`/`readonly`
 variants, a read-only handle included: `impl readonly *T : Iface`) states that the receiver shape satisfies the interface; the impl's
 receiver kind is validated against each method's declared receiver kind by the
-same safe-direction smoothing (Ch.11).
+same safe-direction smoothing, except that an impl on a value cannot use a method
+with a raw-pointer receiver (§11.3 `iface.impl.coverage`).
 
 ## 10.6 One method per name; auto-dereference; value receivers
 
