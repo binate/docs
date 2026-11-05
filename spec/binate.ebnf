@@ -367,8 +367,8 @@ DeferStmt     = "defer" Block ;
 BreakStmt     = "break" ;
 ContinueStmt  = "continue" ;
 
-(* In the condition of if/for/switch a bare composite literal must be
-   parenthesized (D4). *)
+(* In the condition of if/for/switch a bare composite literal of a type name
+   must be parenthesized (D4). *)
 IfStmt        = "if" Expression Block [ "else" ( IfStmt | Block ) ] ;
 
 ForStmt       = "for" ForClause Block ;
