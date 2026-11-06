@@ -40,7 +40,7 @@ and `&`, `^`, `|` bind looser still.
 | Level | Operators |
 |-------|-----------|
 | 11 (tightest) | postfix `.` `.(T)` `[]` `()` |
-| 10 | unary prefix `!` `~` `-` `*` `&` |
+| 10 | unary prefix `!` `~` `+` `-` `*` `&` |
 | 9 | `*` `/` `%` |
 | 8 | `+` `-` |
 | 7 | `<<` `>>` |
@@ -134,8 +134,8 @@ constant expression and whose value operand is **untyped** — an untyped intege
 constant (§6.1 `const.untyped.coercion`: a literal, an untyped constant
 expression, or an untyped `const` name) or an *untyped non-constant integer
 expression* — is itself an **untyped non-constant integer expression**. So are:
-a parenthesized untyped non-constant integer expression; a unary `-` or `~`
-applied to one; and a binary arithmetic (`+ - * / %`) or bitwise (`& | ^`)
+a parenthesized untyped non-constant integer expression; a unary `+`, `-` or
+`~` applied to one; and a binary arithmetic (`+ - * / %`) or bitwise (`& | ^`)
 operator whose operands are each an untyped integer constant or an untyped
 non-constant integer expression, at least one being the latter. (`(1 << n) << 2`
 is one: its count is constant but its value is not.) An arithmetic or bitwise
@@ -163,7 +163,7 @@ untyped operand. (A type-parameter target takes whatever an untyped constant
 takes there, Ch.12.)
 
 The type flows down **only through the operands that make up the expression**
-— the operands of `-`, `~`, and the arithmetic and bitwise operators, and the
+— the operands of `+`, `-`, `~`, and the arithmetic and bitwise operators, and the
 value operand of each shift; a shift count is its own position (`int` by default
 when it is untyped: in `var u uint8 = 1 << (1 << n)` the inner shift is `int`).
 Every shift reached this way produces a result of that type; every **maximal
@@ -279,10 +279,13 @@ is evaluated only if `a` is `true`; in `a || b`, `b` is evaluated only if `a` is
 
 ## 13.8 Unary operators and member access
 
-`expr.unary` — The unary operators are `-` (numeric negation), `!` (logical NOT,
-on a `bool`), `~` (bitwise complement, §13.5), `*` (pointer dereference, §7.8),
-and `&` (address-of). There is **no unary `+`**. `&x` yields a **raw** pointer
-`*T` to `x`'s storage (always raw, even for a managed value; §7.8).
+`expr.unary` — The unary operators are `+` (numeric identity), `-` (numeric
+negation), `!` (logical NOT, on a `bool`), `~` (bitwise complement, §13.5), `*`
+(pointer dereference, §7.8), and `&` (address-of). `+x` requires a numeric
+(integer or floating-point) operand and yields its value unchanged, of its type;
+on an untyped constant it is that constant, still untyped, so `var s int8 = +5`
+is valid as `var s int8 = 5` is. `&x` yields a **raw** pointer `*T` to `x`'s
+storage (always raw, even for a managed value; §7.8).
 
 `expr.addressable` — An expression is **addressable** when it denotes storage
 whose address exists; `&` (`expr.unary.addr`), an assignment target
@@ -488,8 +491,8 @@ prose here and the design notes govern). The expression-relevant ones:
 - **D5** — a postfix `[…]` is a slice when it contains `:`, a generic
   instantiation when it has multiple type arguments or its head is a generic
   function, and otherwise an index (resolved during type-checking; §12.2).
-- **D8** — `*`/`&`/`-` at the start of an operand are the unary operators; after
-  a complete operand they are binary (resolved by precedence; §13.2).
+- **D8** — `*`/`&`/`+`/`-` at the start of an operand are the unary operators;
+  after a complete operand they are binary (resolved by precedence; §13.2).
 
 `expr.disambiguation.d4-paren` — A composite literal **may** be used in a
 control-flow condition inside any bracket: by **parenthesizing** it,

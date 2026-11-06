@@ -398,7 +398,7 @@ AssertTargetList = AssertTarget { "," AssertTarget } ;
      7   <<  >>
      8   +  -
      9   *  /  %
-    10   unary prefix:  !  ~  -  *  &
+    10   unary prefix:  !  ~  +  -  *  &
     11   postfix:       .  []  ()
    All binary operators are left-associative; unary prefixes are
    right-associative.  Assignment and ++/-- are statements, not expressions. *)
@@ -418,6 +418,7 @@ MulExpr       = UnaryExpr { ( "*" | "/" | "%" ) UnaryExpr } ;
 UnaryExpr     = PostfixExpr
               | "!" UnaryExpr
               | "~" UnaryExpr
+              | "+" UnaryExpr
               | "-" UnaryExpr
               | "*" UnaryExpr          (* dereference *)
               | "&" UnaryExpr          (* address-of *)
