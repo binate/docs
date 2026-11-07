@@ -139,6 +139,36 @@ construct (§12.3 `gen.mono.check`). Rejected: `type C struct { self C }`,
 instantiations (`type E[T any] struct { e E[[1]T] }`) does not end; such a
 generic is rejected at its declaration by §12.3 `gen.mono.instances`.
 
+`type.named.depth` — A type's **nesting depth** is the number of levels in its
+longest chain of types, each a **part** of the one before. The parts of a type
+are: the element of a raw or managed pointer or slice, an array or a `readonly`
+type; the interface of an interface value (`*I`, `@I`); the fields of a struct;
+the parameters and results of a function-value type; a distinct type's
+underlying type and, for an instantiation, its type arguments; an alias's
+target; and an interface's type arguments, the signature of each of its own
+methods (not those it inherits), whose parts are that method's parameters and
+results, and the interfaces its declaration extends (not the implicit `any`).
+Each type on a chain, an interface and a method signature included, is one
+level, except that a distinct type and an alias add none: each of the
+declarations `type T0 struct { n T1 }`, `type T1 struct { n T2 }`, … adds one
+level. Measured in a package, a forward-declared type (§7.12) with no
+definition, or one another package defines, is one level and has no parts. An
+array's or `readonly` type's element, a struct's field, a distinct type's
+underlying type and an alias's target are held **by value** (the parts
+`type.named.value-acyclic` walks); every other part is held **indirectly**. Two
+distinct types or interfaces, or one and itself, are in a **cycle** when each
+reaches the other through a chain of parts. A chain ends before a distinct type
+or interface `E` when `E` is in a cycle with the last distinct type or interface
+`D` before it on the chain and some part on the chain from `D` to `E` is held
+indirectly; otherwise it goes on through `E`. So
+`type Node struct { v int; next @Node }` nests two levels — its struct, then
+`int` or the pointer — and so does each type of a ring, however long, each
+holding a pointer to the next. A type containing itself by value has no nesting
+depth; it is rejected by `type.named.value-acyclic`. An implementation may bound
+the nesting depth of a type; the bound is implementation-defined and at least
+256 (§21.4), and a program with a type nesting more deeply may be rejected (§2.2
+`conf.implementation.limits`).
+
 `type.named.transparency` — A distinct type is **transparent** to its underlying
 type for operators (arithmetic, bitwise, shift, relational, equality), the
 built-ins that act on the underlying kind (`len`, `present`, `same`), indexing
