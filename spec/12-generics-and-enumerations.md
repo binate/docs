@@ -273,7 +273,13 @@ a violation is a compile-time error. In that check:
   decided at the declaration (§12.4 `gen.satisfy`), so `g[*T]` for a constrained
   `g` is rejected there even if the generic is never instantiated.
 
-An instantiation named through several chains is checked for each. A generic of
+An instantiation named through several chains is checked for each. A method or
+`impl` of a generic type that only its package's `.bn` declares is
+package-private (§16.4 `pkg.export`): an instantiation has it, and it is checked
+for that instantiation, only through a chain rooted in that package — one whose
+root instantiation is written in the package's own `.bn` or `.bni` — not through
+one rooted in another package, which sees the generic through its `.bni` alone.
+A generic of
 which the program names no instantiation is **not** checked for its dependent
 constructs, even ones no type argument could satisfy. A violation found in a named
 instantiation (this rule, §8.9 `conv.typeparam`, §11.12

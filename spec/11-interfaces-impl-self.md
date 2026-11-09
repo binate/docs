@@ -389,7 +389,10 @@ boxed **object** is `readonly` (`iface.assert.readonly`). A target matches as fo
   (`iface.assert.readonly`). The query runs at run time over every `impl` in the
   program (`iface.rtti`), so an `impl` private to another package's `.bn`
   (§16.4 `pkg.export`) counts, although it could not construct the value at the
-  assertion (§11.8 `iface.construct.visible-impl`). Recovers a `*J`/`@J`. `any`
+  assertion (§11.8 `iface.construct.visible-impl`) — for an instantiation of a
+  generic type, such an `impl` of the generic counts only when a chain rooted in
+  its package names the instantiation (§12.3 `gen.mono.check`). Recovers a
+  `*J`/`@J`. `any`
   is satisfied by every present `x`.
 
 The two syntactic forms differ only in how a **miss** is handled:
