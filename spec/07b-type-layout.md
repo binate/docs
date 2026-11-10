@@ -200,13 +200,16 @@ is **always 2 words**:
 Size `2W`, alignment `W`. The vtable begins with an offset-0 **"any-block"** — the
 block every interface vtable shares (the fixed-offset upcast target, §11.6) —
 holding the destructor handle (the "dtor-first" convention) and a **`*TypeInfo`**
-pointer to the concrete type's RTTI record (§7.13.14); methods follow (Ch.11,
-Annex B). The `*TypeInfo` is what a **type assertion** reads to recover the
-dynamic type (§11.12 `iface.rtti`). Every **nested** sub-vtable (a parent's block
-inside a descendant's vtable, §11.6) carries the **same concrete-leaf-type**
-`*TypeInfo` and destructor — the any-block identifies the value's *dynamic
-(concrete)* type, not the interface the sub-vtable dispatches — so an assertion or
-type switch recovers the concrete type however far the value has been upcast.
+pointer to an RTTI record (§7.13.14) — the concrete type's, or for a box made from
+a raw pointer to an object of a declared named type (§11.12 `iface.assert.origin`)
+that type's raw-origin variant's, whose canonical record is the type's own;
+methods follow (Ch.11, Annex B). The `*TypeInfo` is what a **type assertion**
+reads to recover the dynamic type (§11.12 `iface.rtti`). Every **nested**
+sub-vtable (a parent's block inside a descendant's vtable, §11.6) carries the
+**same concrete-leaf-type** `*TypeInfo` and destructor — the any-block identifies
+the value's *dynamic (concrete)* type, not the interface the sub-vtable dispatches
+— so an assertion or type switch recovers the concrete type however far the value
+has been upcast.
 
 ## 7.13.9 Function values
 
@@ -301,13 +304,14 @@ carries:
 
 | Field | Meaning |
 |-------|---------|
-| identity | a per-type token; a concrete assertion tests **equality** of the scrutinee's and target's `TypeInfo` (pointer-equality *within* a mode) — the equality *result*, not any particular address, is what is observable |
+| identity | a per-type token; a concrete assertion tests **equality** of the target's `TypeInfo` and the scrutinee's **canonical** one (below; pointer-equality *within* a mode) — the equality *result*, not any particular address, is what is observable |
 | destructor | the type's destructor handle (the same one the vtable any-block holds) |
 | size, align | `SizeOf`/`AlignOf` of the type (the target's values) |
 | name | the type's name, as a `*[]readonly char` into static storage |
 | kind | a coarse **KIND** discriminator (values pinned below) telling a reflective reader how to interpret a value's bytes; the exact width comes from `size` (or a field's size) |
 | fields | for a struct, its field table — one entry per field carrying the field's name, byte offset, KIND, and size; a reference to a further `TypeInfo` (the field type's own record for a struct field, the **element** type's record for an array/slice field, or the **pointee**'s record for a pointer field — null when there is none or it is not a struct); and, for an array/slice/pointer field, the **element** (or pointee) KIND and size (so a reflective reader can walk the elements, or follow the pointer). Empty for a non-struct |
 | element | for a pointer, array or slice type, the same three facts a field of that type carries: the **pointee**'s or **element**'s KIND and size, and a reference to its `TypeInfo` when it is a struct (else null) — so a reflective reader follows a boxed value of a named pointer type (§11.4 `iface.construct.named-pointer`) to its pointee, as it does a pointer field. Empty for any other type |
+| canonical | a reference to the record of the dynamic type of a box carrying this record — the record itself, except for a raw-origin variant's (below), which names its type's own. It is the record a concrete assertion compares and a reflective reader of the boxed value reads |
 
 The **KIND** values are a cross-artifact contract — the compiler emits them and
 stdlib readers (`pkg/builtins/reflect`, `pkg/stdx/fmt`) match them — so, like the
@@ -320,7 +324,14 @@ stdlib readers (`pkg/builtins/reflect`, `pkg/stdx/fmt`) match them — so, like 
 A box of a `readonly` object of a named type `T` (§11.12 `iface.assert.readonly`)
 has `T`'s **readonly variant** as its dynamic type, a type of its own here: its
 record has `T`'s contents under the name `readonly <T>`, and its vtables are
-`T`'s under the variant's identity.
+`T`'s under the variant's identity. A box made from a raw pointer to an object of
+a declared named type `T` (§11.12 `iface.assert.origin`) carries `T`'s
+**raw-origin variant** — of `T`'s readonly variant, for a readonly object: a
+record with that type's contents, and vtables only for the impls a raw pointer
+may supply. Its dynamic type is still that type, whose record the variant's names
+as its canonical one, so the record a concrete assertion compares and reflection
+reads does not depend on how a box was made, and "exactly one `TypeInfo` per
+type" below counts canonical records.
 
 There is **exactly one** `TypeInfo` per type **program-wide** (not per module) so
 that the **result** of an identity comparison **agrees across compiled and

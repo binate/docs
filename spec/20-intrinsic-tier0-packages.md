@@ -204,8 +204,9 @@ present: types, fields, methods, impls, consts, and imports — richer **type
 metadata** (a `TypeInfo` surface) is a **later phase**, and its opt-in granularity
 (per-build flag, per-package, per-type, or always-on) is an **open** design
 question. When that surface lands it will be backed by the §7.13.14
-`type.layout.typeinfo` record — the same RTTI `TypeInfo` that type assertions read
-(§11.12 `iface.rtti`) — rather than a separate metadata store. Pure-C **extern**
+`type.layout.typeinfo` record — the same RTTI `TypeInfo` (a box's canonical one)
+that type assertions compare (§11.12 `iface.rtti`) — rather than a separate
+metadata store. Pure-C **extern**
 functions are **not** introspectable (the descriptor emitter skips them).
 
 `pkg0.reflect.vm-gap` — Under the **bytecode VM**, the `__Package()` accessor is

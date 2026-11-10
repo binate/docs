@@ -374,7 +374,8 @@ struct / `Self` target is a compile error). The **dynamic type** of `x` is the t
 was constructed (§11.4) — a named type, or a structural one for a name-less box (§7.13.14): the boxed value's type with its `*`/`@` and any handle
 `readonly` stripped and aliases peeled, but **named-distinct wrappers preserved** (a
 boxed `Celsius` records `Celsius`, not `float64`; §7.3) — together with whether the
-boxed **object** is `readonly` (`iface.assert.readonly`). A target matches as follows:
+boxed **object** is `readonly` (`iface.assert.readonly`) and whether the box was made
+from a managed or a raw pointer (`iface.assert.origin`). A target matches as follows:
 - **Concrete target** `T`: succeeds iff `x`'s dynamic type is **exactly** `T` —
   nominal type identity, not assignability (a stored `Celsius` matches `.(Celsius)`
   and **not** `.(float64)`). Each generic instantiation is a distinct type with its
@@ -384,16 +385,16 @@ boxed **object** is `readonly` (`iface.assert.readonly`). A target matches as fo
 - **Interface target** `J`: succeeds iff `x`'s dynamic type **satisfies** `J` — it
   has an `impl … : J` anywhere in the program, **or** an `impl` for any
   (transitive) **descendant** of `J`, since a descendant impl transitively
-  satisfies its ancestors (`iface.impl.nominal`, `iface.extend.transitive`) — on
-  a box of a `readonly` object, only an impl a `readonly` object may reach
-  (`iface.assert.readonly`). The query runs at run time over every `impl` in the
-  program (`iface.rtti`), so an `impl` private to another package's `.bn`
-  (§16.4 `pkg.export`) counts, although it could not construct the value at the
-  assertion (§11.8 `iface.construct.visible-impl`) — for an instantiation of a
-  generic type, such an `impl` of the generic counts only when a chain rooted in
-  its package names the instantiation (§12.3 `gen.mono.check`). Recovers a
-  `*J`/`@J`. `any`
-  is satisfied by every present `x`.
+  satisfies its ancestors (`iface.impl.nominal`, `iface.extend.transitive`) — on a
+  box of a `readonly` object, only an impl a `readonly` object may reach
+  (`iface.assert.readonly`), and on a box made from a raw pointer, only an impl a
+  raw pointer may supply (`iface.assert.origin`). The query runs at run time over
+  every `impl` in the program (`iface.rtti`), so an `impl` private to another
+  package's `.bn` (§16.4 `pkg.export`) counts, although it could not construct the
+  value at the assertion (§11.8 `iface.construct.visible-impl`) — for an
+  instantiation of a generic type, such an `impl` of the generic counts only when
+  a chain rooted in its package names the instantiation (§12.3 `gen.mono.check`).
+  Recovers a `*J`/`@J`. `any` is satisfied by every present `x`.
 
 The two syntactic forms differ only in how a **miss** is handled:
 - As an **expression**, `x.(K T)` yields the recovered value; a miss is a
@@ -455,6 +456,24 @@ a **named** dynamic type has this record: a name-less box keeps its element
 `readonly` in its structural identity (`iface.assert.slice`), and a named type over
 a `readonly` type (`type RI readonly int8`) is read-only at its own outermost level
 (§7.11 `type.readonly.named`), so a recovered `*RI` refuses writes already.
+
+`iface.assert.origin` — A box records whether it was made from a **managed**
+pointer — an `@T` source, including `box(v)` — or from a **raw** one — a `*T`
+source, `&v`, or the implicit borrow (`iface.construct.value-borrow`) of a
+variable. An interface target `.(*J)` / `.(@J)` matches a box made from a raw
+pointer only through an `impl` a raw pointer may supply — a value, `*T` or
+`*readonly T` receiver — never through one whose receiver is `@T` or
+`@readonly T`: its methods hold a reference to the object, which a raw pointer
+cannot give (the object may be a local or global variable, with no reference
+count). A box made from a managed pointer matches through every `impl`, also
+when it is reached through a `*I` borrowed from an `@I`. The record is the
+box's own: an interface value recovered from it (`.(*J)`) or converted from it
+(§11.6) keeps it. A type-switch case (`iface.typeswitch`) matches by the same
+rule. The record is no part of the box's dynamic type (§7.13.14): a concrete
+target ignores it — `.(*T)` and `.(T)` match a box of a `T` made either way, and
+`.(@T)` is recovered only from an `@I`, which is always a box made from a managed
+pointer. A box of a readonly object records both (`iface.assert.readonly`), and
+an `impl` matches it only when it qualifies under each rule.
 
 `iface.assert.slice` — A **slice** type is admitted as an assertion /
 type-switch target — `x.(*[]char)`, `case @[]readonly char:` — even though a slice
