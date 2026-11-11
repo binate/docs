@@ -135,9 +135,8 @@ meaning at the boundary:
 - **`var`** — A `.bni` `var X T` (with **no initializer**) is an **extern**
   declaration: the storage lives in the package's `.bn`, which must define `X`
   with an **identical** type (including any `readonly` modifier). (So `var` *can*
-  be extern; `const` cannot.) _Unenforced:_ the current compiler does not diagnose
-  a stray initializer on a `.bni` `var` — it is silently ignored (a conforming
-  implementation should reject it).
+  be extern; `const` cannot.) A `.bni` `var` carries no initializer
+  (`decl.var.extern.no-init`, §9.2).
 - **`func`** — A non-generic function is **signature-only** in the `.bni` (its
   body lives in the `.bn`). A **generic** function carries its full **source-text
   body** in the `.bni` (§16.5.1), and is not defined again in the `.bn`

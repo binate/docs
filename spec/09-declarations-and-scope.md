@@ -67,6 +67,11 @@ declaration with **no initializer** declares an exported variable whose storage
 and initial value are provided by the package's implementation (`.bn`); it is a
 declaration, not a definition (Ch.16).
 
+`decl.var.extern.no-init` _(Constraint)_ — A `var` declaration in a package
+interface file (`.bni`) has **no initializer**: `var X T = e` or `var X = e`
+there is an error, since the declaration only declares the variable
+(`decl.var.extern`).
+
 `decl.var.redeclare` _(Constraint)_ — Declaring with `var` a name already
 declared in the **same** block scope is an error ("redeclared in this scope").
 (A declaration in an inner block may instead shadow an outer one; §9.5.) At
