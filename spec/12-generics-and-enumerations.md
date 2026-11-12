@@ -240,6 +240,16 @@ fact that depends on a type argument:
   positions an array literal of such a length fills (§13.10
   `expr.composite.array`, `expr.composite.array.indexed`), and the size equality
   `bit_cast` requires (§8.6);
+- the judgments that compare a generic's instances — an interface's included — by
+  their type arguments, where a type argument holds an array whose length is such
+  a value: whether a type argument satisfies its constraint (§12.4 `gen.satisfy`),
+  whether a type implements an interface and whether an `impl`'s methods cover it
+  (§11.3 `iface.impl.coverage`), whether an interface extends another (§11.6
+  `iface.extend`), whether two of an interface's parents are one and whether
+  methods it inherits conflict, and the identity and assignability of such
+  instances, a function type's parameters and results included:
+  `*G[[sizeof(T)]uint8]` and `*G[[8]uint8]` are one type exactly where `sizeof(T)`
+  is 8;
 - a use of a type in which a type parameter occurs that requires its layout — a
   by-value variable, field, parameter or result, `make` or `make_slice` — which the
   opaque-type gate restricts (§7.12 `type.opaque.by-value`,
@@ -257,6 +267,11 @@ fact that depends on a type argument:
   so `cast(T, func(x int) int { return x + k })` is a raw closure kept in the frame
   where `T` is a `*func` and a managed closure where it is a `@func`.
 
+At the declaration, a judgment of that kind holds when it holds with every such
+length matching any length — and is then deferred — and is an error there when it
+fails even so: whatever lengths the type arguments give, `Eq[[sizeof(T)]uint16]`
+is not `Eq[[8]uint8]`, nor is `G1[[sizeof(T)]uint8]` a `G2[[8]uint8]`.
+
 The check of a generic declaration against its type parameters' constraints — made
 at the declaration, whether or not the program instantiates it — decides every
 other rule once, for all its instantiations, and **defers** the
@@ -271,7 +286,12 @@ a violation is a compile-time error. In that check:
 - whether a type argument built from the declaration's type parameters (`g[T]`,
   `g[W[T]]`, `g[*T]`) satisfies its constraint is not re-established: it was
   decided at the declaration (§12.4 `gen.satisfy`), so `g[*T]` for a constrained
-  `g` is rejected there even if the generic is never instantiated.
+  `g` is rejected there even if the generic is never instantiated — except where
+  an array length that depends on a type parameter takes part, a dependent
+  construct each instantiation decides for its type argument: with `T` bounded by
+  `Eq[[8]uint8]` and `g`'s constraint `Eq[[sizeof(U)]uint8]`, `g[T, U]` holds
+  for an instantiation whose `T` satisfies `Eq[[8]uint8]` exactly where
+  `sizeof(U)` is 8.
 
 An instantiation named through several chains is checked for each. A method or
 `impl` of a generic type that only its package's `.bn` declares is
@@ -325,12 +345,15 @@ is:
 
 Satisfaction consults `I`'s **full** method set, including methods inherited from
 extended interfaces (§11.6). Every type argument satisfies `any` (§12.1). An
-`impl`'s coverage of `I`'s methods was verified where the `impl` was declared
-(§11.3 `iface.impl.coverage`); satisfaction only confirms the relation. A type
-argument that does not satisfy its constraint is a compile-time error naming the
-constraint it misses. Where the type argument is built from type parameters or
+`impl`'s coverage of `I`'s methods was verified where the `impl` was declared, or
+for each of its instances where it depends on a length that depends on its
+binders (§11.3 `iface.impl.coverage`); satisfaction only confirms the relation. A
+type argument that does not satisfy its constraint is a compile-time error naming
+the constraint it misses. Where the type argument is built from type parameters or
 `Self`, the error is reported at the declaration that writes it, whether or not
-that declaration is instantiated (§12.3).
+that declaration is instantiated — or, where an array length that depends on a
+type parameter takes part, at each instantiation that misses (§12.3
+`gen.mono.check`).
 
 > _Example._ `func sort[T Orderable](xs *[]T) { … xs[i].Compare(xs[j]) … }`
 > instantiated at `T = int` works because `pkg/builtins/lang` provides

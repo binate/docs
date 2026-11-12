@@ -80,7 +80,12 @@ impl method's declared receiver kind must be reachable from `R`'s declared
 receiver kind by the same safe-direction smoothing as a method call (§10.5),
 except that an impl on a **value** receiver (`T`, `readonly T`) cannot use a
 method with a raw-pointer receiver (`*T`, `*readonly T`): the impl has no value
-whose address a call could take. Such a type writes `impl *T : I`.
+whose address a call could take. Such a type writes `impl *T : I`. Where
+a parameterized `impl`'s receiver or interface list holds an array length that
+depends on its binders, the coverage is checked for each instance of it, with the
+length known (§12.3 `gen.mono.check`): `impl *Box[K] : Eq[[sizeof(K)]uint8]`,
+with `func (b *Box[K]) eq(o [8]uint8) int`, covers `Eq[[8]uint8]` for
+`Box[int64]` and is an error for `Box[int32]`.
 
 > _Note._ Since `Self` is the receiver type, a method satisfies a `Self`-using
 > interface for one receiver shape: `Compare(o P)` serves `impl P : Comparable`,
@@ -283,7 +288,13 @@ declares the method, and holds in every interface that inherits it. For a generi
 interface it is decided with the interface's type parameters abstract: in
 `interface G[U any] : Eq[U] { Put(b *B[Self]) int }`, with `interface Eq[T any]`
 and `type B[T Eq[int]]`, `Self` does not satisfy `Eq[int]`, not even for
-`G[int]`. A type built from `Self` is judged by `gen.satisfy` like any other:
+`G[int]`. Where an array length that depends on those type parameters takes part,
+it is decided for each instance the program names, `Self` bounded by that
+instance, with the length known (§12.3 `gen.mono.check`): in
+`interface I3[U any, X any] : Eq[[sizeof(U)]uint8] { m(x *K[Self, X]) int }`,
+with `type K[T Eq[[sizeof(X)]uint8], X any]`, `Self` satisfies `K`'s constraint in
+`I3[int64, int64]` and not in `I3[int64, int32]`. A type built from `Self` is
+judged by `gen.satisfy` like any other:
 `W[Self]` satisfies `C` through a parameterized `impl W[K] : C`, and `*Self`
 satisfies no constraint but `any`.
 
