@@ -245,8 +245,9 @@ fact that depends on a type argument:
   a value: whether a type argument satisfies its constraint (§12.4 `gen.satisfy`),
   whether a type implements an interface and whether an `impl`'s methods cover it
   (§11.3 `iface.impl.coverage`), whether an interface extends another (§11.6
-  `iface.extend`), whether two of an interface's parents are one and whether
-  methods it inherits conflict, and the identity and assignability of such
+  `iface.extend`), whether two of an interface's parents, or of an `impl`'s
+  interfaces (§11.3 `iface.impl.unique`), are one and whether methods an
+  interface inherits conflict, and the identity and assignability of such
   instances, a function type's parameters and results included:
   `*G[[sizeof(T)]uint8]` and `*G[[8]uint8]` are one type exactly where `sizeof(T)`
   is 8;

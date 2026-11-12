@@ -63,6 +63,14 @@ is constructed through it from a `P` or `@P` source by receiver smoothing (§11.
 reference them — a **parameterized-receiver impl** (`impl *Cursor[T] :
 Iterator[T]`; §12.1 `gen.impl.generic-recv`).
 
+`iface.impl.unique` _(Constraint)_ — An interface may appear only once in an
+`impl`'s interface list: `impl R : I, I` is an error, as is `impl R : I, A` for
+an alias `A` of `I` (§11.7 `iface.alias`). A parameterized-receiver impl's list
+is checked at the impl, where a repeat whatever its type arguments is an error
+(`impl *R[K] : Tag[K], Tag[K]`), and as each instance of it has it, its binders
+bound to the instance's type arguments (§12.3 `gen.mono.check`):
+`impl *Box[K] : Tag[K], Tag[int]` is an error for `Box[int]` only.
+
 `iface.impl.nominal` _(Constraint)_ — Satisfaction is **nominal and explicit**: a
 type satisfies an interface **only** if a matching `impl` is declared. Having all
 the right methods is never sufficient on its own — there is no duck typing. (The
