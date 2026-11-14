@@ -37,6 +37,31 @@ not found`).
 package unless that package is being built for testing (Ch.20); test files thus
 do not contribute to the normal package surface.
 
+`pkg.source.nesting` — A source file's expressions, statements and blocks
+**nest**, each one level deeper than the construct it is directly part of: a
+function's or function literal's body block than the function or literal, a
+statement than its block, an expression than the statement or declaration it is
+part of, and an operand, a parenthesized expression, an argument, an index or a
+composite literal's element than its expression — an element in brackets after
+an expression counts as an expression whether it is an index or a generic type
+argument, which the syntax does not tell apart. A block statement is a statement
+holding a block, two levels; a `switch` case clause's body is a block (§9.5
+`decl.scope.block`), one level deeper than the `switch`; a `for` statement's
+init and post statements are one level deeper than the `for`; and the `if` after
+an `else` is one level deeper than the `if` before it. Binary operators are
+left-associative and postfix operators apply left to right (§13.2
+`expr.associativity`), so in `a + b + c` the `a` is one level deeper than the
+`c`: a chain of n binary operators of one precedence, or of n selectors, calls
+and indexes (`a.b(c)[d]`), holds its first operand n levels deeper than the
+chain. Type expressions do not nest by this count — a type's own nesting is
+bounded by `type.named.depth` (§7.3) — except that a parenthesized type's type,
+which adds no type depth, is one level deeper than its parentheses; an
+expression within a type, such as an array's length, is one level deeper than
+the construct the type is part of. An implementation may bound the nesting
+depth; the bound is implementation-defined and at least 256 (§21.4), and a
+source file nesting more deeply may be rejected (§2.2
+`conf.implementation.limits`).
+
 ## 16.2 The package clause
 
 `pkg.clause` —
