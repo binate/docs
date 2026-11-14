@@ -167,7 +167,16 @@ holding a pointer to the next. A type containing itself by value has no nesting
 depth; it is rejected by `type.named.value-acyclic`. An implementation may bound
 the nesting depth of a type; the bound is implementation-defined and at least
 256 (§21.4), and a program with a type nesting more deeply may be rejected (§2.2
-`conf.implementation.limits`).
+`conf.implementation.limits`). The bound holds as well for how deeply type
+expressions are written one within another. A type expression written within no
+other is one level; one written within another — as the element of a pointer,
+slice, array or `readonly` type, a struct's field type, a function-value type's
+parameter or result type, a type argument, or a type anywhere in an array's
+length — is a level deeper than it, except that the type in a parenthesized
+type `(T)` is at the parenthesized type's level. A composite literal's type and
+a type assertion's target count as type expressions too, nesting as the same
+forms written as types do. A program with a type expression written more deeply
+than the bound may be rejected.
 
 `type.named.transparency` — A distinct type is **transparent** to its underlying
 type for operators (arithmetic, bitwise, shift, relational, equality), the
