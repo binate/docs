@@ -322,6 +322,43 @@ to it. An interactive interpreter checks an instantiation when an input names it
 > else { … bit_cast(uint64, t) … }` fails at least one branch's size check for
 > every `T`, so no instantiation of it is accepted.
 
+> _Implementation note._ The current implementation chooses the `impl`s in view
+> for a deferred construct by where the construct is written and by the
+> instantiations that led to it, not per type as this rule does, and so accepts
+> some programs this rule rejects. In a chain rooted in a package `P`, every
+> `impl` private to `P` (§16.4 `pkg.export`) is in view for every type a deferred
+> construct judges when:
+> - the construct is written in `P`'s `.bn`; or
+> - the last instantiation of the chain named in `P`'s `.bn`, the construct's own
+>   instantiation, and each instantiation between them have type arguments that
+>   mention the named type of such an `impl`'s receiver (for a generic type, any
+>   instance of it).
+>
+> Either way, they then serve a type this rule judges without them: one written
+> outside `P`'s `.bn`, which this rule judges where it is written, and one
+> supplied by a root instantiation written in `P`'s `.bni`, which it judges at
+> that root.
+>
+> With
+> ```
+> // lib's .bni
+> interface Tag[X any] { tag() int }
+> func In[V Tag[[sizeof(X)]uint8], X any](v V) int { return v.tag() }
+> type T struct { n int }
+> func (t @T) tag() int
+> impl @T : Tag[[8]uint8]
+> func Out[V any, X any](v V) int { return In[@T, X](make(T)) }
+>
+> // lib's .bn
+> func (t @T) tag() int { return t.n }
+> impl @T : Tag[[4]uint8]
+> ```
+> `Out[@T, int32]` written in `lib`'s `.bn` is accepted, though the `@T` that
+> `Out` writes is a `Tag[[4]uint8]` only through the private `impl`;
+> `Out[int64, int32]` written there is rejected, as this rule requires, since its
+> type arguments do not mention `T`. The check at a generic's declaration is
+> unaffected: without the public `impl`, `Out` is rejected there.
+
 ## 12.4 Constraint satisfaction
 
 `gen.satisfy` _(Constraint)_ — A type argument `A` satisfies its constraint
