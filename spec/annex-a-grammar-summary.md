@@ -502,10 +502,11 @@ CCallArg      = Expression | "..." ;    (* "..." marks the C varargs boundary *)
 ExpressionList = Expression { "," Expression } ;
 IdentifierList = identifier { "," identifier } ;
 
-(* Note: where a list (arguments, parameters, type arguments/parameters, or
-   composite-literal elements) spans multiple lines, a trailing comma after the
-   last entry is permitted — and required when the closing delimiter starts the
-   next line (ASI).  The productions omit it for brevity. *)
+(* Note: where a list (arguments, parameters, type arguments/parameters,
+   composite-literal elements, or an annotation block's entries or an entry's
+   arguments) spans multiple lines, a trailing comma after the last entry is
+   permitted — and required when the closing delimiter starts the next line
+   (ASI).  The productions omit it for brevity. *)
 ```
 
 ## A.9 Generics

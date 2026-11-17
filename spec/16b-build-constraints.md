@@ -21,7 +21,9 @@ An **annotation block** `#[ … ]` attaches metadata to the element it
 **immediately precedes**. In the current implementation an annotation block may
 lead the **package clause**, an **import**, or a **top-level declaration**. A
 block holds comma-separated **entries**; each entry is a (possibly dotted) name
-with an optional parenthesized list of expression arguments. (The parser tolerates
+with an optional parenthesized list of expression arguments. Where a block's
+entries or an entry's arguments span lines, a trailing comma may follow the last
+one, as in any list (§5.13 `lex.semicolon.trailing-comma`). (The parser tolerates
 the degenerate empty forms `#[]` and `name()`; they carry no meaning.)
 
 `pkg.annotation.namespace` — An annotation **name** is a dotted identifier, and
